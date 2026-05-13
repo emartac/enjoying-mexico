@@ -97,6 +97,38 @@ class ViajeUpdateView(LoginRequiredMixin, UpdateView):
         return self.form_invalid(form)
 
 
+class ViajeHabitacionesView(LoginRequiredMixin, DetailView):
+    model = Viaje
+    template_name = 'viajes/habitaciones.html'
+    context_object_name = 'viaje'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        reservaciones = (
+            self.object.reservaciones
+            .exclude(estado='cancelada')
+            .select_related('habitacion__hotel', 'habitacion__tipo')
+            .prefetch_related('clientes_reservacion__cliente')
+            .order_by('habitacion__hotel__nombre', 'habitacion__numero')
+        )
+        habitaciones = []
+        for res in reservaciones:
+            ocupantes = list(res.clientes_reservacion.all())
+            capacidad = res.habitacion.tipo.capacidad
+            num_ocupantes = len(ocupantes)
+            habitaciones.append({
+                'reservacion': res,
+                'habitacion': res.habitacion,
+                'ocupantes': ocupantes,
+                'num_ocupantes': num_ocupantes,
+                'capacidad': capacidad,
+                'lugares_libres': capacidad - num_ocupantes,
+                'llena': num_ocupantes >= capacidad,
+            })
+        ctx['habitaciones'] = habitaciones
+        return ctx
+
+
 class ViajeDeleteView(LoginRequiredMixin, DeleteView):
     model = Viaje
     template_name = 'viajes/confirmar_eliminar.html'

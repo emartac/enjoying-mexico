@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block titulo %}Habitaciones — {{ viaje.nombre }}{% endblock %}
+
+{% block contenido %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4><i class="bi bi-door-open me-2"></i>Habitaciones — {{ viaje.nombre }}</h4>
+  <a href="{% url 'viajes:detalle' viaje.pk %}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left me-1"></i>Volver al viaje
+  </a>
+</div>
+
+{% if habitaciones %}
+<div class="row g-3">
+  {% for h in habitaciones %}
+  <div class="col-md-6 col-xl-4">
+    <div class="card shadow-sm h-100 {% if h.llena %}border-danger{% else %}border-success{% endif %}" style="border-left-width: 4px !important; border-left-style: solid !important;">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-bold">
+          <i class="bi bi-door-closed me-1"></i>
+          Hab. {{ h.habitacion.numero }} — {{ h.habitacion.tipo.nombre }}
+        </span>
+        {% if h.llena %}
+          <span class="badge bg-danger">Llena</span>
+        {% else %}
+          <span class="badge bg-success">{{ h.lugares_libres }} libre(s)</span>
+        {% endif %}
+      </div>
+      <div class="card-body">
+        <p class="text-muted small mb-2">
+          <i class="bi bi-building me-1"></i>{{ h.habitacion.hotel.nombre }}
+          &nbsp;|&nbsp;
+          <i class="bi bi-people me-1"></i>{{ h.num_ocupantes }} / {{ h.capacidad }} ocupantes
+        </p>
+
+        <div class="progress mb-3" style="height: 8px;">
+          {% if h.llena %}
+            <div class="progress-bar bg-danger" style="width: 100%"></div>
+          {% else %}
+            <div class="progress-bar bg-success"
+                 style="width: {% widthratio h.num_ocupantes h.capacidad 100 %}%"></div>
+          {% endif %}
+        </div>
+
+        {% if h.ocupantes %}
+        <ul class="list-group list-group-flush">
+          {% for cr in h.ocupantes %}
+          <li class="list-group-item px-0 py-1 d-flex justify-content-between align-items-center">
+            <span>
+              <i class="bi bi-person me-1 text-muted"></i>
+              <a href="{% url 'clientes:detalle' cr.cliente.pk %}">{{ cr.cliente }}</a>
+            </span>
+            {% if cr.es_titular %}
+              <span class="badge bg-primary">Titular</span>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted small mb-0">Sin pasajeros asignados.</p>
+        {% endif %}
+      </div>
+      <div class="card-footer bg-transparent">
+        <a href="{% url 'reservaciones:detalle' h.reservacion.pk %}" class="text-decoration-none small">
+          <i class="bi bi-receipt me-1"></i>{{ h.reservacion.codigo }}
+          <span class="badge badge-{{ h.reservacion.estado }} ms-1">{{ h.reservacion.get_estado_display }}</span>
+        </a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info">No hay habitaciones asignadas en este viaje.</div>
+{% endif %}
+{% endblock %}
