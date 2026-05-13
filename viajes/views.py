@@ -1,9 +1,11 @@
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
 from django.urls import reverse_lazy, reverse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
-from .models import Viaje
-from .forms import ViajeForm, PrecioFormSet, HabitacionFormSet
+from .models import Viaje, ViajeHabitacion
+from .forms import ViajeForm, PrecioFormSet, HabitacionFormSet, ViajeHabitacionForm
 
 
 class ViajeListView(LoginRequiredMixin, ListView):
@@ -166,6 +168,63 @@ class ViajeHabitacionesView(LoginRequiredMixin, DetailView):
             })
         ctx['habitaciones'] = habitaciones
         return ctx
+
+
+class ViajeHabitacionAgregarView(LoginRequiredMixin, CreateView):
+    model = ViajeHabitacion
+    form_class = ViajeHabitacionForm
+    template_name = 'viajes/habitacion_form.html'
+
+    def setup(self, request, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
+        self.viaje = get_object_or_404(Viaje, pk=kwargs['pk'])
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['viaje'] = self.viaje
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['viaje'] = self.viaje
+        ctx['titulo'] = f'Agregar habitación — {self.viaje.nombre}'
+        return ctx
+
+    def form_valid(self, form):
+        form.instance.viaje = self.viaje
+        messages.success(self.request, 'Habitación agregada al viaje.')
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('viajes:detalle', kwargs={'pk': self.viaje.pk})
+
+
+@login_required
+def viaje_habitacion_editar(request, pk, vh_pk):
+    viaje = get_object_or_404(Viaje, pk=pk)
+    vh = get_object_or_404(ViajeHabitacion, pk=vh_pk, viaje=viaje)
+    if request.method == 'POST':
+        form = ViajeHabitacionForm(viaje, request.POST, instance=vh)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Habitación actualizada.')
+            return redirect('viajes:detalle', pk=viaje.pk)
+    else:
+        form = ViajeHabitacionForm(viaje, instance=vh)
+    return render(request, 'viajes/habitacion_form.html', {
+        'form': form, 'viaje': viaje, 'titulo': f'Editar habitación — {vh.habitacion}'
+    })
+
+
+@login_required
+def viaje_habitacion_quitar(request, pk, vh_pk):
+    viaje = get_object_or_404(Viaje, pk=pk)
+    vh = get_object_or_404(ViajeHabitacion, pk=vh_pk, viaje=viaje)
+    if request.method == 'POST':
+        nombre = str(vh.habitacion)
+        vh.delete()
+        messages.success(request, f'Habitación {nombre} quitada del viaje.')
+    return redirect('viajes:detalle', pk=viaje.pk)
 
 
 class ViajeDeleteView(LoginRequiredMixin, DeleteView):

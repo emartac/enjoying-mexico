@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block titulo %}{{ titulo }}{% endblock %}
+
+{% block contenido %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card shadow-sm border-danger">
+      <div class="card-header bg-danger text-white">
+        <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Confirmar eliminación</h5>
+      </div>
+      <div class="card-body text-center py-4">
+        <p class="fs-5">¿Estás seguro de que deseas eliminar la reservación</p>
+        <p class="fs-4 fw-bold">{{ objeto.codigo }}</p>
+        <p class="text-muted">Esta acción eliminará también los clientes y pagos asociados y no se puede deshacer.</p>
+        <form method="post" class="d-inline">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger px-4 me-2">
+            <i class="bi bi-trash me-1"></i>Sí, eliminar
+          </button>
+          <a href="{% url 'reservaciones:detalle' objeto.pk %}" class="btn btn-secondary px-4">Cancelar</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

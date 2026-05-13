@@ -46,6 +46,29 @@ PrecioFormSet = inlineformset_factory(
     can_delete=True,
 )
 
+class ViajeHabitacionForm(forms.ModelForm):
+    class Meta:
+        model = ViajeHabitacion
+        fields = ['habitacion', 'precio_total']
+
+    def __init__(self, viaje=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from hoteles.models import Habitacion
+        qs = Habitacion.objects.select_related('hotel', 'tipo').order_by('hotel__nombre', 'numero')
+        if viaje:
+            ya_asignadas = viaje.viaje_habitaciones.values_list('habitacion_id', flat=True)
+            if not self.instance.pk:
+                qs = qs.exclude(pk__in=ya_asignadas)
+        self.fields['habitacion'].queryset = qs
+        self.fields['habitacion'].label_from_instance = lambda h: f'{h.hotel.nombre} — Hab. {h.numero} ({h.tipo.nombre})'
+        self.helper = FormHelper()
+        self.helper.layout = Layout(
+            'habitacion',
+            'precio_total',
+            ButtonHolder(Submit('submit', 'Guardar', css_class='btn btn-primary')),
+        )
+
+
 HabitacionFormSet = inlineformset_factory(
     Viaje,
     ViajeHabitacion,

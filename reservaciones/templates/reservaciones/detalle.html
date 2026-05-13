@@ -13,6 +13,9 @@
     <a href="{% url 'reservaciones:editar' reservacion.pk %}" class="btn btn-outline-secondary btn-sm">
       <i class="bi bi-pencil me-1"></i>Editar
     </a>
+    <a href="{% url 'reservaciones:eliminar' reservacion.pk %}" class="btn btn-outline-danger btn-sm">
+      <i class="bi bi-trash me-1"></i>Eliminar
+    </a>
     <a href="{% url 'reservaciones:pdf' reservacion.pk %}" class="btn btn-outline-dark btn-sm" target="_blank">
       <i class="bi bi-file-earmark-pdf me-1"></i>PDF
     </a>

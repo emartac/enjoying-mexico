@@ -1,4 +1,4 @@
-from django.views.generic import ListView, DetailView, CreateView, UpdateView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse_lazy, reverse
@@ -102,6 +102,22 @@ class ReservacionUpdateView(LoginRequiredMixin, UpdateView):
 
     def form_valid(self, form):
         messages.success(self.request, 'Reservación actualizada.')
+        return super().form_valid(form)
+
+
+class ReservacionDeleteView(LoginRequiredMixin, DeleteView):
+    model = Reservacion
+    template_name = 'reservaciones/confirmar_eliminar.html'
+    success_url = reverse_lazy('reservaciones:lista')
+    context_object_name = 'objeto'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['titulo'] = f'Eliminar reservación {self.object.codigo}'
+        return ctx
+
+    def form_valid(self, form):
+        messages.success(self.request, f'Reservación {self.object.codigo} eliminada.')
         return super().form_valid(form)
 
 

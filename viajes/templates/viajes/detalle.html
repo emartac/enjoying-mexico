@@ -37,69 +37,60 @@
       </div>
     </div>
 
-    {% if grupos_habitacion %}
     <div class="card shadow-sm mb-3">
       <div class="card-header d-flex justify-content-between align-items-center">
-        <span><i class="bi bi-tags me-1"></i>Precios por tipo de habitación</span>
-        <a href="{% url 'viajes:editar' viaje.pk %}" class="btn btn-outline-secondary btn-sm">
-          <i class="bi bi-pencil"></i>
+        <span><i class="bi bi-building me-1"></i>Hoteles y habitaciones</span>
+        <a href="{% url 'viajes:habitacion_agregar' viaje.pk %}" class="btn btn-sm btn-primary">
+          <i class="bi bi-plus-lg me-1"></i>Agregar habitación
         </a>
       </div>
+      {% if grupos_habitacion %}
       <div class="card-body p-0">
-        <table class="table table-sm mb-0">
-          <thead class="table-light">
-            <tr>
-              <th>Tipo</th>
-              <th class="text-center">Cuartos</th>
-              <th class="text-center">Disp.</th>
-              <th class="text-end">Precio</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for tipo_nombre, g in grupos_habitacion.items %}
-            <tr>
-              <td>
-                <span class="fw-semibold">{{ tipo_nombre }}</span>
-                <div class="text-muted small">{{ g.tipo.capacidad }} persona(s) máx.</div>
-              </td>
-              <td class="text-center align-middle">{{ g.total }}</td>
-              <td class="text-center align-middle">
-                {% if g.disponibles == 0 %}
-                  <span class="badge bg-danger">Lleno</span>
-                {% else %}
-                  <span class="badge bg-success">{{ g.disponibles }}</span>
-                {% endif %}
-              </td>
-              <td class="text-end align-middle">
-                {% with precios=g.habitaciones %}
-                  {% if precios|length == 1 %}
-                    <strong>${{ precios.0.precio_total }}</strong>
-                  {% else %}
-                    {% with first=precios.0 %}
-                    <strong>${{ first.precio_total }}</strong>
-                    {% endwith %}
-                  {% endif %}
-                {% endwith %}
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+        {% for tipo_nombre, g in grupos_habitacion.items %}
+        <div class="px-3 pt-2 pb-1">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="fw-semibold small text-uppercase text-muted">{{ tipo_nombre }}</span>
+            {% if g.disponibles == 0 %}
+              <span class="badge bg-danger">Lleno</span>
+            {% else %}
+              <span class="badge bg-success">{{ g.disponibles }} disponible(s)</span>
+            {% endif %}
+          </div>
+          <table class="table table-sm mb-1">
+            <tbody>
+              {% for vh in g.habitaciones %}
+              <tr>
+                <td class="align-middle">
+                  <i class="bi bi-building me-1 text-muted"></i>{{ vh.habitacion.hotel.nombre }}
+                </td>
+                <td class="align-middle">Hab. {{ vh.habitacion.numero }}</td>
+                <td class="align-middle">{{ vh.habitacion.num_camas }} cama(s)</td>
+                <td class="align-middle fw-bold">${{ vh.precio_total }}</td>
+                <td class="text-end align-middle">
+                  <a href="{% url 'viajes:habitacion_editar' viaje.pk vh.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+                  <form method="post" action="{% url 'viajes:habitacion_quitar' viaje.pk vh.pk %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                      onclick="return confirm('¿Quitar esta habitación del viaje?')">
+                      <i class="bi bi-x-lg"></i>
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% if not forloop.last %}<hr class="my-0">{% endif %}
+        {% endfor %}
       </div>
-    </div>
-    {% else %}
-    <div class="card shadow-sm mb-3">
+      {% else %}
       <div class="card-body text-center text-muted py-3">
         <i class="bi bi-door-open fs-4 d-block mb-2"></i>
-        Sin habitaciones asignadas
-        <div class="mt-2">
-          <a href="{% url 'viajes:editar' viaje.pk %}" class="btn btn-sm btn-primary">
-            <i class="bi bi-plus-lg me-1"></i>Agregar habitaciones
-          </a>
-        </div>
+        Sin habitaciones asignadas aún.
       </div>
+      {% endif %}
     </div>
-    {% endif %}
 
     <div class="card shadow-sm">
       <div class="card-header"><i class="bi bi-people-fill me-1"></i>Ocupación general</div>
