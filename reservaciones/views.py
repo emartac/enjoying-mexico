@@ -16,7 +16,6 @@ class ReservacionListView(LoginRequiredMixin, ListView):
     model = Reservacion
     template_name = 'reservaciones/lista.html'
     context_object_name = 'reservaciones'
-    paginate_by = 20
 
     def get_queryset(self):
         qs = super().get_queryset().select_related('viaje', 'habitacion__tipo').prefetch_related(
@@ -25,7 +24,7 @@ class ReservacionListView(LoginRequiredMixin, ListView):
                 queryset=ClienteReservacion.objects.filter(es_titular=True).select_related('cliente'),
                 to_attr='titulares',
             )
-        )
+        ).order_by('viaje__fecha_salida', 'viaje__nombre', '-creado')
         estado = self.request.GET.get('estado', '')
         if estado:
             qs = qs.filter(estado=estado)
@@ -35,7 +34,15 @@ class ReservacionListView(LoginRequiredMixin, ListView):
         return qs
 
     def get_context_data(self, **kwargs):
+        from collections import OrderedDict
         ctx = super().get_context_data(**kwargs)
+        grupos = OrderedDict()
+        for res in ctx['reservaciones']:
+            vid = res.viaje_id
+            if vid not in grupos:
+                grupos[vid] = {'viaje': res.viaje, 'reservaciones': []}
+            grupos[vid]['reservaciones'].append(res)
+        ctx['grupos'] = grupos.values()
         ctx['estados'] = Reservacion.ESTADOS
         ctx['estado_sel'] = self.request.GET.get('estado', '')
         ctx['q'] = self.request.GET.get('q', '')
