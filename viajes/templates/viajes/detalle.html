@@ -113,10 +113,11 @@
           <thead class="table-light">
             <tr>
               <th>Nombre</th>
-              <th>Documento</th>
               <th>Email</th>
               <th>Teléfono</th>
               <th>Reservación</th>
+              <th>Hotel</th>
+              <th>Habitación</th>
               <th>Titular</th>
             </tr>
           </thead>
@@ -124,14 +125,15 @@
             {% for cr in viajeros %}
             <tr>
               <td><a href="{% url 'clientes:detalle' cr.cliente.pk %}">{{ cr.cliente }}</a></td>
-              <td>{{ cr.cliente.numero_documento }}</td>
               <td>{{ cr.cliente.email }}</td>
               <td>{{ cr.cliente.telefono|default:"—" }}</td>
               <td><a href="{% url 'reservaciones:detalle' cr.reservacion.pk %}">{{ cr.reservacion.codigo }}</a></td>
+              <td>{{ cr.reservacion.habitacion.hotel.nombre }}</td>
+              <td>{{ cr.reservacion.habitacion.tipo.nombre }} #{{ cr.reservacion.habitacion.numero }}</td>
               <td>{% if cr.es_titular %}<span class="badge bg-primary">Titular</span>{% endif %}</td>
             </tr>
             {% empty %}
-            <tr><td colspan="6" class="text-center text-muted py-3">Sin viajeros registrados.</td></tr>
+            <tr><td colspan="7" class="text-center text-muted py-3">Sin viajeros registrados.</td></tr>
             {% endfor %}
           </tbody>
         </table>

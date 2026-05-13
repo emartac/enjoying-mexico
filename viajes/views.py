@@ -41,8 +41,8 @@ class ViajeDetailView(LoginRequiredMixin, DetailView):
             ClienteReservacion.objects
             .filter(reservacion__viaje=self.object)
             .exclude(reservacion__estado='cancelada')
-            .select_related('cliente', 'reservacion')
-            .order_by('cliente__apellido', 'cliente__nombre')
+            .select_related('cliente', 'reservacion', 'reservacion__habitacion__hotel', 'reservacion__habitacion__tipo')
+            .order_by('reservacion__codigo', 'cliente__apellido')
         )
         return ctx
 
