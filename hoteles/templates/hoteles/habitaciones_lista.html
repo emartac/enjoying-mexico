@@ -24,21 +24,22 @@
   </div>
 </div>
 
-<div class="card shadow-sm">
+{% for grupo in grupos %}
+<div class="card shadow-sm mb-3">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span class="fw-semibold">
+      <i class="bi bi-map me-1"></i>{{ grupo.viaje.destino }}
+      <span class="text-muted fw-normal ms-2 small">{{ grupo.viaje.fecha_salida|date:"d/m/Y" }} — {{ grupo.viaje.fecha_regreso|date:"d/m/Y" }}</span>
+    </span>
+    <span class="badge bg-secondary">{{ grupo.habitaciones|length }} habitación(es)</span>
+  </div>
   <div class="table-responsive">
-    <table class="table table-hover mb-0">
+    <table class="table table-hover table-sm mb-0">
       <thead class="table-light">
-        <tr>
-          <th>Hotel</th>
-          <th>Número</th>
-          <th>Tipo</th>
-          <th>Camas</th>
-          <th>Disponible</th>
-          <th></th>
-        </tr>
+        <tr><th>Hotel</th><th>Número</th><th>Tipo</th><th>Camas</th><th>Disponible</th><th></th></tr>
       </thead>
       <tbody>
-        {% for hab in habitaciones %}
+        {% for hab in grupo.habitaciones %}
         <tr>
           <td>{{ hab.nombre_hotel }}</td>
           <td>{{ hab.numero }}</td>
@@ -50,11 +51,47 @@
             <a href="{% url 'hoteles:habitaciones_eliminar' hab.pk %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></a>
           </td>
         </tr>
-        {% empty %}
-        <tr><td colspan="6" class="text-center text-muted py-4">No se encontraron habitaciones.</td></tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
 </div>
+{% endfor %}
+
+{% if sin_viaje %}
+<div class="card shadow-sm mb-3">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span class="fw-semibold text-muted"><i class="bi bi-question-circle me-1"></i>Sin viaje asignado</span>
+    <span class="badge bg-secondary">{{ sin_viaje|length }} habitación(es)</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover table-sm mb-0">
+      <thead class="table-light">
+        <tr><th>Hotel</th><th>Número</th><th>Tipo</th><th>Camas</th><th>Disponible</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for hab in sin_viaje %}
+        <tr>
+          <td>{{ hab.nombre_hotel }}</td>
+          <td>{{ hab.numero }}</td>
+          <td>{{ hab.tipo.nombre }}</td>
+          <td>{{ hab.num_camas }}</td>
+          <td>{% if hab.disponible %}<span class="badge bg-success">Sí</span>{% else %}<span class="badge bg-warning text-dark">No</span>{% endif %}</td>
+          <td class="text-end">
+            <a href="{% url 'hoteles:habitaciones_editar' hab.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+            <a href="{% url 'hoteles:habitaciones_eliminar' hab.pk %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+{% if not grupos and not sin_viaje %}
+<div class="card shadow-sm">
+  <div class="card-body text-center text-muted py-4">No se encontraron habitaciones.</div>
+</div>
+{% endif %}
 {% endblock %}
