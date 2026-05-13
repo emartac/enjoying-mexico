@@ -100,7 +100,7 @@
     <div class="card shadow-sm mb-3">
       <div class="card-header d-flex justify-content-between align-items-center">
         <span><i class="bi bi-calendar-check me-1"></i>Reservaciones de este viaje</span>
-        <a href="{% url 'reservaciones:crear' %}" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg me-1"></i>Nueva</a>
+        <a href="{% url 'reservaciones:crear' %}?viaje={{ viaje.pk }}" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg me-1"></i>Nueva</a>
       </div>
       <div class="table-responsive">
         <table class="table table-sm table-hover mb-0">

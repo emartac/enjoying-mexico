@@ -16,14 +16,17 @@ class ReservacionForm(forms.ModelForm):
             'notas': forms.Textarea(attrs={'rows': 3}),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, viaje_id=None, **kwargs):
         super().__init__(*args, **kwargs)
-        if self.instance.pk and self.instance.viaje_id:
-            from viajes.models import ViajeHabitacion
-            ids = ViajeHabitacion.objects.filter(
-                viaje=self.instance.viaje
-            ).values_list('habitacion_id', flat=True)
-            self.fields['habitacion'].queryset = self.fields['habitacion'].queryset.filter(pk__in=ids)
+        from viajes.models import ViajeHabitacion
+        from hoteles.models import Habitacion
+        viaje_id = viaje_id or (self.instance.viaje_id if self.instance.pk else None)
+        if viaje_id:
+            ids = ViajeHabitacion.objects.filter(viaje_id=viaje_id).values_list('habitacion_id', flat=True)
+            self.fields['habitacion'].queryset = Habitacion.objects.filter(pk__in=ids).select_related('hotel', 'tipo')
+        else:
+            self.fields['habitacion'].queryset = Habitacion.objects.none()
+            self.fields['habitacion'].help_text = 'Primero selecciona un viaje y guarda para ver las habitaciones disponibles.'
         self.helper = FormHelper()
         self.helper.layout = Layout(
             Row(

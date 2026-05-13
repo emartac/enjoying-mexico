@@ -54,6 +54,20 @@ class ReservacionCreateView(LoginRequiredMixin, CreateView):
     form_class = ReservacionForm
     template_name = 'reservaciones/formulario.html'
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        viaje_id = self.request.GET.get('viaje') or self.request.POST.get('viaje')
+        if viaje_id:
+            kwargs['viaje_id'] = int(viaje_id)
+        return kwargs
+
+    def get_initial(self):
+        initial = super().get_initial()
+        viaje_id = self.request.GET.get('viaje')
+        if viaje_id:
+            initial['viaje'] = viaje_id
+        return initial
+
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['titulo'] = 'Nueva reservación'
@@ -72,6 +86,11 @@ class ReservacionUpdateView(LoginRequiredMixin, UpdateView):
     model = Reservacion
     form_class = ReservacionForm
     template_name = 'reservaciones/formulario.html'
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['viaje_id'] = self.object.viaje_id
+        return kwargs
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
