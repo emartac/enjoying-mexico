@@ -5,6 +5,32 @@
 {% block contenido %}
 <div class="row justify-content-center">
   <div class="col-lg-6">
+
+    {% if hoteles %}
+    <div class="card shadow-sm mb-3">
+      <div class="card-header"><i class="bi bi-building me-1"></i>Filtrar por hotel</div>
+      <div class="card-body pb-2">
+        <form method="get" class="row g-2 align-items-end">
+          <div class="col">
+            <select name="hotel" class="form-select" onchange="this.form.submit()">
+              <option value="">— Todos los hoteles —</option>
+              {% for h in hoteles %}
+              <option value="{{ h.pk }}" {% if hotel_sel == h.pk|stringformat:"s" %}selected{% endif %}>
+                {{ h.nombre }} — {{ h.ciudad }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          {% if hotel_sel %}
+          <div class="col-auto">
+            <a href="?" class="btn btn-outline-secondary">Limpiar</a>
+          </div>
+          {% endif %}
+        </form>
+      </div>
+    </div>
+    {% endif %}
+
     <div class="card shadow-sm">
       <div class="card-header">
         <h5 class="mb-0"><i class="bi bi-door-open me-2"></i>{{ titulo }}</h5>
@@ -12,10 +38,12 @@
       <div class="card-body">
         <form method="post">
           {% csrf_token %}
+          <input type="hidden" name="hotel_filtro" value="{{ hotel_sel }}">
           {% crispy form %}
         </form>
       </div>
     </div>
+
     <div class="mt-2">
       <a href="{% url 'viajes:detalle' viaje.pk %}" class="text-secondary">
         <i class="bi bi-arrow-left me-1"></i>Volver al viaje

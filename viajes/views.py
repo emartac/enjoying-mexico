@@ -180,14 +180,20 @@ class ViajeHabitacionAgregarView(LoginRequiredMixin, CreateView):
         self.viaje = get_object_or_404(Viaje, pk=kwargs['pk'])
 
     def get_form_kwargs(self):
+        from hoteles.models import Hotel
         kwargs = super().get_form_kwargs()
         kwargs['viaje'] = self.viaje
+        hotel_id = self.request.GET.get('hotel') or self.request.POST.get('hotel_filtro')
+        kwargs['hotel_id'] = int(hotel_id) if hotel_id else None
         return kwargs
 
     def get_context_data(self, **kwargs):
+        from hoteles.models import Hotel
         ctx = super().get_context_data(**kwargs)
         ctx['viaje'] = self.viaje
         ctx['titulo'] = f'Agregar habitación — {self.viaje.nombre}'
+        ctx['hoteles'] = Hotel.objects.filter(activo=True).order_by('nombre')
+        ctx['hotel_sel'] = self.request.GET.get('hotel', '')
         return ctx
 
     def form_valid(self, form):

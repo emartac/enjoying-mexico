@@ -51,16 +51,17 @@ class ViajeHabitacionForm(forms.ModelForm):
         model = ViajeHabitacion
         fields = ['habitacion', 'precio_total']
 
-    def __init__(self, viaje=None, *args, **kwargs):
+    def __init__(self, viaje=None, hotel_id=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         from hoteles.models import Habitacion
         qs = Habitacion.objects.select_related('hotel', 'tipo').order_by('hotel__nombre', 'numero')
-        if viaje:
+        if viaje and not self.instance.pk:
             ya_asignadas = viaje.viaje_habitaciones.values_list('habitacion_id', flat=True)
-            if not self.instance.pk:
-                qs = qs.exclude(pk__in=ya_asignadas)
+            qs = qs.exclude(pk__in=ya_asignadas)
+        if hotel_id:
+            qs = qs.filter(hotel_id=hotel_id)
         self.fields['habitacion'].queryset = qs
-        self.fields['habitacion'].label_from_instance = lambda h: f'{h.hotel.nombre} — Hab. {h.numero} ({h.tipo.nombre})'
+        self.fields['habitacion'].label_from_instance = lambda h: f'Hab. {h.numero} — {h.tipo.nombre} ({h.num_camas} cama(s))'
         self.helper = FormHelper()
         self.helper.layout = Layout(
             'habitacion',
