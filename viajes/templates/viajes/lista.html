@@ -41,7 +41,6 @@
           <th>Salida</th>
           <th>Regreso</th>
           <th>Días</th>
-          <th>Precio p/persona</th>
           <th>Estado</th>
           <th></th>
         </tr>
@@ -54,7 +53,6 @@
           <td>{{ viaje.fecha_salida|date:"d/m/Y" }}</td>
           <td>{{ viaje.fecha_regreso|date:"d/m/Y" }}</td>
           <td>{{ viaje.duracion_dias }}</td>
-          <td>${{ viaje.precio_por_persona }}</td>
           <td>{% if viaje.activo %}<span class="badge bg-success">Activo</span>{% else %}<span class="badge bg-secondary">Inactivo</span>{% endif %}</td>
           <td class="text-end">
             <a href="{% url 'viajes:editar' viaje.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
@@ -62,7 +60,7 @@
           </td>
         </tr>
         {% empty %}
-        <tr><td colspan="8" class="text-center text-muted py-4">No se encontraron viajes.</td></tr>
+        <tr><td colspan="7" class="text-center text-muted py-4">No se encontraron viajes.</td></tr>
         {% endfor %}
       </tbody>
     </table>
