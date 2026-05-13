@@ -9,11 +9,9 @@ class ClienteForm(forms.ModelForm):
         model = Cliente
         fields = [
             'nombre', 'apellido', 'email', 'telefono',
-            'tipo_documento', 'numero_documento', 'fecha_nacimiento',
             'nacionalidad', 'direccion', 'notas',
         ]
         widgets = {
-            'fecha_nacimiento': forms.DateInput(attrs={'type': 'date'}),
             'direccion': forms.Textarea(attrs={'rows': 2}),
             'notas': forms.Textarea(attrs={'rows': 2}),
         }
@@ -30,15 +28,8 @@ class ClienteForm(forms.ModelForm):
                 Column('email', css_class='col-md-7'),
                 Column('telefono', css_class='col-md-5'),
             ),
-            Row(
-                Column('tipo_documento', css_class='col-md-4'),
-                Column('numero_documento', css_class='col-md-4'),
-                Column('fecha_nacimiento', css_class='col-md-4'),
-            ),
-            Row(
-                Column('nacionalidad', css_class='col-md-5'),
-                Column('direccion', css_class='col-md-7'),
-            ),
+            'nacionalidad',
+            'direccion',
             'notas',
             ButtonHolder(Submit('submit', 'Guardar cliente', css_class='btn btn-primary')),
         )
