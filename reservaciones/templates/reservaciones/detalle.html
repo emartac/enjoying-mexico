@@ -75,13 +75,15 @@
           {% else %}
           <dt class="col-sm-5">Alojamiento</dt>
           <dd class="col-sm-7"><span class="badge bg-info text-dark">Viaje de un día</span></dd>
+          {% if reservacion.viaje.precio_por_persona %}
+          <dt class="col-sm-5">Precio regular</dt>
+          <dd class="col-sm-7">${{ reservacion.viaje.precio_por_persona }}</dd>
           {% endif %}
-          <dt class="col-sm-5">Check-in</dt>
-          <dd class="col-sm-7">{{ reservacion.fecha_checkin|date:"d/m/Y" }}</dd>
-          <dt class="col-sm-5">Check-out</dt>
-          <dd class="col-sm-7">{{ reservacion.fecha_checkout|date:"d/m/Y" }}</dd>
-          <dt class="col-sm-5">Noches</dt>
-          <dd class="col-sm-7">{{ reservacion.noches }}</dd>
+          {% if reservacion.viaje.precio_frecuente %}
+          <dt class="col-sm-5">Precio frecuente</dt>
+          <dd class="col-sm-7 fw-bold">${{ reservacion.viaje.precio_frecuente }}</dd>
+          {% endif %}
+          {% endif %}
           {% if reservacion.precio_personalizado is not None %}
           <dt class="col-sm-5">Precio asignado</dt>
           <dd class="col-sm-7 fw-bold">${{ reservacion.precio_personalizado }}</dd>
