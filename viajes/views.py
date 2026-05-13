@@ -35,8 +35,13 @@ class ViajeDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         from reservaciones.models import ClienteReservacion
+        from collections import defaultdict
         ctx = super().get_context_data(**kwargs)
-        ctx['reservaciones'] = self.object.reservaciones.select_related('habitacion__hotel', 'habitacion__tipo').order_by('-creado')
+
+        ctx['reservaciones'] = self.object.reservaciones.select_related(
+            'habitacion__hotel', 'habitacion__tipo'
+        ).order_by('-creado')
+
         ctx['viajeros'] = (
             ClienteReservacion.objects
             .filter(reservacion__viaje=self.object)
@@ -44,6 +49,32 @@ class ViajeDetailView(LoginRequiredMixin, DetailView):
             .select_related('cliente', 'reservacion', 'reservacion__habitacion__hotel', 'reservacion__habitacion__tipo')
             .order_by('reservacion__codigo', 'cliente__apellido')
         )
+
+        # Habitaciones agrupadas por tipo
+        habitaciones_reservadas = set(
+            self.object.reservaciones
+            .exclude(estado='cancelada')
+            .values_list('habitacion_id', flat=True)
+        )
+        grupos = defaultdict(lambda: {
+            'tipo': None, 'habitaciones': [], 'total': 0, 'reservadas': 0, 'disponibles': 0
+        })
+        viaje_habs = (
+            self.object.viaje_habitaciones
+            .select_related('habitacion__tipo', 'habitacion__hotel')
+            .order_by('habitacion__tipo__nombre')
+        )
+        for vh in viaje_habs:
+            tipo_nombre = vh.habitacion.tipo.nombre
+            g = grupos[tipo_nombre]
+            g['tipo'] = vh.habitacion.tipo
+            g['habitaciones'].append(vh)
+            g['total'] += 1
+            if vh.habitacion_id in habitaciones_reservadas:
+                g['reservadas'] += 1
+            else:
+                g['disponibles'] += 1
+        ctx['grupos_habitacion'] = dict(grupos)
         return ctx
 
 
