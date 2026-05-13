@@ -141,6 +141,7 @@ class ViajeHabitacionesView(LoginRequiredMixin, DetailView):
         reservaciones = (
             self.object.reservaciones
             .exclude(estado='cancelada')
+            .exclude(habitacion__isnull=True)
             .select_related('habitacion__tipo')
             .prefetch_related('clientes_reservacion__cliente')
             .order_by('habitacion__nombre_hotel', 'habitacion__numero')
