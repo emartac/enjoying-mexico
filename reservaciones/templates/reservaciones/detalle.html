@@ -77,6 +77,10 @@
           <dd class="col-sm-7">{{ reservacion.fecha_checkout|date:"d/m/Y" }}</dd>
           <dt class="col-sm-5">Noches</dt>
           <dd class="col-sm-7">{{ reservacion.noches }}</dd>
+          {% if reservacion.precio_personalizado is not None %}
+          <dt class="col-sm-5">Precio asignado</dt>
+          <dd class="col-sm-7 fw-bold">${{ reservacion.precio_personalizado }}</dd>
+          {% endif %}
         </dl>
         {% if reservacion.notas %}<hr><p class="small text-muted mb-0">{{ reservacion.notas }}</p>{% endif %}
       </div>

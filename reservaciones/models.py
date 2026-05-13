@@ -26,6 +26,11 @@ class Reservacion(models.Model):
     fecha_checkin = models.DateField('Fecha check-in')
     fecha_checkout = models.DateField('Fecha check-out')
     estado = models.CharField('Estado', max_length=20, choices=ESTADOS, default='pendiente')
+    precio_personalizado = models.DecimalField(
+        'Precio personalizado (MXN)', max_digits=10, decimal_places=2,
+        null=True, blank=True, validators=[MinValueValidator(0)],
+        help_text='Si se llena, este monto reemplaza el cálculo automático.',
+    )
     notas = models.TextField('Notas internas', blank=True)
     creado = models.DateTimeField(auto_now_add=True)
     actualizado = models.DateTimeField(auto_now=True)
@@ -48,6 +53,8 @@ class Reservacion(models.Model):
 
     @property
     def costo_habitacion(self):
+        if self.precio_personalizado is not None:
+            return self.precio_personalizado
         from viajes.models import ViajeHabitacion
         try:
             vh = ViajeHabitacion.objects.get(viaje=self.viaje, habitacion=self.habitacion)
