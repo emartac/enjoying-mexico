@@ -71,7 +71,6 @@ def generar_pdf_reservacion(request, reservacion):
 
     # Viaje
     pdf.seccion('Informacion del Viaje')
-    pdf.fila_dato('Viaje', reservacion.viaje.nombre)
     pdf.fila_dato('Destino', reservacion.viaje.destino)
     pdf.fila_dato('Fecha salida', reservacion.viaje.fecha_salida.strftime('%d/%m/%Y'))
     pdf.fila_dato('Fecha regreso', reservacion.viaje.fecha_regreso.strftime('%d/%m/%Y'))
@@ -169,7 +168,7 @@ class PDFPaseAbordaje(FPDF):
         self.cell(0, 8, str(self.cr.cliente))
         self.set_font('Helvetica', '', 9)
         self.set_xy(15, 27)
-        self.cell(0, 6, f'{self.reservacion.viaje.nombre}  |  {self.reservacion.codigo}')
+        self.cell(0, 6, f'{self.reservacion.viaje.destino}  |  {self.reservacion.codigo}')
         self.set_text_color(0, 0, 0)
         self.ln(26)
 
@@ -219,7 +218,6 @@ def generar_pase_abordaje(reservacion, cr):
     pdf.add_page()
 
     pdf.seccion('Informacion del Viaje')
-    pdf.fila_dato('Viaje', reservacion.viaje.nombre)
     pdf.fila_dato('Destino', reservacion.viaje.destino)
     pdf.fila_dato('Fecha salida', reservacion.viaje.fecha_salida.strftime('%d/%m/%Y'))
     pdf.fila_dato('Fecha regreso', reservacion.viaje.fecha_regreso.strftime('%d/%m/%Y'))
