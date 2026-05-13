@@ -18,6 +18,7 @@ class Cliente(models.Model):
     fecha_nacimiento = models.DateField('Fecha de nacimiento', null=True, blank=True, editable=False)
     nacionalidad = models.CharField('Nacionalidad', max_length=100, blank=True)
     direccion = models.TextField('Dirección', blank=True)
+    viajero_frecuente = models.BooleanField('Viajero frecuente', default=False)
     notas = models.TextField('Notas internas', blank=True)
     creado = models.DateTimeField(auto_now_add=True)
     actualizado = models.DateTimeField(auto_now=True)

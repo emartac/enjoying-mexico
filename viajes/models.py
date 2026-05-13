@@ -52,6 +52,10 @@ class ViajeHabitacion(models.Model):
         'Precio total del viaje (MXN)', max_digits=10, decimal_places=2,
         validators=[MinValueValidator(0)],
     )
+    precio_frecuente = models.DecimalField(
+        'Precio viajero frecuente (MXN)', max_digits=10, decimal_places=2,
+        null=True, blank=True, validators=[MinValueValidator(0)],
+    )
 
     class Meta:
         verbose_name = 'Habitación del viaje'

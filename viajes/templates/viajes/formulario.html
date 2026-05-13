@@ -44,34 +44,6 @@
         </div>
       </div>
 
-      <div class="card shadow-sm mb-3">
-        <div class="card-header">
-          <h5 class="mb-0"><i class="bi bi-tags me-2"></i>Precios por tipo de habitación (por persona)</h5>
-        </div>
-        <div class="card-body">
-          {{ precio_formset.management_form }}
-          <table class="table table-sm">
-            <thead class="table-light">
-              <tr>
-                <th>Tipo de habitación</th>
-                <th>Precio por persona (MXN)</th>
-                <th>Eliminar</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for pform in precio_formset %}
-              <tr>
-                <td>{{ pform.tipo_habitacion }}{{ pform.id }}</td>
-                <td>{{ pform.precio_por_persona }}</td>
-                <td>{% if pform.instance.pk %}{{ pform.DELETE }}{% endif %}</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-          <p class="text-muted small mb-0">Precio que se cobra a cada pasajero según el tipo de habitación que ocupa.</p>
-        </div>
-      </div>
-
       <div class="d-flex gap-2">
         <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Guardar viaje</button>
         <a href="{% url 'viajes:lista' %}" class="btn btn-outline-secondary">Cancelar</a>

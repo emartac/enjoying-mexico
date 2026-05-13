@@ -49,7 +49,7 @@ PrecioFormSet = inlineformset_factory(
 class ViajeHabitacionForm(forms.ModelForm):
     class Meta:
         model = ViajeHabitacion
-        fields = ['habitacion', 'precio_total']
+        fields = ['habitacion', 'precio_total', 'precio_frecuente']
 
     def __init__(self, viaje=None, hotel_id=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -65,7 +65,10 @@ class ViajeHabitacionForm(forms.ModelForm):
         self.helper = FormHelper()
         self.helper.layout = Layout(
             'habitacion',
-            'precio_total',
+            Row(
+                Column('precio_total', css_class='col-md-6'),
+                Column('precio_frecuente', css_class='col-md-6'),
+            ),
             ButtonHolder(Submit('submit', 'Guardar', css_class='btn btn-primary')),
         )
 

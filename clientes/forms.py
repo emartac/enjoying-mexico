@@ -9,7 +9,7 @@ class ClienteForm(forms.ModelForm):
         model = Cliente
         fields = [
             'nombre', 'apellido', 'email', 'telefono',
-            'nacionalidad', 'direccion', 'notas',
+            'nacionalidad', 'direccion', 'viajero_frecuente', 'notas',
         ]
         widgets = {
             'direccion': forms.Textarea(attrs={'rows': 2}),
@@ -30,6 +30,7 @@ class ClienteForm(forms.ModelForm):
             ),
             'nacionalidad',
             'direccion',
+            'viajero_frecuente',
             'notas',
             ButtonHolder(Submit('submit', 'Guardar cliente', css_class='btn btn-primary')),
         )

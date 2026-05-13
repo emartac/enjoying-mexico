@@ -50,24 +50,17 @@ class Reservacion(models.Model):
     def costo_habitacion(self):
         from viajes.models import ViajeHabitacion
         try:
-            return ViajeHabitacion.objects.get(
-                viaje=self.viaje,
-                habitacion=self.habitacion,
-            ).precio_total
+            vh = ViajeHabitacion.objects.get(viaje=self.viaje, habitacion=self.habitacion)
+            titular = self.clientes_reservacion.filter(es_titular=True).select_related('cliente').first()
+            if titular and titular.cliente.viajero_frecuente and vh.precio_frecuente is not None:
+                return vh.precio_frecuente
+            return vh.precio_total
         except ViajeHabitacion.DoesNotExist:
             return 0
 
     @property
     def costo_viaje(self):
-        from viajes.models import ViajeHabitacionPrecio
-        try:
-            precio = ViajeHabitacionPrecio.objects.get(
-                viaje=self.viaje,
-                tipo_habitacion=self.habitacion.tipo,
-            ).precio_por_persona
-        except ViajeHabitacionPrecio.DoesNotExist:
-            precio = self.viaje.precio_por_persona
-        return self.num_clientes * precio
+        return 0
 
     @property
     def total(self):
