@@ -158,11 +158,30 @@
         <p class="small fw-semibold mb-2">Agregar cliente:</p>
         <form method="post" action="{% url 'reservaciones:agregar_cliente' reservacion.pk %}">
           {% csrf_token %}
-          {% load crispy_forms_tags %}
-          {% crispy agregar_form %}
-          <button type="submit" class="btn btn-success btn-sm w-100 mt-1">
-            <i class="bi bi-person-plus me-1"></i>Agregar
-          </button>
+          <input type="hidden" name="cliente" id="cliente-sel-id">
+          <div class="position-relative mb-2">
+            <input type="text" class="form-control form-control-sm" id="buscar-cliente-input"
+                   placeholder="Buscar por nombre o teléfono…" autocomplete="off">
+            <div id="buscar-resultados" class="list-group position-absolute w-100 shadow"
+                 style="z-index:1050;display:none;max-height:180px;overflow-y:auto;top:100%;left:0"></div>
+          </div>
+          <div id="cliente-sel-display" class="alert alert-success py-1 px-2 small mb-2 d-flex justify-content-between align-items-center" style="display:none!important">
+            <span><i class="bi bi-person-check me-1"></i><span id="cliente-sel-nombre"></span></span>
+            <button type="button" class="btn-close" id="limpiar-sel" style="font-size:0.55rem"></button>
+          </div>
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" name="es_titular" id="es-titular-check">
+            <label class="form-check-label small" for="es-titular-check">Es titular de la reservación</label>
+          </div>
+          <div class="d-flex gap-1">
+            <button type="submit" class="btn btn-success btn-sm flex-grow-1" id="btn-agregar-cliente" disabled>
+              <i class="bi bi-person-plus me-1"></i>Agregar
+            </button>
+            <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalNuevoCliente"
+                    title="Crear nuevo cliente">
+              <i class="bi bi-person-plus-fill"></i>
+            </button>
+          </div>
         </form>
       </div>
       {% else %}
@@ -210,4 +229,152 @@
   </div>
 
 </div>
+
+<!-- Modal: nuevo cliente -->
+<div class="modal fade" id="modalNuevoCliente" tabindex="-1" aria-labelledby="modalNuevoClienteLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalNuevoClienteLabel"><i class="bi bi-person-plus me-1"></i>Nuevo cliente</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="nc-errores" class="alert alert-danger small py-2" style="display:none"></div>
+        <div class="row g-2">
+          <div class="col-6">
+            <label class="form-label small mb-1">Nombre *</label>
+            <input type="text" class="form-control form-control-sm" id="nc-nombre">
+          </div>
+          <div class="col-6">
+            <label class="form-label small mb-1">Apellido *</label>
+            <input type="text" class="form-control form-control-sm" id="nc-apellido">
+          </div>
+          <div class="col-7">
+            <label class="form-label small mb-1">Email *</label>
+            <input type="email" class="form-control form-control-sm" id="nc-email">
+          </div>
+          <div class="col-5">
+            <label class="form-label small mb-1">Teléfono</label>
+            <input type="text" class="form-control form-control-sm" id="nc-telefono">
+          </div>
+          <div class="col-12">
+            <div class="form-check mt-1">
+              <input class="form-check-input" type="checkbox" id="nc-frecuente">
+              <label class="form-check-label small" for="nc-frecuente">Viajero frecuente</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary btn-sm" id="btn-guardar-nc">
+          <i class="bi bi-save me-1"></i>Guardar y seleccionar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const searchInput = document.getElementById('buscar-cliente-input');
+  const resultsBox  = document.getElementById('buscar-resultados');
+  const selId       = document.getElementById('cliente-sel-id');
+  const selDisplay  = document.getElementById('cliente-sel-display');
+  const selNombre   = document.getElementById('cliente-sel-nombre');
+  const btnAgregar  = document.getElementById('btn-agregar-cliente');
+  const btnLimpiar  = document.getElementById('limpiar-sel');
+
+  if (!searchInput) return;
+
+  let timer;
+
+  searchInput.addEventListener('input', function () {
+    clearTimeout(timer);
+    const q = this.value.trim();
+    if (q.length < 2) { resultsBox.style.display = 'none'; return; }
+    timer = setTimeout(() => fetchClientes(q), 280);
+  });
+
+  function fetchClientes(q) {
+    fetch('{% url "clientes:buscar" %}?q=' + encodeURIComponent(q))
+      .then(r => r.json())
+      .then(data => {
+        resultsBox.innerHTML = '';
+        if (!data.clientes.length) {
+          resultsBox.innerHTML = '<div class="list-group-item text-muted small py-1">Sin resultados</div>';
+        } else {
+          data.clientes.forEach(c => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'list-group-item list-group-item-action py-1 small';
+            btn.innerHTML = '<strong>' + escHtml(c.nombre) + '</strong>'
+              + '<span class="text-muted ms-2">' + escHtml(c.email)
+              + (c.telefono ? ' · ' + escHtml(c.telefono) : '') + '</span>';
+            btn.addEventListener('click', () => elegir(c));
+            resultsBox.appendChild(btn);
+          });
+        }
+        resultsBox.style.display = 'block';
+      });
+  }
+
+  function elegir(c) {
+    selId.value = c.id;
+    selNombre.textContent = c.nombre + (c.email ? ' (' + c.email + ')' : '');
+    selDisplay.style.removeProperty('display');
+    searchInput.value = '';
+    resultsBox.style.display = 'none';
+    btnAgregar.disabled = false;
+  }
+
+  btnLimpiar.addEventListener('click', () => {
+    selId.value = '';
+    selDisplay.style.display = 'none';
+    btnAgregar.disabled = true;
+  });
+
+  document.addEventListener('click', e => {
+    if (!resultsBox.contains(e.target) && e.target !== searchInput) {
+      resultsBox.style.display = 'none';
+    }
+  });
+
+  // Crear nuevo cliente desde el modal
+  document.getElementById('btn-guardar-nc').addEventListener('click', function () {
+    const errDiv  = document.getElementById('nc-errores');
+    errDiv.style.display = 'none';
+    const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const body = new URLSearchParams({
+      nombre:            document.getElementById('nc-nombre').value.trim(),
+      apellido:          document.getElementById('nc-apellido').value.trim(),
+      email:             document.getElementById('nc-email').value.trim(),
+      telefono:          document.getElementById('nc-telefono').value.trim(),
+      viajero_frecuente: document.getElementById('nc-frecuente').checked ? 'on' : '',
+    });
+    fetch('{% url "clientes:crear_ajax" %}', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': csrf },
+      body: body.toString(),
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.ok) {
+        elegir(data);
+        bootstrap.Modal.getInstance(document.getElementById('modalNuevoCliente')).hide();
+        ['nc-nombre','nc-apellido','nc-email','nc-telefono'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('nc-frecuente').checked = false;
+      } else {
+        const msgs = Object.values(data.errors).flat().join(' ');
+        errDiv.textContent = msgs;
+        errDiv.style.display = '';
+      }
+    });
+  });
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+})();
+</script>
 {% endblock %}

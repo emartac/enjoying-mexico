@@ -1,7 +1,10 @@
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
 from django.urls import reverse_lazy
 from django.contrib import messages
+from django.db.models import Q
+from django.http import JsonResponse
 from .models import Cliente
 from .forms import ClienteForm
 
@@ -89,3 +92,35 @@ class ClienteDeleteView(LoginRequiredMixin, DeleteView):
     def form_valid(self, form):
         messages.success(self.request, f'Cliente {self.object} eliminado.')
         return super().form_valid(form)
+
+
+@login_required
+def cliente_buscar(request):
+    q = request.GET.get('q', '').strip()
+    if len(q) < 2:
+        return JsonResponse({'clientes': []})
+    qs = Cliente.objects.filter(
+        Q(nombre__icontains=q) | Q(apellido__icontains=q) | Q(telefono__icontains=q)
+    ).order_by('apellido', 'nombre')[:10]
+    return JsonResponse({'clientes': [
+        {'id': c.pk, 'nombre': str(c), 'email': c.email, 'telefono': c.telefono or ''}
+        for c in qs
+    ]})
+
+
+@login_required
+def cliente_crear_ajax(request):
+    if request.method != 'POST':
+        return JsonResponse({'ok': False}, status=405)
+    form = ClienteForm(request.POST)
+    if form.is_valid():
+        cliente = form.save()
+        return JsonResponse({
+            'ok': True, 'id': cliente.pk,
+            'nombre': str(cliente), 'email': cliente.email,
+            'telefono': cliente.telefono or '',
+        })
+    return JsonResponse({
+        'ok': False,
+        'errors': {k: [str(e) for e in v] for k, v in form.errors.items()},
+    }, status=400)
