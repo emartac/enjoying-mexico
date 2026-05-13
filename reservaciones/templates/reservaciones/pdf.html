@@ -45,8 +45,12 @@
 
 <div class="section">
   <div class="section-title">Alojamiento</div>
+  {% if reservacion.habitacion %}
   <div class="row-info"><span class="label">Hotel:</span><span class="value">{{ reservacion.habitacion.nombre_hotel }}</span></div>
   <div class="row-info"><span class="label">Habitación:</span><span class="value">{{ reservacion.habitacion.tipo.nombre }} — N° {{ reservacion.habitacion.numero }}</span></div>
+  {% else %}
+  <div class="row-info"><span class="label">Alojamiento:</span><span class="value">Viaje de un día</span></div>
+  {% endif %}
   <div class="row-info"><span class="label">Check-in:</span><span class="value">{{ reservacion.fecha_checkin|date:"d/m/Y" }}</span></div>
   <div class="row-info"><span class="label">Check-out:</span><span class="value">{{ reservacion.fecha_checkout|date:"d/m/Y" }}</span></div>
   <div class="row-info"><span class="label">Noches:</span><span class="value">{{ reservacion.noches }}</span></div>

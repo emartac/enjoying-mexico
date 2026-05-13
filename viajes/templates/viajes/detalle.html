@@ -160,14 +160,11 @@
     <div class="card shadow-sm mb-3">
       <div class="card-header d-flex justify-content-between align-items-center">
         <span><i class="bi bi-calendar-check me-1"></i>Reservaciones</span>
-        <a href="{% url 'reservaciones:crear' %}?viaje={{ viaje.pk }}" class="btn btn-sm btn-primary
-          {% if not grupos_habitacion %} disabled{% endif %}">
+        <a href="{% url 'reservaciones:crear' %}?viaje={{ viaje.pk }}" class="btn btn-sm btn-primary">
           <i class="bi bi-plus-lg me-1"></i>Nueva
         </a>
       </div>
-      {% if not grupos_habitacion %}
-      <div class="card-body text-muted small">Agrega habitaciones al viaje antes de crear reservaciones.</div>
-      {% else %}
+      {% if True %}
       <div class="table-responsive">
         <table class="table table-sm table-hover mb-0">
           <thead class="table-light">
@@ -181,7 +178,7 @@
             {% for res in reservaciones %}
             <tr>
               <td><a href="{% url 'reservaciones:detalle' res.pk %}">{{ res.codigo }}</a></td>
-              <td>{{ res.habitacion.nombre_hotel }} — {{ res.habitacion.tipo.nombre }} #{{ res.habitacion.numero }}</td>
+              <td>{% if res.habitacion %}{{ res.habitacion.nombre_hotel }} — {{ res.habitacion.tipo.nombre }} #{{ res.habitacion.numero }}{% else %}<span class="text-muted">Viaje de un día</span>{% endif %}</td>
               <td><span class="badge badge-{{ res.estado }}">{{ res.get_estado_display }}</span></td>
             </tr>
             {% empty %}
@@ -217,7 +214,7 @@
               <td>{{ cr.cliente.email }}</td>
               <td>{{ cr.cliente.telefono|default:"—" }}</td>
               <td><a href="{% url 'reservaciones:detalle' cr.reservacion.pk %}">{{ cr.reservacion.codigo }}</a></td>
-              <td>{{ cr.reservacion.habitacion.tipo.nombre }} #{{ cr.reservacion.habitacion.numero }}</td>
+              <td>{% if cr.reservacion.habitacion %}{{ cr.reservacion.habitacion.tipo.nombre }} #{{ cr.reservacion.habitacion.numero }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
               <td>${{ cr.reservacion.total }}</td>
               <td class="text-success">${{ cr.reservacion.total_pagado }}</td>
               <td class="{% if cr.reservacion.saldo_pendiente > 0 %}text-danger{% else %}text-success{% endif %}">${{ cr.reservacion.saldo_pendiente }}</td>

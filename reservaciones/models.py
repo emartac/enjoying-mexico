@@ -21,7 +21,7 @@ class Reservacion(models.Model):
 
     codigo = models.CharField('Código', max_length=20, unique=True, default=_generar_codigo, editable=False)
     viaje = models.ForeignKey(Viaje, on_delete=models.PROTECT, verbose_name='Viaje', related_name='reservaciones')
-    habitacion = models.ForeignKey(Habitacion, on_delete=models.PROTECT, verbose_name='Habitación', related_name='reservaciones')
+    habitacion = models.ForeignKey(Habitacion, on_delete=models.PROTECT, verbose_name='Habitación', related_name='reservaciones', null=True, blank=True)
     clientes = models.ManyToManyField(Cliente, through='ClienteReservacion', verbose_name='Clientes')
     fecha_checkin = models.DateField('Fecha check-in')
     fecha_checkout = models.DateField('Fecha check-out')
@@ -55,6 +55,8 @@ class Reservacion(models.Model):
     def costo_habitacion(self):
         if self.precio_personalizado is not None:
             return self.precio_personalizado
+        if not self.habitacion_id:
+            return 0
         from viajes.models import ViajeHabitacion
         try:
             vh = ViajeHabitacion.objects.get(viaje=self.viaje, habitacion=self.habitacion)

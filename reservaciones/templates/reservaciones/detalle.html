@@ -67,10 +67,15 @@
           <dd class="col-sm-7">{{ reservacion.viaje.fecha_salida|date:"d/m/Y" }}</dd>
           <dt class="col-sm-5">Regreso</dt>
           <dd class="col-sm-7">{{ reservacion.viaje.fecha_regreso|date:"d/m/Y" }}</dd>
+          {% if reservacion.habitacion %}
           <dt class="col-sm-5">Hotel</dt>
           <dd class="col-sm-7">{{ reservacion.habitacion.nombre_hotel }}</dd>
           <dt class="col-sm-5">Habitación</dt>
           <dd class="col-sm-7">{{ reservacion.habitacion.tipo.nombre }} #{{ reservacion.habitacion.numero }}</dd>
+          {% else %}
+          <dt class="col-sm-5">Alojamiento</dt>
+          <dd class="col-sm-7"><span class="badge bg-info text-dark">Viaje de un día</span></dd>
+          {% endif %}
           <dt class="col-sm-5">Check-in</dt>
           <dd class="col-sm-7">{{ reservacion.fecha_checkin|date:"d/m/Y" }}</dd>
           <dt class="col-sm-5">Check-out</dt>
@@ -92,12 +97,8 @@
       <div class="card-body">
         <table class="table table-sm mb-0">
           <tr>
-            <td>Habitación ({{ reservacion.noches }} noche(s) × ${{ reservacion.habitacion.precio_por_noche }})</td>
+            <td>{% if reservacion.habitacion %}Habitación{% else %}Viaje de un día{% endif %} ({{ reservacion.num_clientes }} persona(s))</td>
             <td class="text-end">${{ reservacion.costo_habitacion }}</td>
-          </tr>
-          <tr>
-            <td>Viaje ({{ reservacion.num_clientes }} persona(s) × ${{ reservacion.viaje.precio_por_persona }})</td>
-            <td class="text-end">${{ reservacion.costo_viaje }}</td>
           </tr>
           <tr class="fw-bold">
             <td>Total</td>
@@ -120,7 +121,7 @@
   <div class="col-md-4">
     <div class="card shadow-sm">
       <div class="card-header d-flex justify-content-between align-items-center">
-        <span><i class="bi bi-people me-1"></i>Clientes ({{ reservacion.num_clientes }}/{{ reservacion.habitacion.tipo.capacidad }})</span>
+        <span><i class="bi bi-people me-1"></i>Clientes ({{ reservacion.num_clientes }}{% if reservacion.habitacion %}/{{ reservacion.habitacion.tipo.capacidad }}{% endif %})</span>
       </div>
       <ul class="list-group list-group-flush">
         {% for cr in clientes_res %}
@@ -152,7 +153,7 @@
         <li class="list-group-item text-muted text-center py-3">Sin clientes asignados.</li>
         {% endfor %}
       </ul>
-      {% if reservacion.num_clientes < reservacion.habitacion.tipo.capacidad %}
+      {% if not reservacion.habitacion or reservacion.num_clientes < reservacion.habitacion.tipo.capacidad %}
       <div class="card-footer">
         <p class="small fw-semibold mb-2">Agregar cliente:</p>
         <form method="post" action="{% url 'reservaciones:agregar_cliente' reservacion.pk %}">

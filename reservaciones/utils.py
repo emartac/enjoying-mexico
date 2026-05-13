@@ -82,12 +82,14 @@ def generar_pdf_reservacion(request, reservacion):
 
     # Alojamiento
     pdf.seccion('Alojamiento')
-    pdf.fila_dato('Hotel', reservacion.habitacion.nombre_hotel)
-    pdf.fila_dato('Habitacion', f'{reservacion.habitacion.tipo.nombre} No. {reservacion.habitacion.numero}')
-    pdf.fila_dato('Capacidad', f'{reservacion.habitacion.tipo.capacidad} persona(s)')
-    pdf.fila_dato('Check-in', reservacion.fecha_checkin.strftime('%d/%m/%Y'))
-    pdf.fila_dato('Check-out', reservacion.fecha_checkout.strftime('%d/%m/%Y'))
-    pdf.fila_dato('Noches', str(reservacion.noches))
+    if reservacion.habitacion:
+        pdf.fila_dato('Hotel', reservacion.habitacion.nombre_hotel)
+        pdf.fila_dato('Habitacion', f'{reservacion.habitacion.tipo.nombre} No. {reservacion.habitacion.numero}')
+        pdf.fila_dato('Capacidad', f'{reservacion.habitacion.tipo.capacidad} persona(s)')
+    else:
+        pdf.fila_dato('Alojamiento', 'Viaje de un dia (sin hospedaje)')
+    pdf.fila_dato('Fecha salida', reservacion.fecha_checkin.strftime('%d/%m/%Y'))
+    pdf.fila_dato('Fecha regreso', reservacion.fecha_checkout.strftime('%d/%m/%Y'))
     pdf.ln(4)
 
     # Pasajeros

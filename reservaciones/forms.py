@@ -24,7 +24,8 @@ class ReservacionForm(forms.ModelForm):
             self.fields['habitacion'].queryset = Habitacion.objects.filter(pk__in=ids).select_related('tipo')
         else:
             self.fields['habitacion'].queryset = Habitacion.objects.none()
-            self.fields['habitacion'].help_text = 'Primero selecciona un viaje y guarda para ver las habitaciones disponibles.'
+        self.fields['habitacion'].required = False
+        self.fields['habitacion'].empty_label = '— Sin habitación (viaje de un día) —'
         self.helper = FormHelper()
         self.helper.layout = Layout(
             Row(

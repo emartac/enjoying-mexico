@@ -51,7 +51,7 @@
         <tr>
           <td><a href="{% url 'reservaciones:detalle' res.pk %}" class="fw-semibold">{{ res.codigo }}</a></td>
           <td>{{ res.viaje.nombre }}</td>
-          <td>{{ res.habitacion.nombre_hotel }}<br><small class="text-muted">{{ res.habitacion.tipo.nombre }} #{{ res.habitacion.numero }}</small></td>
+          <td>{% if res.habitacion %}{{ res.habitacion.nombre_hotel }}<br><small class="text-muted">{{ res.habitacion.tipo.nombre }} #{{ res.habitacion.numero }}</small>{% else %}<span class="text-muted">Viaje de un día</span>{% endif %}</td>
           <td class="text-center">{{ res.num_clientes }}</td>
           <td>${{ res.total }}</td>
           <td><span class="badge badge-{{ res.estado }}">{{ res.get_estado_display }}</span></td>
