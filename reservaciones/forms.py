@@ -23,7 +23,7 @@ class ReservacionForm(forms.ModelForm):
         viaje_id = viaje_id or (self.instance.viaje_id if self.instance.pk else None)
         if viaje_id:
             ids = ViajeHabitacion.objects.filter(viaje_id=viaje_id).values_list('habitacion_id', flat=True)
-            self.fields['habitacion'].queryset = Habitacion.objects.filter(pk__in=ids).select_related('hotel', 'tipo')
+            self.fields['habitacion'].queryset = Habitacion.objects.filter(pk__in=ids).select_related('tipo')
         else:
             self.fields['habitacion'].queryset = Habitacion.objects.none()
             self.fields['habitacion'].help_text = 'Primero selecciona un viaje y guarda para ver las habitaciones disponibles.'

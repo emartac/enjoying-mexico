@@ -32,7 +32,7 @@ class ClienteDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['reservaciones'] = self.object.reservacion_set.select_related('viaje', 'habitacion__hotel').order_by('-creado')
+        ctx['reservaciones'] = self.object.reservacion_set.select_related('viaje', 'habitacion__tipo').order_by('-creado')
         return ctx
 
 

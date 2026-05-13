@@ -19,7 +19,7 @@ class HomeView(LoginRequiredMixin, TemplateView):
         ctx['canceladas'] = Reservacion.objects.filter(estado='cancelada').count()
         ctx['recientes'] = (
             Reservacion.objects
-            .select_related('viaje', 'habitacion__hotel', 'habitacion__tipo')
+            .select_related('viaje', 'habitacion__tipo')
             .order_by('-creado')[:8]
         )
         return ctx

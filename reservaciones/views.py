@@ -18,7 +18,7 @@ class ReservacionListView(LoginRequiredMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        qs = super().get_queryset().select_related('viaje', 'habitacion__hotel', 'habitacion__tipo')
+        qs = super().get_queryset().select_related('viaje', 'habitacion__tipo')
         estado = self.request.GET.get('estado', '')
         if estado:
             qs = qs.filter(estado=estado)
