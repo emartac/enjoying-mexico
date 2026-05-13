@@ -34,8 +34,16 @@ class ViajeDetailView(LoginRequiredMixin, DetailView):
     context_object_name = 'viaje'
 
     def get_context_data(self, **kwargs):
+        from reservaciones.models import ClienteReservacion
         ctx = super().get_context_data(**kwargs)
-        ctx['reservaciones'] = self.object.reservaciones.select_related('habitacion__hotel').order_by('-creado')
+        ctx['reservaciones'] = self.object.reservaciones.select_related('habitacion__hotel', 'habitacion__tipo').order_by('-creado')
+        ctx['viajeros'] = (
+            ClienteReservacion.objects
+            .filter(reservacion__viaje=self.object)
+            .exclude(reservacion__estado='cancelada')
+            .select_related('cliente', 'reservacion')
+            .order_by('cliente__apellido', 'cliente__nombre')
+        )
         return ctx
 
 

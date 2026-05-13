@@ -13,6 +13,7 @@ class Viaje(models.Model):
         validators=[MinValueValidator(0)],
     )
     incluye = models.TextField('¿Qué incluye?', blank=True, help_text='Lista de servicios incluidos')
+    capacidad_maxima = models.PositiveIntegerField('Capacidad máxima de viajeros', default=0)
     activo = models.BooleanField('Activo', default=True)
     creado = models.DateTimeField(auto_now_add=True)
 
@@ -27,3 +28,15 @@ class Viaje(models.Model):
     @property
     def duracion_dias(self):
         return (self.fecha_regreso - self.fecha_salida).days
+
+    @property
+    def ocupacion_actual(self):
+        return self.reservaciones.exclude(estado='cancelada').values_list(
+            'clientes', flat=True
+        ).distinct().count()
+
+    @property
+    def lugares_disponibles(self):
+        if self.capacidad_maxima == 0:
+            return None
+        return self.capacidad_maxima - self.ocupacion_actual
