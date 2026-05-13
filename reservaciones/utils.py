@@ -82,8 +82,7 @@ def generar_pdf_reservacion(request, reservacion):
 
     # Alojamiento
     pdf.seccion('Alojamiento')
-    pdf.fila_dato('Hotel', reservacion.habitacion.hotel.nombre)
-    pdf.fila_dato('Ciudad / Pais', f'{reservacion.habitacion.hotel.ciudad}, {reservacion.habitacion.hotel.pais}')
+    pdf.fila_dato('Hotel', reservacion.habitacion.nombre_hotel)
     pdf.fila_dato('Habitacion', f'{reservacion.habitacion.tipo.nombre} No. {reservacion.habitacion.numero}')
     pdf.fila_dato('Capacidad', f'{reservacion.habitacion.tipo.capacidad} persona(s)')
     pdf.fila_dato('Check-in', reservacion.fecha_checkin.strftime('%d/%m/%Y'))
@@ -109,12 +108,8 @@ def generar_pdf_reservacion(request, reservacion):
     anchos_fin = [130, 50]
     pdf.tabla_encabezado(['Concepto', 'Monto (MXN)'], anchos_fin)
     pdf.tabla_fila([
-        f'Habitacion ({reservacion.noches} noche(s) x ${reservacion.habitacion.precio_por_noche})',
+        f'Habitacion ({reservacion.num_clientes} persona(s))',
         f'${reservacion.costo_habitacion}',
-    ], anchos_fin)
-    pdf.tabla_fila([
-        f'Viaje ({reservacion.num_clientes} persona(s) x ${reservacion.viaje.precio_por_persona})',
-        f'${reservacion.costo_viaje}',
     ], anchos_fin)
 
     # Fila total en negrita
