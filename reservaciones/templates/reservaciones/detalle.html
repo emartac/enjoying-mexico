@@ -68,7 +68,7 @@
           <dt class="col-sm-5">Regreso</dt>
           <dd class="col-sm-7">{{ reservacion.viaje.fecha_regreso|date:"d/m/Y" }}</dd>
           <dt class="col-sm-5">Hotel</dt>
-          <dd class="col-sm-7"><a href="{% url 'hoteles:detalle' reservacion.habitacion.hotel.pk %}">{{ reservacion.habitacion.hotel.nombre }}</a></dd>
+          <dd class="col-sm-7">{{ reservacion.habitacion.nombre_hotel }}</dd>
           <dt class="col-sm-5">Habitación</dt>
           <dd class="col-sm-7">{{ reservacion.habitacion.tipo.nombre }} #{{ reservacion.habitacion.numero }}</dd>
           <dt class="col-sm-5">Check-in</dt>

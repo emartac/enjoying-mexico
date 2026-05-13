@@ -44,6 +44,35 @@
         </div>
       </div>
 
+      <div class="card shadow-sm mb-3">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="bi bi-geo-alt me-2"></i>Puntos de abordaje</h5>
+        </div>
+        <div class="card-body">
+          {{ abordaje_formset.management_form }}
+          <table class="table table-sm">
+            <thead class="table-light">
+              <tr>
+                <th>Punto de abordaje</th>
+                <th>Hora abordaje</th>
+                <th>Hora salida</th>
+                <th>Eliminar</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for aform in abordaje_formset %}
+              <tr>
+                <td>{{ aform.punto }}{{ aform.id }}</td>
+                <td>{{ aform.hora_abordaje }}</td>
+                <td>{{ aform.hora_salida }}</td>
+                <td>{% if aform.instance.pk %}{{ aform.DELETE }}{% endif %}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <div class="d-flex gap-2">
         <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Guardar viaje</button>
         <a href="{% url 'viajes:lista' %}" class="btn btn-outline-secondary">Cancelar</a>

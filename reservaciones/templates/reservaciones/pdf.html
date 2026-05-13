@@ -45,8 +45,7 @@
 
 <div class="section">
   <div class="section-title">Alojamiento</div>
-  <div class="row-info"><span class="label">Hotel:</span><span class="value">{{ reservacion.habitacion.hotel.nombre }}</span></div>
-  <div class="row-info"><span class="label">Ciudad:</span><span class="value">{{ reservacion.habitacion.hotel.ciudad }}, {{ reservacion.habitacion.hotel.pais }}</span></div>
+  <div class="row-info"><span class="label">Hotel:</span><span class="value">{{ reservacion.habitacion.nombre_hotel }}</span></div>
   <div class="row-info"><span class="label">Habitación:</span><span class="value">{{ reservacion.habitacion.tipo.nombre }} — N° {{ reservacion.habitacion.numero }}</span></div>
   <div class="row-info"><span class="label">Check-in:</span><span class="value">{{ reservacion.fecha_checkin|date:"d/m/Y" }}</span></div>
   <div class="row-info"><span class="label">Check-out:</span><span class="value">{{ reservacion.fecha_checkout|date:"d/m/Y" }}</span></div>

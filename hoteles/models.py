@@ -1,24 +1,5 @@
 from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator
-
-
-class Hotel(models.Model):
-    nombre = models.CharField('Nombre', max_length=200)
-    direccion = models.TextField('Dirección')
-    ciudad = models.CharField('Ciudad', max_length=100)
-    telefono = models.CharField('Teléfono', max_length=25, blank=True)
-    email = models.EmailField('Correo electrónico', blank=True)
-    sitio_web = models.URLField('Sitio web', blank=True)
-    descripcion = models.TextField('Descripción', blank=True)
-    activo = models.BooleanField('Activo', default=True)
-
-    class Meta:
-        verbose_name = 'Hotel'
-        verbose_name_plural = 'Hoteles'
-        ordering = ['nombre']
-
-    def __str__(self):
-        return f'{self.nombre} — {self.ciudad}'
+from django.core.validators import MinValueValidator
 
 
 class TipoHabitacion(models.Model):
@@ -36,7 +17,7 @@ class TipoHabitacion(models.Model):
 
 
 class Habitacion(models.Model):
-    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='habitaciones', verbose_name='Hotel')
+    nombre_hotel = models.CharField('Hotel', max_length=200)
     tipo = models.ForeignKey(TipoHabitacion, on_delete=models.PROTECT, verbose_name='Tipo de habitación')
     numero = models.CharField('Número / Identificador', max_length=20)
     num_camas = models.PositiveIntegerField('Número de camas', default=1)
@@ -46,8 +27,7 @@ class Habitacion(models.Model):
     class Meta:
         verbose_name = 'Habitación'
         verbose_name_plural = 'Habitaciones'
-        ordering = ['hotel', 'numero']
-        unique_together = ['hotel', 'numero']
+        ordering = ['nombre_hotel', 'numero']
 
     def __str__(self):
-        return f'Hab. {self.numero} — {self.tipo.nombre} | {self.hotel.nombre}'
+        return f'Hab. {self.numero} — {self.tipo.nombre} | {self.nombre_hotel}'

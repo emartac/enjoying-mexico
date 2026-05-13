@@ -52,9 +52,10 @@ class Reservacion(models.Model):
         try:
             vh = ViajeHabitacion.objects.get(viaje=self.viaje, habitacion=self.habitacion)
             titular = self.clientes_reservacion.filter(es_titular=True).select_related('cliente').first()
+            num_personas = self.clientes_reservacion.count() or 1
             if titular and titular.cliente.viajero_frecuente and vh.precio_frecuente is not None:
-                return vh.precio_frecuente
-            return vh.precio_total
+                return vh.precio_frecuente * num_personas
+            return vh.precio_total * num_personas
         except ViajeHabitacion.DoesNotExist:
             return 0
 

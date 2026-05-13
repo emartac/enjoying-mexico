@@ -91,7 +91,7 @@
         <tr>
           <td><a href="{% url 'reservaciones:detalle' res.pk %}">{{ res.codigo }}</a></td>
           <td>{{ res.viaje.nombre }}</td>
-          <td>{{ res.habitacion.hotel.nombre }}</td>
+          <td>{{ res.habitacion.nombre_hotel }}</td>
           <td>{{ res.habitacion.tipo.nombre }} #{{ res.habitacion.numero }}</td>
           <td>{{ res.fecha_checkin|date:"d/m/Y" }}</td>
           <td>{{ res.fecha_checkout|date:"d/m/Y" }}</td>

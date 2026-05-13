@@ -43,13 +43,10 @@
 
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-            <i class="bi bi-building me-1"></i>Hoteles
+            <i class="bi bi-building me-1"></i>Habitaciones
           </a>
           <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="{% url 'hoteles:lista' %}"><i class="bi bi-list me-2"></i>Lista de hoteles</a></li>
-            <li><a class="dropdown-item" href="{% url 'hoteles:crear' %}"><i class="bi bi-plus-circle me-2"></i>Nuevo hotel</a></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="{% url 'hoteles:habitaciones_lista' %}"><i class="bi bi-door-open me-2"></i>Habitaciones</a></li>
+            <li><a class="dropdown-item" href="{% url 'hoteles:habitaciones_lista' %}"><i class="bi bi-door-open me-2"></i>Lista de habitaciones</a></li>
             <li><a class="dropdown-item" href="{% url 'hoteles:habitaciones_crear' %}"><i class="bi bi-plus-circle me-2"></i>Nueva habitación</a></li>
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="{% url 'hoteles:tipos_lista' %}"><i class="bi bi-tags me-2"></i>Tipos de habitación</a></li>

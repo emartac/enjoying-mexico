@@ -10,18 +10,16 @@
 <div class="card shadow-sm mb-3">
   <div class="card-body py-2">
     <form class="row g-2 align-items-center" method="get">
+      <div class="col-md-6">
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-search"></i></span>
+          <input type="text" name="q" class="form-control" placeholder="Buscar por hotel o número…" value="{{ q }}">
+        </div>
+      </div>
       <div class="col-auto">
-        <label class="col-form-label">Filtrar por hotel:</label>
+        <button class="btn btn-outline-primary" type="submit">Buscar</button>
+        {% if q %}<a href="{% url 'hoteles:habitaciones_lista' %}" class="btn btn-outline-secondary ms-1">Limpiar</a>{% endif %}
       </div>
-      <div class="col-md-5">
-        <select name="hotel" class="form-select" onchange="this.form.submit()">
-          <option value="">— Todos los hoteles —</option>
-          {% for hotel in hoteles %}
-          <option value="{{ hotel.pk }}" {% if hotel_sel == hotel.pk|stringformat:"s" %}selected{% endif %}>{{ hotel.nombre }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      {% if hotel_sel %}<div class="col-auto"><a href="{% url 'hoteles:habitaciones_lista' %}" class="btn btn-outline-secondary btn-sm">Limpiar</a></div>{% endif %}
     </form>
   </div>
 </div>
@@ -34,8 +32,7 @@
           <th>Hotel</th>
           <th>Número</th>
           <th>Tipo</th>
-          <th>Capacidad</th>
-          <th>Precio/noche</th>
+          <th>Camas</th>
           <th>Disponible</th>
           <th></th>
         </tr>
@@ -43,11 +40,10 @@
       <tbody>
         {% for hab in habitaciones %}
         <tr>
-          <td><a href="{% url 'hoteles:detalle' hab.hotel.pk %}">{{ hab.hotel.nombre }}</a></td>
+          <td>{{ hab.nombre_hotel }}</td>
           <td>{{ hab.numero }}</td>
           <td>{{ hab.tipo.nombre }}</td>
-          <td>{{ hab.tipo.capacidad }} persona(s)</td>
-          <td>${{ hab.precio_por_noche }}</td>
+          <td>{{ hab.num_camas }}</td>
           <td>{% if hab.disponible %}<span class="badge bg-success">Sí</span>{% else %}<span class="badge bg-warning text-dark">No</span>{% endif %}</td>
           <td class="text-end">
             <a href="{% url 'hoteles:habitaciones_editar' hab.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
@@ -55,7 +51,7 @@
           </td>
         </tr>
         {% empty %}
-        <tr><td colspan="7" class="text-center text-muted py-4">No se encontraron habitaciones.</td></tr>
+        <tr><td colspan="6" class="text-center text-muted py-4">No se encontraron habitaciones.</td></tr>
         {% endfor %}
       </tbody>
     </table>

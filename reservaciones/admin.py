@@ -17,7 +17,7 @@ class PagoInline(admin.TabularInline):
 @admin.register(Reservacion)
 class ReservacionAdmin(admin.ModelAdmin):
     list_display = ['codigo', 'viaje', 'habitacion', 'estado', 'fecha_checkin', 'fecha_checkout', 'creado']
-    list_filter = ['estado', 'viaje', 'habitacion__hotel']
+    list_filter = ['estado', 'viaje']
     search_fields = ['codigo', 'viaje__nombre', 'clientes__nombre', 'clientes__apellido']
     readonly_fields = ['codigo', 'creado', 'actualizado']
     inlines = [ClienteReservacionInline, PagoInline]

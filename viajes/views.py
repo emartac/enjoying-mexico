@@ -5,7 +5,7 @@ from django.urls import reverse_lazy, reverse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
 from .models import Viaje, ViajeHabitacion
-from .forms import ViajeForm, PrecioFormSet, HabitacionFormSet, ViajeHabitacionForm
+from .forms import ViajeForm, HabitacionFormSet, ViajeHabitacionForm, PuntoAbordajeFormSet
 
 
 class ViajeListView(LoginRequiredMixin, ListView):
@@ -41,18 +41,19 @@ class ViajeDetailView(LoginRequiredMixin, DetailView):
         ctx = super().get_context_data(**kwargs)
 
         ctx['reservaciones'] = self.object.reservaciones.select_related(
-            'habitacion__hotel', 'habitacion__tipo'
+            'habitacion__tipo'
         ).order_by('-creado')
 
         ctx['viajeros'] = (
             ClienteReservacion.objects
             .filter(reservacion__viaje=self.object)
             .exclude(reservacion__estado='cancelada')
-            .select_related('cliente', 'reservacion', 'reservacion__habitacion__hotel', 'reservacion__habitacion__tipo')
+            .select_related('cliente', 'reservacion', 'reservacion__habitacion__tipo')
             .order_by('reservacion__codigo', 'cliente__apellido')
         )
 
-        # Habitaciones agrupadas por tipo
+        ctx['puntos_abordaje'] = self.object.puntos_abordaje.all()
+
         habitaciones_reservadas = set(
             self.object.reservaciones
             .exclude(estado='cancelada')
@@ -63,7 +64,7 @@ class ViajeDetailView(LoginRequiredMixin, DetailView):
         })
         viaje_habs = (
             self.object.viaje_habitaciones
-            .select_related('habitacion__tipo', 'habitacion__hotel')
+            .select_related('habitacion__tipo')
             .order_by('habitacion__tipo__nombre')
         )
         for vh in viaje_habs:
@@ -90,15 +91,19 @@ class ViajeCreateView(LoginRequiredMixin, CreateView):
         ctx = super().get_context_data(**kwargs)
         ctx['titulo'] = 'Nuevo viaje'
         ctx['habitacion_formset'] = HabitacionFormSet(self.request.POST or None, prefix='habitaciones')
+        ctx['abordaje_formset'] = PuntoAbordajeFormSet(self.request.POST or None, prefix='abordaje')
         return ctx
 
     def form_valid(self, form):
         ctx = self.get_context_data()
         habitacion_formset = ctx['habitacion_formset']
-        if habitacion_formset.is_valid():
+        abordaje_formset = ctx['abordaje_formset']
+        if habitacion_formset.is_valid() and abordaje_formset.is_valid():
             self.object = form.save()
             habitacion_formset.instance = self.object
             habitacion_formset.save()
+            abordaje_formset.instance = self.object
+            abordaje_formset.save()
             messages.success(self.request, 'Viaje creado exitosamente.')
             return super().form_valid(form)
         return self.form_invalid(form)
@@ -116,15 +121,19 @@ class ViajeUpdateView(LoginRequiredMixin, UpdateView):
         ctx = super().get_context_data(**kwargs)
         ctx['titulo'] = f'Editar viaje: {self.object.nombre}'
         ctx['habitacion_formset'] = HabitacionFormSet(self.request.POST or None, instance=self.object, prefix='habitaciones')
+        ctx['abordaje_formset'] = PuntoAbordajeFormSet(self.request.POST or None, instance=self.object, prefix='abordaje')
         return ctx
 
     def form_valid(self, form):
         ctx = self.get_context_data()
         habitacion_formset = ctx['habitacion_formset']
-        if habitacion_formset.is_valid():
+        abordaje_formset = ctx['abordaje_formset']
+        if habitacion_formset.is_valid() and abordaje_formset.is_valid():
             self.object = form.save()
             habitacion_formset.instance = self.object
             habitacion_formset.save()
+            abordaje_formset.instance = self.object
+            abordaje_formset.save()
             messages.success(self.request, 'Viaje actualizado.')
             return super().form_valid(form)
         return self.form_invalid(form)
@@ -140,9 +149,9 @@ class ViajeHabitacionesView(LoginRequiredMixin, DetailView):
         reservaciones = (
             self.object.reservaciones
             .exclude(estado='cancelada')
-            .select_related('habitacion__hotel', 'habitacion__tipo')
+            .select_related('habitacion__tipo')
             .prefetch_related('clientes_reservacion__cliente')
-            .order_by('habitacion__hotel__nombre', 'habitacion__numero')
+            .order_by('habitacion__nombre_hotel', 'habitacion__numero')
         )
         habitaciones = []
         for res in reservaciones:
@@ -172,20 +181,14 @@ class ViajeHabitacionAgregarView(LoginRequiredMixin, CreateView):
         self.viaje = get_object_or_404(Viaje, pk=kwargs['pk'])
 
     def get_form_kwargs(self):
-        from hoteles.models import Hotel
         kwargs = super().get_form_kwargs()
         kwargs['viaje'] = self.viaje
-        hotel_id = self.request.GET.get('hotel') or self.request.POST.get('hotel_filtro')
-        kwargs['hotel_id'] = int(hotel_id) if hotel_id else None
         return kwargs
 
     def get_context_data(self, **kwargs):
-        from hoteles.models import Hotel
         ctx = super().get_context_data(**kwargs)
         ctx['viaje'] = self.viaje
         ctx['titulo'] = f'Agregar habitación — {self.viaje.nombre}'
-        ctx['hoteles'] = Hotel.objects.filter(activo=True).order_by('nombre')
-        ctx['hotel_sel'] = self.request.GET.get('hotel', '')
         return ctx
 
     def form_valid(self, form):
@@ -202,13 +205,13 @@ def viaje_habitacion_editar(request, pk, vh_pk):
     viaje = get_object_or_404(Viaje, pk=pk)
     vh = get_object_or_404(ViajeHabitacion, pk=vh_pk, viaje=viaje)
     if request.method == 'POST':
-        form = ViajeHabitacionForm(viaje, request.POST, instance=vh)
+        form = ViajeHabitacionForm(request.POST, instance=vh)
         if form.is_valid():
             form.save()
             messages.success(request, 'Habitación actualizada.')
             return redirect('viajes:detalle', pk=viaje.pk)
     else:
-        form = ViajeHabitacionForm(viaje, instance=vh)
+        form = ViajeHabitacionForm(instance=vh)
     return render(request, 'viajes/habitacion_form.html', {
         'form': form, 'viaje': viaje, 'titulo': f'Editar habitación — {vh.habitacion}'
     })

@@ -1,88 +1,9 @@
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.urls import reverse_lazy, reverse
+from django.urls import reverse_lazy
 from django.contrib import messages
-from .models import Hotel, TipoHabitacion, Habitacion
-from .forms import HotelForm, TipoHabitacionForm, HabitacionForm
-
-
-class HotelListView(LoginRequiredMixin, ListView):
-    model = Hotel
-    template_name = 'hoteles/lista.html'
-    context_object_name = 'hoteles'
-
-    def get_queryset(self):
-        qs = super().get_queryset()
-        q = self.request.GET.get('q', '').strip()
-        if q:
-            qs = qs.filter(nombre__icontains=q) | qs.filter(ciudad__icontains=q)
-        return qs
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx['q'] = self.request.GET.get('q', '')
-        return ctx
-
-
-class HotelDetailView(LoginRequiredMixin, DetailView):
-    model = Hotel
-    template_name = 'hoteles/detalle.html'
-    context_object_name = 'hotel'
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx['habitaciones'] = self.object.habitaciones.select_related('tipo').order_by('numero')
-        return ctx
-
-
-class HotelCreateView(LoginRequiredMixin, CreateView):
-    model = Hotel
-    form_class = HotelForm
-    template_name = 'hoteles/formulario.html'
-    success_url = reverse_lazy('hoteles:lista')
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx['titulo'] = 'Nuevo hotel'
-        return ctx
-
-    def form_valid(self, form):
-        messages.success(self.request, 'Hotel creado exitosamente.')
-        return super().form_valid(form)
-
-
-class HotelUpdateView(LoginRequiredMixin, UpdateView):
-    model = Hotel
-    form_class = HotelForm
-    template_name = 'hoteles/formulario.html'
-
-    def get_success_url(self):
-        return reverse('hoteles:detalle', kwargs={'pk': self.object.pk})
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx['titulo'] = f'Editar hotel: {self.object.nombre}'
-        return ctx
-
-    def form_valid(self, form):
-        messages.success(self.request, 'Hotel actualizado.')
-        return super().form_valid(form)
-
-
-class HotelDeleteView(LoginRequiredMixin, DeleteView):
-    model = Hotel
-    template_name = 'hoteles/confirmar_eliminar.html'
-    success_url = reverse_lazy('hoteles:lista')
-    context_object_name = 'objeto'
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx['titulo'] = f'Eliminar hotel: {self.object.nombre}'
-        return ctx
-
-    def form_valid(self, form):
-        messages.success(self.request, 'Hotel eliminado.')
-        return super().form_valid(form)
+from .models import TipoHabitacion, Habitacion
+from .forms import TipoHabitacionForm, HabitacionForm
 
 
 class TipoHabitacionListView(LoginRequiredMixin, ListView):
@@ -141,16 +62,15 @@ class HabitacionListView(LoginRequiredMixin, ListView):
     context_object_name = 'habitaciones'
 
     def get_queryset(self):
-        qs = super().get_queryset().select_related('hotel', 'tipo')
-        hotel_id = self.request.GET.get('hotel')
-        if hotel_id:
-            qs = qs.filter(hotel_id=hotel_id)
+        qs = super().get_queryset().select_related('tipo')
+        q = self.request.GET.get('q', '').strip()
+        if q:
+            qs = qs.filter(nombre_hotel__icontains=q) | qs.filter(numero__icontains=q)
         return qs
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['hoteles'] = Hotel.objects.filter(activo=True)
-        ctx['hotel_sel'] = self.request.GET.get('hotel', '')
+        ctx['q'] = self.request.GET.get('q', '')
         return ctx
 
 

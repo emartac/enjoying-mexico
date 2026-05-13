@@ -1,34 +1,7 @@
 from django import forms
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Row, Column, Submit, ButtonHolder
-from .models import Hotel, TipoHabitacion, Habitacion
-
-
-class HotelForm(forms.ModelForm):
-    class Meta:
-        model = Hotel
-        fields = ['nombre', 'ciudad', 'direccion', 'telefono', 'email', 'sitio_web', 'descripcion', 'activo']
-        widgets = {
-            'descripcion': forms.Textarea(attrs={'rows': 3}),
-            'direccion': forms.Textarea(attrs={'rows': 2}),
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.layout = Layout(
-            'nombre',
-            'ciudad',
-            'direccion',
-            Row(
-                Column('telefono', css_class='col-md-4'),
-                Column('email', css_class='col-md-4'),
-                Column('sitio_web', css_class='col-md-4'),
-            ),
-            'descripcion',
-            'activo',
-            ButtonHolder(Submit('submit', 'Guardar hotel', css_class='btn btn-primary')),
-        )
+from .models import TipoHabitacion, Habitacion
 
 
 class TipoHabitacionForm(forms.ModelForm):
@@ -55,7 +28,7 @@ class TipoHabitacionForm(forms.ModelForm):
 class HabitacionForm(forms.ModelForm):
     class Meta:
         model = Habitacion
-        fields = ['hotel', 'tipo', 'numero', 'num_camas', 'descripcion', 'disponible']
+        fields = ['nombre_hotel', 'tipo', 'numero', 'num_camas', 'descripcion', 'disponible']
         widgets = {
             'descripcion': forms.Textarea(attrs={'rows': 2}),
         }
@@ -65,7 +38,7 @@ class HabitacionForm(forms.ModelForm):
         self.helper = FormHelper()
         self.helper.layout = Layout(
             Row(
-                Column('hotel', css_class='col-md-6'),
+                Column('nombre_hotel', css_class='col-md-6'),
                 Column('tipo', css_class='col-md-6'),
             ),
             Row(

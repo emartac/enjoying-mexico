@@ -2,7 +2,7 @@ from django import forms
 from django.forms import inlineformset_factory
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Row, Column, Submit, ButtonHolder
-from .models import Viaje, ViajeHabitacion, ViajeHabitacionPrecio
+from .models import Viaje, ViajeHabitacion, ViajeHabitacionPrecio, PuntoAbordaje
 
 
 class ViajeForm(forms.ModelForm):
@@ -38,6 +38,18 @@ class ViajeForm(forms.ModelForm):
         )
 
 
+PuntoAbordajeFormSet = inlineformset_factory(
+    Viaje,
+    PuntoAbordaje,
+    fields=['punto', 'hora_abordaje', 'hora_salida'],
+    extra=1,
+    can_delete=True,
+    widgets={
+        'hora_abordaje': forms.TimeInput(attrs={'type': 'time'}),
+        'hora_salida': forms.TimeInput(attrs={'type': 'time'}),
+    },
+)
+
 PrecioFormSet = inlineformset_factory(
     Viaje,
     ViajeHabitacionPrecio,
@@ -46,22 +58,21 @@ PrecioFormSet = inlineformset_factory(
     can_delete=True,
 )
 
+
 class ViajeHabitacionForm(forms.ModelForm):
     class Meta:
         model = ViajeHabitacion
         fields = ['habitacion', 'precio_total', 'precio_frecuente']
 
-    def __init__(self, viaje=None, hotel_id=None, *args, **kwargs):
+    def __init__(self, viaje=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         from hoteles.models import Habitacion
-        qs = Habitacion.objects.select_related('hotel', 'tipo').order_by('hotel__nombre', 'numero')
+        qs = Habitacion.objects.select_related('tipo').order_by('nombre_hotel', 'numero')
         if viaje and not self.instance.pk:
             ya_asignadas = viaje.viaje_habitaciones.values_list('habitacion_id', flat=True)
             qs = qs.exclude(pk__in=ya_asignadas)
-        if hotel_id:
-            qs = qs.filter(hotel_id=hotel_id)
         self.fields['habitacion'].queryset = qs
-        self.fields['habitacion'].label_from_instance = lambda h: f'Hab. {h.numero} — {h.tipo.nombre} ({h.num_camas} cama(s))'
+        self.fields['habitacion'].label_from_instance = lambda h: f'{h.nombre_hotel} — Hab. {h.numero} ({h.tipo.nombre}, {h.num_camas} cama(s))'
         self.helper = FormHelper()
         self.helper.layout = Layout(
             'habitacion',

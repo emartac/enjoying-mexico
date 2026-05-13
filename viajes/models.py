@@ -66,6 +66,21 @@ class ViajeHabitacion(models.Model):
         return f'{self.habitacion} — ${self.precio_total}'
 
 
+class PuntoAbordaje(models.Model):
+    viaje = models.ForeignKey(Viaje, on_delete=models.CASCADE, related_name='puntos_abordaje')
+    punto = models.CharField('Punto de abordaje', max_length=200)
+    hora_abordaje = models.TimeField('Hora de abordaje')
+    hora_salida = models.TimeField('Hora de salida')
+
+    class Meta:
+        verbose_name = 'Punto de abordaje'
+        verbose_name_plural = 'Puntos de abordaje'
+        ordering = ['hora_abordaje']
+
+    def __str__(self):
+        return f'{self.punto} — {self.hora_abordaje:%H:%M}'
+
+
 class ViajeHabitacionPrecio(models.Model):
     viaje = models.ForeignKey(Viaje, on_delete=models.CASCADE, related_name='precios')
     tipo_habitacion = models.ForeignKey(
