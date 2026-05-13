@@ -1,4 +1,5 @@
 import uuid
+import unicodedata
 from django.db import models
 from django.db.models import Sum
 from django.core.validators import MinValueValidator
@@ -9,6 +10,13 @@ from viajes.models import Viaje
 
 def _generar_codigo():
     return f'RES-{uuid.uuid4().hex[:8].upper()}'
+
+
+def _slug_destino(destino):
+    nfkd = unicodedata.normalize('NFKD', destino)
+    ascii_str = nfkd.encode('ASCII', 'ignore').decode('ASCII')
+    letras = ''.join(c for c in ascii_str if c.isalpha())[:3].upper()
+    return letras or 'RES'
 
 
 class Reservacion(models.Model):
@@ -42,6 +50,22 @@ class Reservacion(models.Model):
 
     def __str__(self):
         return f'{self.codigo} — {self.viaje.destino}'
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            try:
+                viaje = self.viaje
+                slug = _slug_destino(viaje.destino)
+                fecha = viaje.fecha_salida.strftime('%d%m')
+                for _ in range(5):
+                    sufijo = uuid.uuid4().hex[:4].upper()
+                    codigo = f'{slug}-{fecha}-{sufijo}'
+                    if not Reservacion.objects.filter(codigo=codigo).exists():
+                        self.codigo = codigo
+                        break
+            except Exception:
+                pass
+        super().save(*args, **kwargs)
 
     @property
     def noches(self):
