@@ -8,7 +8,7 @@ from .models import Viaje, ViajeHabitacion, ViajeHabitacionPrecio, PuntoAbordaje
 class ViajeForm(forms.ModelForm):
     class Meta:
         model = Viaje
-        fields = ['nombre', 'destino', 'fecha_salida', 'fecha_regreso', 'capacidad_maxima', 'incluye', 'descripcion', 'activo']
+        fields = ['nombre', 'destino', 'fecha_salida', 'fecha_regreso', 'capacidad_maxima', 'precio_por_persona', 'precio_frecuente', 'incluye', 'descripcion', 'activo']
         widgets = {
             'fecha_salida': forms.DateInput(attrs={'type': 'date'}),
             'fecha_regreso': forms.DateInput(attrs={'type': 'date'}),
@@ -30,6 +30,10 @@ class ViajeForm(forms.ModelForm):
                 Column('fecha_salida', css_class='col-md-4'),
                 Column('fecha_regreso', css_class='col-md-4'),
                 Column('activo', css_class='col-md-4 d-flex align-items-center pt-3'),
+            ),
+            Row(
+                Column('precio_por_persona', css_class='col-md-6'),
+                Column('precio_frecuente', css_class='col-md-6'),
             ),
             Row(
                 Column('incluye', css_class='col-md-6'),

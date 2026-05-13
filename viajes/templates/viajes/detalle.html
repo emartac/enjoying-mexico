@@ -24,6 +24,13 @@
           <dt class="col-sm-6">Duración</dt><dd class="col-sm-6">{{ viaje.duracion_dias }} día(s)</dd>
           <dt class="col-sm-6">Estado</dt>
           <dd class="col-sm-6">{% if viaje.activo %}<span class="badge bg-success">Activo</span>{% else %}<span class="badge bg-secondary">Inactivo</span>{% endif %}</dd>
+          {% if viaje.precio_por_persona %}
+          <dt class="col-sm-6">Precio por persona</dt><dd class="col-sm-6">${{ viaje.precio_por_persona }}</dd>
+          {% endif %}
+          {% if viaje.precio_frecuente %}
+          <dt class="col-sm-6">Precio frecuente</dt>
+          <dd class="col-sm-6"><span class="fw-bold">${{ viaje.precio_frecuente }}</span></dd>
+          {% endif %}
         </dl>
         {% if viaje.incluye %}
         <hr>

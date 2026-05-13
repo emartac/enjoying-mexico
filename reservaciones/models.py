@@ -56,6 +56,12 @@ class Reservacion(models.Model):
         if self.precio_personalizado is not None:
             return self.precio_personalizado
         if not self.habitacion_id:
+            num_personas = self.clientes_reservacion.count() or 1
+            titular = self.clientes_reservacion.filter(es_titular=True).select_related('cliente').first()
+            if titular and titular.cliente.viajero_frecuente and self.viaje.precio_frecuente is not None:
+                return self.viaje.precio_frecuente * num_personas
+            if self.viaje.precio_por_persona:
+                return self.viaje.precio_por_persona * num_personas
             return 0
         from viajes.models import ViajeHabitacion
         try:

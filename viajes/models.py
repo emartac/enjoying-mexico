@@ -9,8 +9,12 @@ class Viaje(models.Model):
     fecha_salida = models.DateField('Fecha de salida')
     fecha_regreso = models.DateField('Fecha de regreso')
     precio_por_persona = models.DecimalField(
-        'Precio base por persona (MXN)', max_digits=10, decimal_places=2,
+        'Precio por persona (MXN)', max_digits=10, decimal_places=2,
         validators=[MinValueValidator(0)], default=0,
+    )
+    precio_frecuente = models.DecimalField(
+        'Precio viajero frecuente por persona (MXN)', max_digits=10, decimal_places=2,
+        null=True, blank=True, validators=[MinValueValidator(0)],
     )
     incluye = models.TextField('¿Qué incluye?', blank=True, help_text='Lista de servicios incluidos')
     capacidad_maxima = models.PositiveIntegerField('Capacidad máxima de viajeros', default=0)

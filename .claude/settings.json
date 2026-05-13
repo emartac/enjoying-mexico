@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "PowerShell($env:PATH = $env:PATH + \";C:\\\\Program Files\\\\Git\\\\cmd\"; Set-Location c:\\\\Users\\\\Edgar\\\\turismo; git add -A; git commit -m \"Allow reservations without room for day trips\"; git push origin main 2>&1)"
+      "PowerShell($env:PATH = $env:PATH + \";C:\\\\Program Files\\\\Git\\\\cmd\"; Set-Location c:\\\\Users\\\\Edgar\\\\turismo; git add -A; git commit -m \"Allow reservations without room for day trips\"; git push origin main 2>&1)",
+      "PowerShell($env:PATH = $env:PATH + \";C:\\\\Program Files\\\\Git\\\\cmd\"; Set-Location c:\\\\Users\\\\Edgar\\\\turismo; git add -A; git commit -m \"Add precio_frecuente to Viaje for day trips, auto-apply in costo_habitacion\"; git push origin main 2>&1)"
     ]
   }
 }
