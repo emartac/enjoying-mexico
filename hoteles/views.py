@@ -15,7 +15,7 @@ class HotelListView(LoginRequiredMixin, ListView):
         qs = super().get_queryset()
         q = self.request.GET.get('q', '').strip()
         if q:
-            qs = qs.filter(nombre__icontains=q) | qs.filter(ciudad__icontains=q) | qs.filter(pais__icontains=q)
+            qs = qs.filter(nombre__icontains=q) | qs.filter(ciudad__icontains=q)
         return qs
 
     def get_context_data(self, **kwargs):

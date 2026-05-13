@@ -21,11 +21,6 @@
       <div class="card-body">
         <dl class="row mb-0">
           <dt class="col-sm-5">Ciudad</dt><dd class="col-sm-7">{{ hotel.ciudad }}</dd>
-          <dt class="col-sm-5">País</dt><dd class="col-sm-7">{{ hotel.pais }}</dd>
-          <dt class="col-sm-5">Estrellas</dt>
-          <dd class="col-sm-7">
-            {% for i in "12345" %}{% if forloop.counter <= hotel.estrellas %}★{% else %}☆{% endif %}{% endfor %}
-          </dd>
           <dt class="col-sm-5">Dirección</dt><dd class="col-sm-7">{{ hotel.direccion }}</dd>
           {% if hotel.telefono %}<dt class="col-sm-5">Teléfono</dt><dd class="col-sm-7">{{ hotel.telefono }}</dd>{% endif %}
           {% if hotel.email %}<dt class="col-sm-5">Email</dt><dd class="col-sm-7"><a href="mailto:{{ hotel.email }}">{{ hotel.email }}</a></dd>{% endif %}
@@ -52,7 +47,7 @@
               <th>N°</th>
               <th>Tipo</th>
               <th>Capacidad</th>
-              <th>Precio/noche</th>
+
               <th>Disponible</th>
               <th></th>
             </tr>
@@ -63,7 +58,7 @@
               <td>{{ hab.numero }}</td>
               <td>{{ hab.tipo.nombre }}</td>
               <td>{{ hab.tipo.capacidad }} persona(s)</td>
-              <td>${{ hab.precio_por_noche }}</td>
+
               <td>{% if hab.disponible %}<span class="badge bg-success">Sí</span>{% else %}<span class="badge bg-warning text-dark">No</span>{% endif %}</td>
               <td class="text-end">
                 <a href="{% url 'hoteles:habitaciones_editar' hab.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>

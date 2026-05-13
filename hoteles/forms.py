@@ -7,7 +7,7 @@ from .models import Hotel, TipoHabitacion, Habitacion
 class HotelForm(forms.ModelForm):
     class Meta:
         model = Hotel
-        fields = ['nombre', 'ciudad', 'pais', 'estrellas', 'direccion', 'telefono', 'email', 'sitio_web', 'descripcion', 'activo']
+        fields = ['nombre', 'ciudad', 'direccion', 'telefono', 'email', 'sitio_web', 'descripcion', 'activo']
         widgets = {
             'descripcion': forms.Textarea(attrs={'rows': 3}),
             'direccion': forms.Textarea(attrs={'rows': 2}),
@@ -18,11 +18,7 @@ class HotelForm(forms.ModelForm):
         self.helper = FormHelper()
         self.helper.layout = Layout(
             'nombre',
-            Row(
-                Column('ciudad', css_class='col-md-5'),
-                Column('pais', css_class='col-md-5'),
-                Column('estrellas', css_class='col-md-2'),
-            ),
+            'ciudad',
             'direccion',
             Row(
                 Column('telefono', css_class='col-md-4'),

@@ -10,9 +10,9 @@ class HabitacionInline(admin.TabularInline):
 
 @admin.register(Hotel)
 class HotelAdmin(admin.ModelAdmin):
-    list_display = ['nombre', 'ciudad', 'pais', 'estrellas', 'activo']
-    search_fields = ['nombre', 'ciudad', 'pais']
-    list_filter = ['estrellas', 'activo', 'pais']
+    list_display = ['nombre', 'ciudad', 'activo']
+    search_fields = ['nombre', 'ciudad']
+    list_filter = ['activo']
     inlines = [HabitacionInline]
 
 

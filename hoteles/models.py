@@ -6,11 +6,6 @@ class Hotel(models.Model):
     nombre = models.CharField('Nombre', max_length=200)
     direccion = models.TextField('Dirección')
     ciudad = models.CharField('Ciudad', max_length=100)
-    pais = models.CharField('País', max_length=100)
-    estrellas = models.IntegerField(
-        'Estrellas', default=3,
-        validators=[MinValueValidator(1), MaxValueValidator(5)],
-    )
     telefono = models.CharField('Teléfono', max_length=25, blank=True)
     email = models.EmailField('Correo electrónico', blank=True)
     sitio_web = models.URLField('Sitio web', blank=True)
