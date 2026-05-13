@@ -24,6 +24,15 @@
           <dt class="col-sm-6">Estado</dt>
           <dd class="col-sm-6">{% if viaje.activo %}<span class="badge bg-success">Activo</span>{% else %}<span class="badge bg-secondary">Inactivo</span>{% endif %}</dd>
         </dl>
+        {% if viaje.precios.all %}
+        <hr>
+        <p class="fw-semibold mb-1">Precios por tipo de habitación:</p>
+        <ul class="list-unstyled small mb-0">
+          {% for p in viaje.precios.all %}
+          <li><i class="bi bi-tag me-1 text-primary"></i>{{ p.tipo_habitacion.nombre }}: <strong>${{ p.precio_por_persona }}</strong> p/persona</li>
+          {% endfor %}
+        </ul>
+        {% endif %}
         {% if viaje.incluye %}
         <hr>
         <p class="fw-semibold mb-1">Incluye:</p>

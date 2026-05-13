@@ -9,8 +9,8 @@ class Viaje(models.Model):
     fecha_salida = models.DateField('Fecha de salida')
     fecha_regreso = models.DateField('Fecha de regreso')
     precio_por_persona = models.DecimalField(
-        'Precio por persona (MXN)', max_digits=10, decimal_places=2,
-        validators=[MinValueValidator(0)],
+        'Precio base por persona (MXN)', max_digits=10, decimal_places=2,
+        validators=[MinValueValidator(0)], default=0,
     )
     incluye = models.TextField('¿Qué incluye?', blank=True, help_text='Lista de servicios incluidos')
     capacidad_maxima = models.PositiveIntegerField('Capacidad máxima de viajeros', default=0)
@@ -40,3 +40,22 @@ class Viaje(models.Model):
         if self.capacidad_maxima == 0:
             return None
         return self.capacidad_maxima - self.ocupacion_actual
+
+
+class ViajeHabitacionPrecio(models.Model):
+    viaje = models.ForeignKey(Viaje, on_delete=models.CASCADE, related_name='precios')
+    tipo_habitacion = models.ForeignKey(
+        'hoteles.TipoHabitacion', on_delete=models.PROTECT, verbose_name='Tipo de habitación'
+    )
+    precio_por_persona = models.DecimalField(
+        'Precio por persona (MXN)', max_digits=10, decimal_places=2,
+        validators=[MinValueValidator(0)],
+    )
+
+    class Meta:
+        verbose_name = 'Precio por tipo de habitación'
+        verbose_name_plural = 'Precios por tipo de habitación'
+        unique_together = ['viaje', 'tipo_habitacion']
+
+    def __str__(self):
+        return f'{self.viaje.nombre} — {self.tipo_habitacion.nombre}: ${self.precio_por_persona}'

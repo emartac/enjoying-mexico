@@ -52,7 +52,15 @@ class Reservacion(models.Model):
 
     @property
     def costo_viaje(self):
-        return self.num_clientes * self.viaje.precio_por_persona
+        from viajes.models import ViajeHabitacionPrecio
+        try:
+            precio = ViajeHabitacionPrecio.objects.get(
+                viaje=self.viaje,
+                tipo_habitacion=self.habitacion.tipo,
+            ).precio_por_persona
+        except ViajeHabitacionPrecio.DoesNotExist:
+            precio = self.viaje.precio_por_persona
+        return self.num_clientes * precio
 
     @property
     def total(self):
