@@ -15,6 +15,16 @@
           {% crispy form %}
         </form>
       </div>
+      <script>
+        document.addEventListener('DOMContentLoaded', function () {
+          var viajeSelect = document.getElementById('id_viaje');
+          if (viajeSelect) {
+            viajeSelect.addEventListener('change', function () {
+              if (this.value) window.location.href = '?viaje=' + this.value;
+            });
+          }
+        });
+      </script>
     </div>
     <div class="mt-2">
       <a href="{% url 'reservaciones:lista' %}" class="text-secondary"><i class="bi bi-arrow-left me-1"></i>Volver a la lista</a>

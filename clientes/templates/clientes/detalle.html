@@ -3,7 +3,10 @@
 
 {% block contenido %}
 <div class="d-flex justify-content-between align-items-center mb-3">
-  <h4><i class="bi bi-person-fill me-2"></i>{{ cliente }}</h4>
+  <h4>
+    <i class="bi bi-person-fill me-2"></i>{{ cliente }}
+    {% if cliente.viajero_frecuente %}<span class="badge bg-warning text-dark ms-2"><i class="bi bi-star-fill me-1"></i>Viajero frecuente</span>{% endif %}
+  </h4>
   <div>
     <a href="{% url 'clientes:editar' cliente.pk %}" class="btn btn-outline-secondary">
       <i class="bi bi-pencil me-1"></i>Editar
@@ -26,12 +29,6 @@
           <dd class="col-sm-7"><a href="mailto:{{ cliente.email }}">{{ cliente.email }}</a></dd>
           <dt class="col-sm-5">Teléfono</dt>
           <dd class="col-sm-7">{{ cliente.telefono }}</dd>
-          <dt class="col-sm-5">Documento</dt>
-          <dd class="col-sm-7">{{ cliente.get_tipo_documento_display }} — {{ cliente.numero_documento }}</dd>
-          <dt class="col-sm-5">Nacimiento</dt>
-          <dd class="col-sm-7">{{ cliente.fecha_nacimiento|date:"d/m/Y"|default:"—" }}</dd>
-          <dt class="col-sm-5">Nacionalidad</dt>
-          <dd class="col-sm-7">{{ cliente.nacionalidad|default:"—" }}</dd>
           <dt class="col-sm-5">Dirección</dt>
           <dd class="col-sm-7">{{ cliente.direccion|default:"—" }}</dd>
           {% if cliente.notas %}

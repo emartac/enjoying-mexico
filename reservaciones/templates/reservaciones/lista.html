@@ -40,8 +40,6 @@
           <th>Código</th>
           <th>Viaje</th>
           <th>Hotel / Habitación</th>
-          <th>Check-in</th>
-          <th>Check-out</th>
           <th>Clientes</th>
           <th>Total</th>
           <th>Estado</th>
@@ -54,8 +52,6 @@
           <td><a href="{% url 'reservaciones:detalle' res.pk %}" class="fw-semibold">{{ res.codigo }}</a></td>
           <td>{{ res.viaje.nombre }}</td>
           <td>{{ res.habitacion.hotel.nombre }}<br><small class="text-muted">{{ res.habitacion.tipo.nombre }} #{{ res.habitacion.numero }}</small></td>
-          <td>{{ res.fecha_checkin|date:"d/m/Y" }}</td>
-          <td>{{ res.fecha_checkout|date:"d/m/Y" }}</td>
           <td class="text-center">{{ res.num_clientes }}</td>
           <td>${{ res.total }}</td>
           <td><span class="badge badge-{{ res.estado }}">{{ res.get_estado_display }}</span></td>
@@ -64,7 +60,7 @@
           </td>
         </tr>
         {% empty %}
-        <tr><td colspan="9" class="text-center text-muted py-4">No se encontraron reservaciones.</td></tr>
+        <tr><td colspan="7" class="text-center text-muted py-4">No se encontraron reservaciones.</td></tr>
         {% endfor %}
       </tbody>
     </table>
