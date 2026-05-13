@@ -18,58 +18,49 @@
       </div>
 
       <div class="card shadow-sm mb-3">
-        <div class="card-header">
-          <h5 class="mb-0"><i class="bi bi-door-open me-2"></i>Habitaciones del viaje</h5>
-        </div>
-        <div class="card-body">
-          {{ habitacion_formset.management_form }}
-          <table class="table table-sm">
-            <thead class="table-light">
-              <tr>
-                <th>Habitación</th>
-                <th>Precio total del viaje (MXN)</th>
-                <th>Eliminar</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for hform in habitacion_formset %}
-              <tr>
-                <td>{{ hform.habitacion }}{{ hform.id }}</td>
-                <td>{{ hform.precio_total }}</td>
-                <td>{% if hform.instance.pk %}{{ hform.DELETE }}{% endif %}</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="card shadow-sm mb-3">
-        <div class="card-header">
+        <div class="card-header d-flex justify-content-between align-items-center">
           <h5 class="mb-0"><i class="bi bi-geo-alt me-2"></i>Puntos de abordaje</h5>
+          <button type="button" class="btn btn-sm btn-outline-primary" id="btn-agregar-punto">
+            <i class="bi bi-plus-lg me-1"></i>Agregar punto
+          </button>
         </div>
         <div class="card-body">
           {{ abordaje_formset.management_form }}
-          <table class="table table-sm">
+          <table class="table table-sm" id="tabla-abordaje">
             <thead class="table-light">
               <tr>
                 <th>Punto de abordaje</th>
-                <th>Hora abordaje</th>
-                <th>Hora salida</th>
-                <th>Eliminar</th>
+                <th style="width:140px">Hora abordaje</th>
+                <th style="width:140px">Hora salida</th>
+                <th style="width:50px"></th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="abordaje-tbody">
               {% for aform in abordaje_formset %}
-              <tr>
+              <tr class="abordaje-row">
                 <td>{{ aform.punto }}{{ aform.id }}</td>
                 <td>{{ aform.hora_abordaje }}</td>
                 <td>{{ aform.hora_salida }}</td>
-                <td>{% if aform.instance.pk %}{{ aform.DELETE }}{% endif %}</td>
+                <td>
+                  {% if aform.instance.pk %}
+                    <div class="d-none">{{ aform.DELETE }}</div>
+                    <button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-existente"
+                            data-delete-id="id_abordaje-{{ forloop.index0 }}-DELETE">
+                      <i class="bi bi-x-lg"></i>
+                    </button>
+                  {% else %}
+                    <button type="button" class="btn btn-sm btn-outline-danger btn-quitar-nuevo">
+                      <i class="bi bi-x-lg"></i>
+                    </button>
+                  {% endif %}
+                </td>
               </tr>
               {% endfor %}
             </tbody>
           </table>
+          {% if not abordaje_formset.forms %}
+          <p class="text-muted small mb-0" id="msg-vacio">Sin puntos de abordaje. Usa el botón para agregar.</p>
+          {% endif %}
         </div>
       </div>
 
@@ -80,4 +71,48 @@
     </form>
   </div>
 </div>
+
+{# Plantilla vacía para clonar con JS #}
+<template id="abordaje-empty-form">
+  <tr class="abordaje-row">
+    <td><input type="text" name="abordaje-__prefix__-punto" maxlength="200" class="form-control form-control-sm" id="id_abordaje-__prefix__-punto"></td>
+    <td><input type="time" name="abordaje-__prefix__-hora_abordaje" class="form-control form-control-sm" id="id_abordaje-__prefix__-hora_abordaje"></td>
+    <td><input type="time" name="abordaje-__prefix__-hora_salida" class="form-control form-control-sm" id="id_abordaje-__prefix__-hora_salida"></td>
+    <td><button type="button" class="btn btn-sm btn-outline-danger btn-quitar-nuevo"><i class="bi bi-x-lg"></i></button></td>
+  </tr>
+</template>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var totalForms = document.getElementById('id_abordaje-TOTAL_FORMS');
+  var tbody = document.getElementById('abordaje-tbody');
+  var msgVacio = document.getElementById('msg-vacio');
+
+  document.getElementById('btn-agregar-punto').addEventListener('click', function () {
+    var idx = parseInt(totalForms.value);
+    var tmpl = document.getElementById('abordaje-empty-form').innerHTML;
+    tmpl = tmpl.replace(/__prefix__/g, idx);
+    var tmp = document.createElement('tbody');
+    tmp.innerHTML = tmpl;
+    var newRow = tmp.firstElementChild;
+    tbody.appendChild(newRow);
+    newRow.querySelector('.btn-quitar-nuevo').addEventListener('click', function () {
+      newRow.remove();
+      totalForms.value = parseInt(totalForms.value) - 1;
+    });
+    totalForms.value = idx + 1;
+    if (msgVacio) msgVacio.style.display = 'none';
+  });
+
+  // Filas existentes: marcar DELETE en lugar de quitar del DOM
+  document.querySelectorAll('.btn-eliminar-existente').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var chk = document.getElementById(btn.dataset.deleteId);
+      if (chk) chk.checked = true;
+      btn.closest('tr').style.opacity = '0.4';
+      btn.disabled = true;
+    });
+  });
+});
+</script>
 {% endblock %}

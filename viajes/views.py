@@ -5,7 +5,7 @@ from django.urls import reverse_lazy, reverse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
 from .models import Viaje, ViajeHabitacion
-from .forms import ViajeForm, HabitacionFormSet, ViajeHabitacionForm, PuntoAbordajeFormSet
+from .forms import ViajeForm, ViajeHabitacionForm, PuntoAbordajeFormSet
 
 
 class ViajeListView(LoginRequiredMixin, ListView):
@@ -90,18 +90,14 @@ class ViajeCreateView(LoginRequiredMixin, CreateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['titulo'] = 'Nuevo viaje'
-        ctx['habitacion_formset'] = HabitacionFormSet(self.request.POST or None, prefix='habitaciones')
         ctx['abordaje_formset'] = PuntoAbordajeFormSet(self.request.POST or None, prefix='abordaje')
         return ctx
 
     def form_valid(self, form):
         ctx = self.get_context_data()
-        habitacion_formset = ctx['habitacion_formset']
         abordaje_formset = ctx['abordaje_formset']
-        if habitacion_formset.is_valid() and abordaje_formset.is_valid():
+        if abordaje_formset.is_valid():
             self.object = form.save()
-            habitacion_formset.instance = self.object
-            habitacion_formset.save()
             abordaje_formset.instance = self.object
             abordaje_formset.save()
             messages.success(self.request, 'Viaje creado exitosamente.')
@@ -120,18 +116,14 @@ class ViajeUpdateView(LoginRequiredMixin, UpdateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['titulo'] = f'Editar viaje: {self.object.nombre}'
-        ctx['habitacion_formset'] = HabitacionFormSet(self.request.POST or None, instance=self.object, prefix='habitaciones')
         ctx['abordaje_formset'] = PuntoAbordajeFormSet(self.request.POST or None, instance=self.object, prefix='abordaje')
         return ctx
 
     def form_valid(self, form):
         ctx = self.get_context_data()
-        habitacion_formset = ctx['habitacion_formset']
         abordaje_formset = ctx['abordaje_formset']
-        if habitacion_formset.is_valid() and abordaje_formset.is_valid():
+        if abordaje_formset.is_valid():
             self.object = form.save()
-            habitacion_formset.instance = self.object
-            habitacion_formset.save()
             abordaje_formset.instance = self.object
             abordaje_formset.save()
             messages.success(self.request, 'Viaje actualizado.')

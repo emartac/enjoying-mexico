@@ -42,7 +42,7 @@ PuntoAbordajeFormSet = inlineformset_factory(
     Viaje,
     PuntoAbordaje,
     fields=['punto', 'hora_abordaje', 'hora_salida'],
-    extra=1,
+    extra=0,
     can_delete=True,
     widgets={
         'hora_abordaje': forms.TimeInput(attrs={'type': 'time'}),
