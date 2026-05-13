@@ -60,7 +60,7 @@ class PagoForm(forms.ModelForm):
         model = Pago
         fields = ['monto', 'fecha', 'metodo', 'estado', 'referencia', 'notas']
         widgets = {
-            'fecha': forms.DateInput(attrs={'type': 'date'}),
+            'fecha': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
             'notas': forms.Textarea(attrs={'rows': 2}),
         }
 

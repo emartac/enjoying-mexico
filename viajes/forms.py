@@ -10,8 +10,8 @@ class ViajeForm(forms.ModelForm):
         model = Viaje
         fields = ['nombre', 'destino', 'fecha_salida', 'fecha_regreso', 'capacidad_maxima', 'precio_por_persona', 'precio_frecuente', 'incluye', 'descripcion', 'activo']
         widgets = {
-            'fecha_salida': forms.DateInput(attrs={'type': 'date'}),
-            'fecha_regreso': forms.DateInput(attrs={'type': 'date'}),
+            'fecha_salida': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
+            'fecha_regreso': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
             'descripcion': forms.Textarea(attrs={'rows': 3}),
             'incluye': forms.Textarea(attrs={'rows': 3}),
         }
