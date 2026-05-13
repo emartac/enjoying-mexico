@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem -Path \"c:\\\\Users\\\\Edgar\\\\turismo\" | Where-Object { $_.Name -ne \".venv\" } | Select-Object Name, PSIsContainer)"
+    ]
+  }
+}

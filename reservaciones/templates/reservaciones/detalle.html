@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+{% block titulo %}{{ reservacion.codigo }}{% endblock %}
+
+{% block contenido %}
+
+<!-- Encabezado -->
+<div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+  <div>
+    <h4 class="mb-0"><i class="bi bi-calendar-check me-2"></i>{{ reservacion.codigo }}</h4>
+    <p class="text-muted mb-0">{{ reservacion.viaje.nombre }} — {{ reservacion.viaje.destino }}</p>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <a href="{% url 'reservaciones:editar' reservacion.pk %}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-pencil me-1"></i>Editar
+    </a>
+    <a href="{% url 'reservaciones:pdf' reservacion.pk %}" class="btn btn-outline-dark btn-sm" target="_blank">
+      <i class="bi bi-file-earmark-pdf me-1"></i>PDF
+    </a>
+    <form method="post" action="{% url 'reservaciones:enviar_email' reservacion.pk %}" class="d-inline">
+      {% csrf_token %}
+      <button class="btn btn-outline-info btn-sm" type="submit">
+        <i class="bi bi-envelope me-1"></i>Enviar email
+      </button>
+    </form>
+    {% if reservacion.estado == 'pendiente' %}
+    <form method="post" action="{% url 'reservaciones:confirmar' reservacion.pk %}" class="d-inline">
+      {% csrf_token %}
+      <button class="btn btn-success btn-sm" type="submit"><i class="bi bi-check-circle me-1"></i>Confirmar</button>
+    </form>
+    {% endif %}
+    {% if reservacion.estado == 'confirmada' %}
+    <form method="post" action="{% url 'reservaciones:completar' reservacion.pk %}" class="d-inline">
+      {% csrf_token %}
+      <button class="btn btn-primary btn-sm" type="submit"><i class="bi bi-flag me-1"></i>Completar</button>
+    </form>
+    {% endif %}
+    {% if reservacion.estado != 'cancelada' and reservacion.estado != 'completada' %}
+    <form method="post" action="{% url 'reservaciones:cancelar' reservacion.pk %}" class="d-inline">
+      {% csrf_token %}
+      <button class="btn btn-outline-danger btn-sm" type="submit"><i class="bi bi-x-circle me-1"></i>Cancelar</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Estado actual -->
+<div class="mb-3">
+  <span class="badge badge-{{ reservacion.estado }} fs-6 px-3 py-2">{{ reservacion.get_estado_display }}</span>
+</div>
+
+<div class="row g-3">
+
+  <!-- Información de viaje y habitación -->
+  <div class="col-md-4">
+    <div class="card shadow-sm">
+      <div class="card-header"><i class="bi bi-info-circle me-1"></i>Detalle de la reservación</div>
+      <div class="card-body">
+        <dl class="row mb-0 small">
+          <dt class="col-sm-5">Viaje</dt>
+          <dd class="col-sm-7"><a href="{% url 'viajes:detalle' reservacion.viaje.pk %}">{{ reservacion.viaje.nombre }}</a></dd>
+          <dt class="col-sm-5">Destino</dt>
+          <dd class="col-sm-7">{{ reservacion.viaje.destino }}</dd>
+          <dt class="col-sm-5">Salida</dt>
+          <dd class="col-sm-7">{{ reservacion.viaje.fecha_salida|date:"d/m/Y" }}</dd>
+          <dt class="col-sm-5">Regreso</dt>
+          <dd class="col-sm-7">{{ reservacion.viaje.fecha_regreso|date:"d/m/Y" }}</dd>
+          <dt class="col-sm-5">Hotel</dt>
+          <dd class="col-sm-7"><a href="{% url 'hoteles:detalle' reservacion.habitacion.hotel.pk %}">{{ reservacion.habitacion.hotel.nombre }}</a></dd>
+          <dt class="col-sm-5">Habitación</dt>
+          <dd class="col-sm-7">{{ reservacion.habitacion.tipo.nombre }} #{{ reservacion.habitacion.numero }}</dd>
+          <dt class="col-sm-5">Check-in</dt>
+          <dd class="col-sm-7">{{ reservacion.fecha_checkin|date:"d/m/Y" }}</dd>
+          <dt class="col-sm-5">Check-out</dt>
+          <dd class="col-sm-7">{{ reservacion.fecha_checkout|date:"d/m/Y" }}</dd>
+          <dt class="col-sm-5">Noches</dt>
+          <dd class="col-sm-7">{{ reservacion.noches }}</dd>
+        </dl>
+        {% if reservacion.notas %}<hr><p class="small text-muted mb-0">{{ reservacion.notas }}</p>{% endif %}
+      </div>
+    </div>
+
+    <!-- Resumen financiero -->
+    <div class="card shadow-sm mt-3">
+      <div class="card-header"><i class="bi bi-cash-coin me-1"></i>Resumen financiero</div>
+      <div class="card-body">
+        <table class="table table-sm mb-0">
+          <tr>
+            <td>Habitación ({{ reservacion.noches }} noche(s) × ${{ reservacion.habitacion.precio_por_noche }})</td>
+            <td class="text-end">${{ reservacion.costo_habitacion }}</td>
+          </tr>
+          <tr>
+            <td>Viaje ({{ reservacion.num_clientes }} persona(s) × ${{ reservacion.viaje.precio_por_persona }})</td>
+            <td class="text-end">${{ reservacion.costo_viaje }}</td>
+          </tr>
+          <tr class="fw-bold">
+            <td>Total</td>
+            <td class="text-end">${{ reservacion.total }}</td>
+          </tr>
+          <tr class="text-success">
+            <td>Total pagado</td>
+            <td class="text-end">${{ reservacion.total_pagado }}</td>
+          </tr>
+          <tr class="{% if reservacion.saldo_pendiente > 0 %}text-danger{% else %}text-success{% endif %} fw-semibold">
+            <td>Saldo pendiente</td>
+            <td class="text-end">${{ reservacion.saldo_pendiente }}</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Clientes -->
+  <div class="col-md-4">
+    <div class="card shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-people me-1"></i>Clientes ({{ reservacion.num_clientes }}/{{ reservacion.habitacion.tipo.capacidad }})</span>
+      </div>
+      <ul class="list-group list-group-flush">
+        {% for cr in clientes_res %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <a href="{% url 'clientes:detalle' cr.cliente.pk %}">{{ cr.cliente }}</a>
+            {% if cr.es_titular %}<span class="badge bg-primary ms-1">Titular</span>{% endif %}
+            <br><small class="text-muted">{{ cr.cliente.email }}</small>
+          </div>
+          <div class="d-flex gap-1">
+            {% if not cr.es_titular %}
+            <form method="post" action="{% url 'reservaciones:marcar_titular' reservacion.pk cr.pk %}">
+              {% csrf_token %}
+              <button class="btn btn-xs btn-outline-primary" title="Marcar como titular" style="font-size:.7rem;padding:2px 6px">
+                <i class="bi bi-star"></i>
+              </button>
+            </form>
+            {% endif %}
+            <form method="post" action="{% url 'reservaciones:remover_cliente' reservacion.pk cr.pk %}">
+              {% csrf_token %}
+              <button class="btn btn-xs btn-outline-danger" title="Remover" style="font-size:.7rem;padding:2px 6px"
+                onclick="return confirm('¿Remover a {{ cr.cliente }} de esta reservación?')">
+                <i class="bi bi-x-lg"></i>
+              </button>
+            </form>
+          </div>
+        </li>
+        {% empty %}
+        <li class="list-group-item text-muted text-center py-3">Sin clientes asignados.</li>
+        {% endfor %}
+      </ul>
+      {% if reservacion.num_clientes < reservacion.habitacion.tipo.capacidad %}
+      <div class="card-footer">
+        <p class="small fw-semibold mb-2">Agregar cliente:</p>
+        <form method="post" action="{% url 'reservaciones:agregar_cliente' reservacion.pk %}">
+          {% csrf_token %}
+          {% load crispy_forms_tags %}
+          {% crispy agregar_form %}
+          <button type="submit" class="btn btn-success btn-sm w-100 mt-1">
+            <i class="bi bi-person-plus me-1"></i>Agregar
+          </button>
+        </form>
+      </div>
+      {% else %}
+      <div class="card-footer text-muted small text-center">
+        <i class="bi bi-info-circle me-1"></i>Capacidad máxima alcanzada ({{ reservacion.habitacion.tipo.capacidad }} persona(s)).
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Pagos -->
+  <div class="col-md-4">
+    <div class="card shadow-sm">
+      <div class="card-header"><i class="bi bi-credit-card me-1"></i>Pagos</div>
+      <ul class="list-group list-group-flush">
+        {% for pago in pagos %}
+        <li class="list-group-item">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <span class="fw-semibold">${{ pago.monto }}</span>
+              <span class="text-muted ms-1 small">{{ pago.get_metodo_display }}</span><br>
+              <small class="text-muted">{{ pago.fecha|date:"d/m/Y" }} — {{ pago.get_estado_display }}</small>
+              {% if pago.referencia %}<br><small class="text-muted">Ref: {{ pago.referencia }}</small>{% endif %}
+            </div>
+            <div class="d-flex gap-1">
+              <a href="{% url 'reservaciones:pago_editar' reservacion.pk pago.pk %}" class="btn btn-xs btn-outline-secondary" style="font-size:.7rem;padding:2px 6px"><i class="bi bi-pencil"></i></a>
+              <form method="post" action="{% url 'reservaciones:pago_eliminar' reservacion.pk pago.pk %}" class="d-inline">
+                {% csrf_token %}
+                <button class="btn btn-xs btn-outline-danger" style="font-size:.7rem;padding:2px 6px"
+                  onclick="return confirm('¿Eliminar este pago?')"><i class="bi bi-trash"></i></button>
+              </form>
+            </div>
+          </div>
+        </li>
+        {% empty %}
+        <li class="list-group-item text-muted text-center py-3">Sin pagos registrados.</li>
+        {% endfor %}
+      </ul>
+      <div class="card-footer">
+        <a href="{% url 'reservaciones:pago_crear' reservacion.pk %}" class="btn btn-success btn-sm w-100">
+          <i class="bi bi-plus-lg me-1"></i>Registrar pago
+        </a>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

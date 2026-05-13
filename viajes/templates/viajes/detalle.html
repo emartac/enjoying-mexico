@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block titulo %}{{ viaje.nombre }}{% endblock %}
+
+{% block contenido %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4><i class="bi bi-map me-2"></i>{{ viaje.nombre }}</h4>
+  <div>
+    <a href="{% url 'viajes:editar' viaje.pk %}" class="btn btn-outline-secondary"><i class="bi bi-pencil me-1"></i>Editar</a>
+    <a href="{% url 'viajes:eliminar' viaje.pk %}" class="btn btn-outline-danger ms-1"><i class="bi bi-trash me-1"></i>Eliminar</a>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-md-4">
+    <div class="card shadow-sm">
+      <div class="card-header"><i class="bi bi-info-circle me-1"></i>Detalles</div>
+      <div class="card-body">
+        <dl class="row mb-0">
+          <dt class="col-sm-6">Destino</dt><dd class="col-sm-6">{{ viaje.destino }}</dd>
+          <dt class="col-sm-6">Fecha salida</dt><dd class="col-sm-6">{{ viaje.fecha_salida|date:"d/m/Y" }}</dd>
+          <dt class="col-sm-6">Fecha regreso</dt><dd class="col-sm-6">{{ viaje.fecha_regreso|date:"d/m/Y" }}</dd>
+          <dt class="col-sm-6">Duración</dt><dd class="col-sm-6">{{ viaje.duracion_dias }} día(s)</dd>
+          <dt class="col-sm-6">Precio p/persona</dt><dd class="col-sm-6">${{ viaje.precio_por_persona }}</dd>
+          <dt class="col-sm-6">Estado</dt>
+          <dd class="col-sm-6">{% if viaje.activo %}<span class="badge bg-success">Activo</span>{% else %}<span class="badge bg-secondary">Inactivo</span>{% endif %}</dd>
+        </dl>
+        {% if viaje.incluye %}
+        <hr>
+        <p class="fw-semibold mb-1">Incluye:</p>
+        <p class="text-muted small mb-0">{{ viaje.incluye|linebreaksbr }}</p>
+        {% endif %}
+        {% if viaje.descripcion %}
+        <hr>
+        <p class="text-muted small mb-0">{{ viaje.descripcion }}</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-8">
+    <div class="card shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-calendar-check me-1"></i>Reservaciones de este viaje</span>
+        <a href="{% url 'reservaciones:crear' %}" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg me-1"></i>Nueva</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Código</th>
+              <th>Hotel</th>
+              <th>Habitación</th>
+              <th>Check-in</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for res in reservaciones %}
+            <tr>
+              <td><a href="{% url 'reservaciones:detalle' res.pk %}">{{ res.codigo }}</a></td>
+              <td>{{ res.habitacion.hotel.nombre }}</td>
+              <td>{{ res.habitacion.tipo.nombre }} #{{ res.habitacion.numero }}</td>
+              <td>{{ res.fecha_checkin|date:"d/m/Y" }}</td>
+              <td><span class="badge badge-{{ res.estado }}">{{ res.get_estado_display }}</span></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="text-center text-muted py-3">Sin reservaciones.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

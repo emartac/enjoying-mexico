@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block titulo %}{{ titulo }}{% endblock %}
+
+{% block contenido %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <nav aria-label="breadcrumb" class="mb-3">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'reservaciones:lista' %}">Reservaciones</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'reservaciones:detalle' reservacion.pk %}">{{ reservacion.codigo }}</a></li>
+        <li class="breadcrumb-item active">{{ titulo }}</li>
+      </ol>
+    </nav>
+
+    <div class="card shadow-sm mb-3">
+      <div class="card-body py-2 d-flex gap-4 small text-muted">
+        <span><strong>Total:</strong> ${{ reservacion.total }}</span>
+        <span><strong>Pagado:</strong> ${{ reservacion.total_pagado }}</span>
+        <span class="{% if reservacion.saldo_pendiente > 0 %}text-danger{% else %}text-success{% endif %}">
+          <strong>Saldo:</strong> ${{ reservacion.saldo_pendiente }}
+        </span>
+      </div>
+    </div>
+
+    <div class="card shadow-sm">
+      <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-credit-card me-2"></i>{{ titulo }}</h5>
+      </div>
+      <div class="card-body">
+        <form method="post">
+          {% csrf_token %}
+          {% crispy form %}
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

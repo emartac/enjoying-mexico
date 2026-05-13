@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block titulo %}Hoteles{% endblock %}
+
+{% block contenido %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4><i class="bi bi-building me-2"></i>Hoteles</h4>
+  <a href="{% url 'hoteles:crear' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Nuevo hotel</a>
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body py-2">
+    <form class="row g-2 align-items-center" method="get">
+      <div class="col-md-7">
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-search"></i></span>
+          <input type="text" name="q" class="form-control" placeholder="Buscar por nombre, ciudad o país…" value="{{ q }}">
+        </div>
+      </div>
+      <div class="col-auto">
+        <button class="btn btn-outline-primary" type="submit">Buscar</button>
+        {% if q %}<a href="{% url 'hoteles:lista' %}" class="btn btn-outline-secondary ms-1">Limpiar</a>{% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="row g-3">
+  {% for hotel in hoteles %}
+  <div class="col-md-6 col-xl-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h5 class="card-title">{{ hotel.nombre }}</h5>
+        <p class="text-muted mb-1"><i class="bi bi-geo-alt me-1"></i>{{ hotel.ciudad }}, {{ hotel.pais }}</p>
+        <p class="mb-2">
+          {% for i in "12345" %}
+            {% if forloop.counter <= hotel.estrellas %}★{% else %}☆{% endif %}
+          {% endfor %}
+        </p>
+        <p class="text-muted small mb-0">{{ hotel.habitaciones.count }} habitación(es) registrada(s)</p>
+      </div>
+      <div class="card-footer d-flex gap-2">
+        <a href="{% url 'hoteles:detalle' hotel.pk %}" class="btn btn-sm btn-outline-primary flex-grow-1">Ver detalle</a>
+        <a href="{% url 'hoteles:editar' hotel.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+        <a href="{% url 'hoteles:eliminar' hotel.pk %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></a>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="col-12 text-center text-muted py-5">No se encontraron hoteles.</div>
+  {% endfor %}
+</div>
+{% endblock %}

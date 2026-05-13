@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="font-family:Arial,sans-serif;background:#f4f4f4;margin:0;padding:20px">
+<div style="max-width:600px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1)">
+
+  <div style="background:#0d6efd;color:white;padding:30px 24px;text-align:center">
+    <h1 style="margin:0;font-size:24px">Confirmación de Reservación</h1>
+    <p style="margin:8px 0 0;opacity:.9;font-size:15px">{{ reservacion.codigo }}</p>
+  </div>
+
+  <div style="padding:24px">
+    {% with titular=clientes_res.first %}
+    <p style="font-size:16px">Estimado/a <strong>{{ titular.cliente.nombre }}</strong>,</p>
+    {% endwith %}
+    <p>Tu reservación ha sido procesada. A continuación encontrarás los detalles. También adjuntamos el PDF de confirmación.</p>
+
+    <div style="background:#f8f9fa;border-radius:6px;padding:16px;margin:16px 0">
+      <h3 style="margin:0 0 12px;color:#0d6efd;font-size:15px">Viaje: {{ reservacion.viaje.nombre }}</h3>
+      <table style="width:100%;font-size:14px">
+        <tr><td style="color:#666;width:40%">Destino</td><td><strong>{{ reservacion.viaje.destino }}</strong></td></tr>
+        <tr><td style="color:#666">Fecha de salida</td><td>{{ reservacion.viaje.fecha_salida|date:"d/m/Y" }}</td></tr>
+        <tr><td style="color:#666">Fecha de regreso</td><td>{{ reservacion.viaje.fecha_regreso|date:"d/m/Y" }}</td></tr>
+      </table>
+    </div>
+
+    <div style="background:#f8f9fa;border-radius:6px;padding:16px;margin:16px 0">
+      <h3 style="margin:0 0 12px;color:#0d6efd;font-size:15px">Alojamiento</h3>
+      <table style="width:100%;font-size:14px">
+        <tr><td style="color:#666;width:40%">Hotel</td><td><strong>{{ reservacion.habitacion.hotel.nombre }}</strong></td></tr>
+        <tr><td style="color:#666">Ubicación</td><td>{{ reservacion.habitacion.hotel.ciudad }}, {{ reservacion.habitacion.hotel.pais }}</td></tr>
+        <tr><td style="color:#666">Habitación</td><td>{{ reservacion.habitacion.tipo.nombre }} N° {{ reservacion.habitacion.numero }}</td></tr>
+        <tr><td style="color:#666">Check-in</td><td>{{ reservacion.fecha_checkin|date:"d/m/Y" }}</td></tr>
+        <tr><td style="color:#666">Check-out</td><td>{{ reservacion.fecha_checkout|date:"d/m/Y" }}</td></tr>
+        <tr><td style="color:#666">Noches</td><td>{{ reservacion.noches }}</td></tr>
+      </table>
+    </div>
+
+    <div style="background:#f8f9fa;border-radius:6px;padding:16px;margin:16px 0">
+      <h3 style="margin:0 0 12px;color:#0d6efd;font-size:15px">Pasajeros</h3>
+      {% for cr in clientes_res %}
+      <p style="margin:4px 0;font-size:14px">
+        {{ forloop.counter }}. <strong>{{ cr.cliente }}</strong>{% if cr.es_titular %} <span style="background:#0d6efd;color:white;font-size:11px;padding:1px 6px;border-radius:3px">Titular</span>{% endif %}
+      </p>
+      {% endfor %}
+    </div>
+
+    <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:6px;padding:16px;margin:16px 0">
+      <h3 style="margin:0 0 8px;font-size:15px">Resumen de pago</h3>
+      <table style="width:100%;font-size:14px">
+        <tr><td>Habitación</td><td style="text-align:right">${{ reservacion.costo_habitacion }}</td></tr>
+        <tr><td>Viaje ({{ reservacion.num_clientes }} persona(s))</td><td style="text-align:right">${{ reservacion.costo_viaje }}</td></tr>
+        <tr style="font-weight:bold"><td>Total</td><td style="text-align:right">${{ reservacion.total }}</td></tr>
+        <tr style="color:#198754"><td>Total pagado</td><td style="text-align:right">${{ reservacion.total_pagado }}</td></tr>
+        <tr style="font-weight:bold;color:{% if reservacion.saldo_pendiente > 0 %}#dc3545{% else %}#198754{% endif %}">
+          <td>Saldo pendiente</td><td style="text-align:right">${{ reservacion.saldo_pendiente }}</td>
+        </tr>
+      </table>
+    </div>
+
+    {% if reservacion.notas %}
+    <p style="font-size:14px;color:#555"><strong>Notas:</strong> {{ reservacion.notas }}</p>
+    {% endif %}
+
+    <p style="font-size:14px;color:#555;margin-top:20px">Si tienes alguna pregunta, no dudes en contactarnos.</p>
+    <p style="font-size:14px">¡Gracias por tu preferencia!</p>
+  </div>
+
+  <div style="background:#f8f9fa;padding:16px;text-align:center;font-size:12px;color:#888">
+    Este correo fue generado automáticamente. Por favor no respondas a este mensaje.
+  </div>
+</div>
+</body>
+</html>

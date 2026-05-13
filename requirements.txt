@@ -1,0 +1,7 @@
+django>=6.0
+psycopg2-binary
+pillow
+fpdf2
+django-crispy-forms
+crispy-bootstrap5
+python-decouple
