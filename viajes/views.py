@@ -1,11 +1,12 @@
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy, reverse
 from django.contrib import messages
 from .models import Viaje
 from .forms import ViajeForm
 
 
-class ViajeListView(ListView):
+class ViajeListView(LoginRequiredMixin, ListView):
     model = Viaje
     template_name = 'viajes/lista.html'
     context_object_name = 'viajes'
@@ -27,7 +28,7 @@ class ViajeListView(ListView):
         return ctx
 
 
-class ViajeDetailView(DetailView):
+class ViajeDetailView(LoginRequiredMixin, DetailView):
     model = Viaje
     template_name = 'viajes/detalle.html'
     context_object_name = 'viaje'
@@ -38,7 +39,7 @@ class ViajeDetailView(DetailView):
         return ctx
 
 
-class ViajeCreateView(CreateView):
+class ViajeCreateView(LoginRequiredMixin, CreateView):
     model = Viaje
     form_class = ViajeForm
     template_name = 'viajes/formulario.html'
@@ -54,7 +55,7 @@ class ViajeCreateView(CreateView):
         return super().form_valid(form)
 
 
-class ViajeUpdateView(UpdateView):
+class ViajeUpdateView(LoginRequiredMixin, UpdateView):
     model = Viaje
     form_class = ViajeForm
     template_name = 'viajes/formulario.html'
@@ -72,7 +73,7 @@ class ViajeUpdateView(UpdateView):
         return super().form_valid(form)
 
 
-class ViajeDeleteView(DeleteView):
+class ViajeDeleteView(LoginRequiredMixin, DeleteView):
     model = Viaje
     template_name = 'viajes/confirmar_eliminar.html'
     success_url = reverse_lazy('viajes:lista')

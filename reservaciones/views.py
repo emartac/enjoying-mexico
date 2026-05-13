@@ -1,4 +1,6 @@
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
 from django.urls import reverse_lazy, reverse
 from django.shortcuts import get_object_or_404, redirect
 from django.http import HttpResponse
@@ -9,7 +11,7 @@ from .forms import ReservacionForm, AgregarClienteForm, PagoForm
 from .utils import generar_pdf_reservacion, enviar_email_reservacion
 
 
-class ReservacionListView(ListView):
+class ReservacionListView(LoginRequiredMixin, ListView):
     model = Reservacion
     template_name = 'reservaciones/lista.html'
     context_object_name = 'reservaciones'
@@ -33,7 +35,7 @@ class ReservacionListView(ListView):
         return ctx
 
 
-class ReservacionDetailView(DetailView):
+class ReservacionDetailView(LoginRequiredMixin, DetailView):
     model = Reservacion
     template_name = 'reservaciones/detalle.html'
     context_object_name = 'reservacion'
@@ -47,7 +49,7 @@ class ReservacionDetailView(DetailView):
         return ctx
 
 
-class ReservacionCreateView(CreateView):
+class ReservacionCreateView(LoginRequiredMixin, CreateView):
     model = Reservacion
     form_class = ReservacionForm
     template_name = 'reservaciones/formulario.html'
@@ -66,7 +68,7 @@ class ReservacionCreateView(CreateView):
         return response
 
 
-class ReservacionUpdateView(UpdateView):
+class ReservacionUpdateView(LoginRequiredMixin, UpdateView):
     model = Reservacion
     form_class = ReservacionForm
     template_name = 'reservaciones/formulario.html'
@@ -84,6 +86,7 @@ class ReservacionUpdateView(UpdateView):
         return super().form_valid(form)
 
 
+@login_required
 def cambiar_estado(request, pk, nuevo_estado):
     reservacion = get_object_or_404(Reservacion, pk=pk)
     if request.method == 'POST':
@@ -94,6 +97,7 @@ def cambiar_estado(request, pk, nuevo_estado):
     return redirect('reservaciones:detalle', pk=pk)
 
 
+@login_required
 def agregar_cliente(request, pk):
     reservacion = get_object_or_404(Reservacion, pk=pk)
     if request.method == 'POST':
@@ -114,6 +118,7 @@ def agregar_cliente(request, pk):
     return redirect('reservaciones:detalle', pk=pk)
 
 
+@login_required
 def remover_cliente(request, pk, cr_pk):
     cr = get_object_or_404(ClienteReservacion, pk=cr_pk, reservacion_id=pk)
     if request.method == 'POST':
@@ -123,6 +128,7 @@ def remover_cliente(request, pk, cr_pk):
     return redirect('reservaciones:detalle', pk=pk)
 
 
+@login_required
 def marcar_titular(request, pk, cr_pk):
     cr = get_object_or_404(ClienteReservacion, pk=cr_pk, reservacion_id=pk)
     if request.method == 'POST':
@@ -133,7 +139,7 @@ def marcar_titular(request, pk, cr_pk):
     return redirect('reservaciones:detalle', pk=pk)
 
 
-class PagoCreateView(CreateView):
+class PagoCreateView(LoginRequiredMixin, CreateView):
     model = Pago
     form_class = PagoForm
     template_name = 'reservaciones/pago_formulario.html'
@@ -157,7 +163,7 @@ class PagoCreateView(CreateView):
         return reverse('reservaciones:detalle', kwargs={'pk': self.reservacion.pk})
 
 
-class PagoUpdateView(UpdateView):
+class PagoUpdateView(LoginRequiredMixin, UpdateView):
     model = Pago
     form_class = PagoForm
     template_name = 'reservaciones/pago_formulario.html'
@@ -181,6 +187,7 @@ class PagoUpdateView(UpdateView):
         return super().form_valid(form)
 
 
+@login_required
 def pago_eliminar(request, pk, pago_pk):
     pago = get_object_or_404(Pago, pk=pago_pk, reservacion_id=pk)
     if request.method == 'POST':
@@ -189,6 +196,7 @@ def pago_eliminar(request, pk, pago_pk):
     return redirect('reservaciones:detalle', pk=pk)
 
 
+@login_required
 def generar_pdf(request, pk):
     reservacion = get_object_or_404(Reservacion, pk=pk)
     pdf_bytes = generar_pdf_reservacion(request, reservacion)
@@ -197,6 +205,7 @@ def generar_pdf(request, pk):
     return response
 
 
+@login_required
 def enviar_email_confirmacion(request, pk):
     reservacion = get_object_or_404(Reservacion, pk=pk)
     if request.method == 'POST':

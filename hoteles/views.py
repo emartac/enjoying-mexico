@@ -1,11 +1,12 @@
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy, reverse
 from django.contrib import messages
 from .models import Hotel, TipoHabitacion, Habitacion
 from .forms import HotelForm, TipoHabitacionForm, HabitacionForm
 
 
-class HotelListView(ListView):
+class HotelListView(LoginRequiredMixin, ListView):
     model = Hotel
     template_name = 'hoteles/lista.html'
     context_object_name = 'hoteles'
@@ -23,7 +24,7 @@ class HotelListView(ListView):
         return ctx
 
 
-class HotelDetailView(DetailView):
+class HotelDetailView(LoginRequiredMixin, DetailView):
     model = Hotel
     template_name = 'hoteles/detalle.html'
     context_object_name = 'hotel'
@@ -34,7 +35,7 @@ class HotelDetailView(DetailView):
         return ctx
 
 
-class HotelCreateView(CreateView):
+class HotelCreateView(LoginRequiredMixin, CreateView):
     model = Hotel
     form_class = HotelForm
     template_name = 'hoteles/formulario.html'
@@ -50,7 +51,7 @@ class HotelCreateView(CreateView):
         return super().form_valid(form)
 
 
-class HotelUpdateView(UpdateView):
+class HotelUpdateView(LoginRequiredMixin, UpdateView):
     model = Hotel
     form_class = HotelForm
     template_name = 'hoteles/formulario.html'
@@ -68,7 +69,7 @@ class HotelUpdateView(UpdateView):
         return super().form_valid(form)
 
 
-class HotelDeleteView(DeleteView):
+class HotelDeleteView(LoginRequiredMixin, DeleteView):
     model = Hotel
     template_name = 'hoteles/confirmar_eliminar.html'
     success_url = reverse_lazy('hoteles:lista')
@@ -84,13 +85,13 @@ class HotelDeleteView(DeleteView):
         return super().form_valid(form)
 
 
-class TipoHabitacionListView(ListView):
+class TipoHabitacionListView(LoginRequiredMixin, ListView):
     model = TipoHabitacion
     template_name = 'hoteles/tipos_lista.html'
     context_object_name = 'tipos'
 
 
-class TipoHabitacionCreateView(CreateView):
+class TipoHabitacionCreateView(LoginRequiredMixin, CreateView):
     model = TipoHabitacion
     form_class = TipoHabitacionForm
     template_name = 'hoteles/formulario.html'
@@ -106,7 +107,7 @@ class TipoHabitacionCreateView(CreateView):
         return super().form_valid(form)
 
 
-class TipoHabitacionUpdateView(UpdateView):
+class TipoHabitacionUpdateView(LoginRequiredMixin, UpdateView):
     model = TipoHabitacion
     form_class = TipoHabitacionForm
     template_name = 'hoteles/formulario.html'
@@ -122,7 +123,7 @@ class TipoHabitacionUpdateView(UpdateView):
         return super().form_valid(form)
 
 
-class TipoHabitacionDeleteView(DeleteView):
+class TipoHabitacionDeleteView(LoginRequiredMixin, DeleteView):
     model = TipoHabitacion
     template_name = 'hoteles/confirmar_eliminar.html'
     success_url = reverse_lazy('hoteles:tipos_lista')
@@ -134,7 +135,7 @@ class TipoHabitacionDeleteView(DeleteView):
         return ctx
 
 
-class HabitacionListView(ListView):
+class HabitacionListView(LoginRequiredMixin, ListView):
     model = Habitacion
     template_name = 'hoteles/habitaciones_lista.html'
     context_object_name = 'habitaciones'
@@ -153,7 +154,7 @@ class HabitacionListView(ListView):
         return ctx
 
 
-class HabitacionCreateView(CreateView):
+class HabitacionCreateView(LoginRequiredMixin, CreateView):
     model = Habitacion
     form_class = HabitacionForm
     template_name = 'hoteles/formulario.html'
@@ -169,7 +170,7 @@ class HabitacionCreateView(CreateView):
         return super().form_valid(form)
 
 
-class HabitacionUpdateView(UpdateView):
+class HabitacionUpdateView(LoginRequiredMixin, UpdateView):
     model = Habitacion
     form_class = HabitacionForm
     template_name = 'hoteles/formulario.html'
@@ -185,7 +186,7 @@ class HabitacionUpdateView(UpdateView):
         return super().form_valid(form)
 
 
-class HabitacionDeleteView(DeleteView):
+class HabitacionDeleteView(LoginRequiredMixin, DeleteView):
     model = Habitacion
     template_name = 'hoteles/confirmar_eliminar.html'
     success_url = reverse_lazy('hoteles:habitaciones_lista')
