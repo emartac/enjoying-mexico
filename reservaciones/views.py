@@ -6,6 +6,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.http import HttpResponse
 from django.contrib import messages
 
+from django.db.models import Prefetch
 from .models import Reservacion, ClienteReservacion, Pago
 from .forms import ReservacionForm, AgregarClienteForm, PagoForm
 from .utils import generar_pdf_reservacion, enviar_email_reservacion, enviar_pases_abordaje
@@ -18,7 +19,13 @@ class ReservacionListView(LoginRequiredMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        qs = super().get_queryset().select_related('viaje', 'habitacion__tipo')
+        qs = super().get_queryset().select_related('viaje', 'habitacion__tipo').prefetch_related(
+            Prefetch(
+                'clientes_reservacion',
+                queryset=ClienteReservacion.objects.filter(es_titular=True).select_related('cliente'),
+                to_attr='titulares',
+            )
+        )
         estado = self.request.GET.get('estado', '')
         if estado:
             qs = qs.filter(estado=estado)
