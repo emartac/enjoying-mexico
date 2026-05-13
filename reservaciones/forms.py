@@ -9,10 +9,8 @@ from clientes.models import Cliente
 class ReservacionForm(forms.ModelForm):
     class Meta:
         model = Reservacion
-        fields = ['viaje', 'habitacion', 'fecha_checkin', 'fecha_checkout', 'estado', 'precio_personalizado', 'notas']
+        fields = ['viaje', 'habitacion', 'estado', 'precio_personalizado', 'notas']
         widgets = {
-            'fecha_checkin': forms.DateInput(attrs={'type': 'date'}),
-            'fecha_checkout': forms.DateInput(attrs={'type': 'date'}),
             'notas': forms.Textarea(attrs={'rows': 3}),
         }
 
@@ -34,10 +32,6 @@ class ReservacionForm(forms.ModelForm):
                 Column('estado', css_class='col-md-4'),
             ),
             'habitacion',
-            Row(
-                Column('fecha_checkin', css_class='col-md-6'),
-                Column('fecha_checkout', css_class='col-md-6'),
-            ),
             'precio_personalizado',
             'notas',
             ButtonHolder(Submit('submit', 'Guardar reservación', css_class='btn btn-primary')),

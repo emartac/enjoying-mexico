@@ -77,6 +77,9 @@ class ReservacionCreateView(LoginRequiredMixin, CreateView):
         return reverse('reservaciones:detalle', kwargs={'pk': self.object.pk})
 
     def form_valid(self, form):
+        viaje = form.cleaned_data['viaje']
+        form.instance.fecha_checkin = viaje.fecha_salida
+        form.instance.fecha_checkout = viaje.fecha_regreso
         response = super().form_valid(form)
         messages.success(self.request, f'Reservación {self.object.codigo} creada. Agrega los clientes a continuación.')
         return response
@@ -101,6 +104,9 @@ class ReservacionUpdateView(LoginRequiredMixin, UpdateView):
         return reverse('reservaciones:detalle', kwargs={'pk': self.object.pk})
 
     def form_valid(self, form):
+        viaje = form.cleaned_data['viaje']
+        form.instance.fecha_checkin = viaje.fecha_salida
+        form.instance.fecha_checkout = viaje.fecha_regreso
         messages.success(self.request, 'Reservación actualizada.')
         return super().form_valid(form)
 

@@ -92,15 +92,14 @@ def generar_pdf_reservacion(request, reservacion):
 
     # Pasajeros
     pdf.seccion('Pasajeros')
-    pdf.tabla_encabezado(['#', 'Nombre', 'Documento', 'Email', 'Titular'], [10, 55, 40, 60, 15])
+    pdf.tabla_encabezado(['#', 'Nombre', 'Email', 'Titular'], [10, 75, 75, 20])
     for i, cr in enumerate(clientes_res, 1):
         pdf.tabla_fila([
             i,
             str(cr.cliente),
-            f'{cr.cliente.get_tipo_documento_display()}: {cr.cliente.numero_documento}',
             cr.cliente.email,
             'Si' if cr.es_titular else '',
-        ], [10, 55, 40, 60, 15])
+        ], [10, 75, 75, 20])
     pdf.ln(4)
 
     # Financiero

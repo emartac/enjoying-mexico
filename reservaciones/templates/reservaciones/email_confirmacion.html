@@ -47,8 +47,7 @@
     <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:6px;padding:16px;margin:16px 0">
       <h3 style="margin:0 0 8px;font-size:15px">Resumen de pago</h3>
       <table style="width:100%;font-size:14px">
-        <tr><td>Habitación</td><td style="text-align:right">${{ reservacion.costo_habitacion }}</td></tr>
-        <tr><td>Viaje ({{ reservacion.num_clientes }} persona(s))</td><td style="text-align:right">${{ reservacion.costo_viaje }}</td></tr>
+        <tr><td>Habitación ({{ reservacion.num_clientes }} persona(s))</td><td style="text-align:right">${{ reservacion.costo_habitacion }}</td></tr>
         <tr style="font-weight:bold"><td>Total</td><td style="text-align:right">${{ reservacion.total }}</td></tr>
         <tr style="color:#198754"><td>Total pagado</td><td style="text-align:right">${{ reservacion.total_pagado }}</td></tr>
         <tr style="font-weight:bold;color:{% if reservacion.saldo_pendiente > 0 %}#dc3545{% else %}#198754{% endif %}">
