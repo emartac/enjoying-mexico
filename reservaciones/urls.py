@@ -20,4 +20,5 @@ urlpatterns = [
     path('<int:pk>/pagos/<int:pago_pk>/eliminar/', views.pago_eliminar, name='pago_eliminar'),
     path('<int:pk>/pdf/', views.generar_pdf, name='pdf'),
     path('<int:pk>/enviar-email/', views.enviar_email_confirmacion, name='enviar_email'),
+    path('<int:pk>/pases/', views.enviar_pases, name='enviar_pases'),
 ]

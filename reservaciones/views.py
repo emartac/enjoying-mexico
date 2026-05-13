@@ -8,7 +8,7 @@ from django.contrib import messages
 
 from .models import Reservacion, ClienteReservacion, Pago
 from .forms import ReservacionForm, AgregarClienteForm, PagoForm
-from .utils import generar_pdf_reservacion, enviar_email_reservacion
+from .utils import generar_pdf_reservacion, enviar_email_reservacion, enviar_pases_abordaje
 
 
 class ReservacionListView(LoginRequiredMixin, ListView):
@@ -244,6 +244,20 @@ def generar_pdf(request, pk):
     response = HttpResponse(pdf_bytes, content_type='application/pdf')
     response['Content-Disposition'] = f'inline; filename="reservacion_{reservacion.codigo}.pdf"'
     return response
+
+
+@login_required
+def enviar_pases(request, pk):
+    reservacion = get_object_or_404(Reservacion, pk=pk)
+    if request.method == 'POST':
+        try:
+            enviar_pases_abordaje(request, reservacion)
+            messages.success(request, f'Pases de abordaje enviados a {reservacion.num_clientes} pasajero(s).')
+        except ValueError as e:
+            messages.error(request, str(e))
+        except Exception as e:
+            messages.error(request, f'Error al enviar los pases: {e}')
+    return redirect('reservaciones:detalle', pk=pk)
 
 
 @login_required
