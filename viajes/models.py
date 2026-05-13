@@ -42,6 +42,26 @@ class Viaje(models.Model):
         return self.capacidad_maxima - self.ocupacion_actual
 
 
+class ViajeHabitacion(models.Model):
+    viaje = models.ForeignKey(Viaje, on_delete=models.CASCADE, related_name='viaje_habitaciones')
+    habitacion = models.ForeignKey(
+        'hoteles.Habitacion', on_delete=models.PROTECT, verbose_name='Habitación',
+        related_name='viaje_habitaciones',
+    )
+    precio_total = models.DecimalField(
+        'Precio total del viaje (MXN)', max_digits=10, decimal_places=2,
+        validators=[MinValueValidator(0)],
+    )
+
+    class Meta:
+        verbose_name = 'Habitación del viaje'
+        verbose_name_plural = 'Habitaciones del viaje'
+        unique_together = ['viaje', 'habitacion']
+
+    def __str__(self):
+        return f'{self.habitacion} — ${self.precio_total}'
+
+
 class ViajeHabitacionPrecio(models.Model):
     viaje = models.ForeignKey(Viaje, on_delete=models.CASCADE, related_name='precios')
     tipo_habitacion = models.ForeignKey(

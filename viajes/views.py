@@ -3,7 +3,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy, reverse
 from django.contrib import messages
 from .models import Viaje
-from .forms import ViajeForm, PrecioFormSet
+from .forms import ViajeForm, PrecioFormSet, HabitacionFormSet
 
 
 class ViajeListView(LoginRequiredMixin, ListView):
@@ -56,16 +56,20 @@ class ViajeCreateView(LoginRequiredMixin, CreateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['titulo'] = 'Nuevo viaje'
-        ctx['precio_formset'] = PrecioFormSet(self.request.POST or None)
+        ctx['precio_formset'] = PrecioFormSet(self.request.POST or None, prefix='precios')
+        ctx['habitacion_formset'] = HabitacionFormSet(self.request.POST or None, prefix='habitaciones')
         return ctx
 
     def form_valid(self, form):
         ctx = self.get_context_data()
         precio_formset = ctx['precio_formset']
-        if precio_formset.is_valid():
+        habitacion_formset = ctx['habitacion_formset']
+        if precio_formset.is_valid() and habitacion_formset.is_valid():
             self.object = form.save()
             precio_formset.instance = self.object
             precio_formset.save()
+            habitacion_formset.instance = self.object
+            habitacion_formset.save()
             messages.success(self.request, 'Viaje creado exitosamente.')
             return super().form_valid(form)
         return self.form_invalid(form)
@@ -82,16 +86,20 @@ class ViajeUpdateView(LoginRequiredMixin, UpdateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['titulo'] = f'Editar viaje: {self.object.nombre}'
-        ctx['precio_formset'] = PrecioFormSet(self.request.POST or None, instance=self.object)
+        ctx['precio_formset'] = PrecioFormSet(self.request.POST or None, instance=self.object, prefix='precios')
+        ctx['habitacion_formset'] = HabitacionFormSet(self.request.POST or None, instance=self.object, prefix='habitaciones')
         return ctx
 
     def form_valid(self, form):
         ctx = self.get_context_data()
         precio_formset = ctx['precio_formset']
-        if precio_formset.is_valid():
+        habitacion_formset = ctx['habitacion_formset']
+        if precio_formset.is_valid() and habitacion_formset.is_valid():
             self.object = form.save()
             precio_formset.instance = self.object
             precio_formset.save()
+            habitacion_formset.instance = self.object
+            habitacion_formset.save()
             messages.success(self.request, 'Viaje actualizado.')
             return super().form_valid(form)
         return self.form_invalid(form)

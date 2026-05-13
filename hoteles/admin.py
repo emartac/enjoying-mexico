@@ -5,7 +5,7 @@ from .models import Hotel, TipoHabitacion, Habitacion
 class HabitacionInline(admin.TabularInline):
     model = Habitacion
     extra = 0
-    fields = ['numero', 'tipo', 'precio_por_noche', 'disponible']
+    fields = ['numero', 'tipo', 'num_camas', 'disponible']
 
 
 @admin.register(Hotel)
@@ -23,6 +23,6 @@ class TipoHabitacionAdmin(admin.ModelAdmin):
 
 @admin.register(Habitacion)
 class HabitacionAdmin(admin.ModelAdmin):
-    list_display = ['numero', 'hotel', 'tipo', 'precio_por_noche', 'disponible']
+    list_display = ['numero', 'hotel', 'tipo', 'num_camas', 'disponible']
     list_filter = ['hotel', 'tipo', 'disponible']
     search_fields = ['numero', 'hotel__nombre']

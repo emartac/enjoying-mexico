@@ -48,7 +48,14 @@ class Reservacion(models.Model):
 
     @property
     def costo_habitacion(self):
-        return self.noches * self.habitacion.precio_por_noche
+        from viajes.models import ViajeHabitacion
+        try:
+            return ViajeHabitacion.objects.get(
+                viaje=self.viaje,
+                habitacion=self.habitacion,
+            ).precio_total
+        except ViajeHabitacion.DoesNotExist:
+            return 0
 
     @property
     def costo_viaje(self):

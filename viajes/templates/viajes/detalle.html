@@ -25,6 +25,20 @@
           <dt class="col-sm-6">Estado</dt>
           <dd class="col-sm-6">{% if viaje.activo %}<span class="badge bg-success">Activo</span>{% else %}<span class="badge bg-secondary">Inactivo</span>{% endif %}</dd>
         </dl>
+        {% if viaje.viaje_habitaciones.all %}
+        <hr>
+        <p class="fw-semibold mb-1">Habitaciones asignadas:</p>
+        <ul class="list-unstyled small mb-0">
+          {% for vh in viaje.viaje_habitaciones.select_related %}
+          <li>
+            <i class="bi bi-door-closed me-1 text-primary"></i>
+            {{ vh.habitacion.hotel.nombre }} — Hab. {{ vh.habitacion.numero }}
+            ({{ vh.habitacion.tipo.nombre }}, {{ vh.habitacion.num_camas }} cama(s))
+            <strong>${{ vh.precio_total }}</strong>
+          </li>
+          {% endfor %}
+        </ul>
+        {% endif %}
         {% if viaje.precios.all %}
         <hr>
         <p class="fw-semibold mb-1">Precios por tipo de habitación:</p>

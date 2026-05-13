@@ -18,6 +18,12 @@ class ReservacionForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if self.instance.pk and self.instance.viaje_id:
+            from viajes.models import ViajeHabitacion
+            ids = ViajeHabitacion.objects.filter(
+                viaje=self.instance.viaje
+            ).values_list('habitacion_id', flat=True)
+            self.fields['habitacion'].queryset = self.fields['habitacion'].queryset.filter(pk__in=ids)
         self.helper = FormHelper()
         self.helper.layout = Layout(
             Row(

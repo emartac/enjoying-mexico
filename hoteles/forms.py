@@ -59,7 +59,7 @@ class TipoHabitacionForm(forms.ModelForm):
 class HabitacionForm(forms.ModelForm):
     class Meta:
         model = Habitacion
-        fields = ['hotel', 'tipo', 'numero', 'num_camas', 'precio_por_noche', 'descripcion', 'disponible']
+        fields = ['hotel', 'tipo', 'numero', 'num_camas', 'descripcion', 'disponible']
         widgets = {
             'descripcion': forms.Textarea(attrs={'rows': 2}),
         }
@@ -73,10 +73,9 @@ class HabitacionForm(forms.ModelForm):
                 Column('tipo', css_class='col-md-6'),
             ),
             Row(
-                Column('numero', css_class='col-md-3'),
-                Column('num_camas', css_class='col-md-3'),
-                Column('precio_por_noche', css_class='col-md-3'),
-                Column('disponible', css_class='col-md-3 d-flex align-items-center pt-3'),
+                Column('numero', css_class='col-md-4'),
+                Column('num_camas', css_class='col-md-4'),
+                Column('disponible', css_class='col-md-4 d-flex align-items-center pt-3'),
             ),
             'descripcion',
             ButtonHolder(Submit('submit', 'Guardar habitación', css_class='btn btn-primary')),

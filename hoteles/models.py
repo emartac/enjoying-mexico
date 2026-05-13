@@ -45,7 +45,6 @@ class Habitacion(models.Model):
     tipo = models.ForeignKey(TipoHabitacion, on_delete=models.PROTECT, verbose_name='Tipo de habitación')
     numero = models.CharField('Número / Identificador', max_length=20)
     num_camas = models.PositiveIntegerField('Número de camas', default=1)
-    precio_por_noche = models.DecimalField('Precio por noche (MXN)', max_digits=10, decimal_places=2)
     descripcion = models.TextField('Descripción adicional', blank=True)
     disponible = models.BooleanField('Disponible', default=True)
 

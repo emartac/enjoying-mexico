@@ -2,7 +2,7 @@ from django import forms
 from django.forms import inlineformset_factory
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Row, Column, Submit, ButtonHolder
-from .models import Viaje, ViajeHabitacionPrecio
+from .models import Viaje, ViajeHabitacion, ViajeHabitacionPrecio
 
 
 class ViajeForm(forms.ModelForm):
@@ -42,6 +42,14 @@ PrecioFormSet = inlineformset_factory(
     Viaje,
     ViajeHabitacionPrecio,
     fields=['tipo_habitacion', 'precio_por_persona'],
+    extra=2,
+    can_delete=True,
+)
+
+HabitacionFormSet = inlineformset_factory(
+    Viaje,
+    ViajeHabitacion,
+    fields=['habitacion', 'precio_total'],
     extra=2,
     can_delete=True,
 )
