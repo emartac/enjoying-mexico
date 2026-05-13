@@ -82,7 +82,7 @@
             <thead class="table-light small">
               <tr>
                 <th>Hotel</th><th>Hab.</th><th>Camas</th>
-                <th>Precio</th><th>Frecuente</th><th></th>
+                <th>Precio regular</th><th>Precio frecuente</th><th></th>
               </tr>
             </thead>
             <tbody>
@@ -94,8 +94,8 @@
                 <td class="align-middle">{{ vh.habitacion.numero }}</td>
                 <td class="align-middle">{{ vh.habitacion.num_camas }}</td>
                 <td class="align-middle fw-bold">${{ vh.precio_total }}</td>
-                <td class="align-middle text-warning">
-                  {% if vh.precio_frecuente %}<i class="bi bi-star-fill me-1"></i>${{ vh.precio_frecuente }}{% else %}<span class="text-muted">—</span>{% endif %}
+                <td class="align-middle">
+                  {% if vh.precio_frecuente %}<span class="fw-bold">${{ vh.precio_frecuente }}</span>{% else %}<span class="text-muted">—</span>{% endif %}
                 </td>
                 <td class="text-end align-middle">
                   <a href="{% url 'viajes:habitacion_editar' viaje.pk vh.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
@@ -173,9 +173,7 @@
           <thead class="table-light">
             <tr>
               <th>Código</th>
-              <th>Hotel</th>
-              <th>Habitación</th>
-              <th>Check-in</th>
+              <th>Hotel / Habitación</th>
               <th>Estado</th>
             </tr>
           </thead>
@@ -183,13 +181,11 @@
             {% for res in reservaciones %}
             <tr>
               <td><a href="{% url 'reservaciones:detalle' res.pk %}">{{ res.codigo }}</a></td>
-              <td>{{ res.habitacion.nombre_hotel }}</td>
-              <td>{{ res.habitacion.tipo.nombre }} #{{ res.habitacion.numero }}</td>
-              <td>{{ res.fecha_checkin|date:"d/m/Y" }}</td>
+              <td>{{ res.habitacion.nombre_hotel }} — {{ res.habitacion.tipo.nombre }} #{{ res.habitacion.numero }}</td>
               <td><span class="badge badge-{{ res.estado }}">{{ res.get_estado_display }}</span></td>
             </tr>
             {% empty %}
-            <tr><td colspan="5" class="text-center text-muted py-3">Sin reservaciones aún.</td></tr>
+            <tr><td colspan="3" class="text-center text-muted py-3">Sin reservaciones aún.</td></tr>
             {% endfor %}
           </tbody>
         </table>
@@ -207,8 +203,10 @@
               <th>Email</th>
               <th>Teléfono</th>
               <th>Reservación</th>
-              <th>Hotel</th>
               <th>Habitación</th>
+              <th>Total</th>
+              <th>Pagado</th>
+              <th>Pendiente</th>
               <th>Titular</th>
             </tr>
           </thead>
@@ -219,12 +217,14 @@
               <td>{{ cr.cliente.email }}</td>
               <td>{{ cr.cliente.telefono|default:"—" }}</td>
               <td><a href="{% url 'reservaciones:detalle' cr.reservacion.pk %}">{{ cr.reservacion.codigo }}</a></td>
-              <td>{{ cr.reservacion.habitacion.nombre_hotel }}</td>
               <td>{{ cr.reservacion.habitacion.tipo.nombre }} #{{ cr.reservacion.habitacion.numero }}</td>
+              <td>${{ cr.reservacion.total }}</td>
+              <td class="text-success">${{ cr.reservacion.total_pagado }}</td>
+              <td class="{% if cr.reservacion.saldo_pendiente > 0 %}text-danger{% else %}text-success{% endif %}">${{ cr.reservacion.saldo_pendiente }}</td>
               <td>{% if cr.es_titular %}<span class="badge bg-primary">Titular</span>{% endif %}</td>
             </tr>
             {% empty %}
-            <tr><td colspan="7" class="text-center text-muted py-3">Sin viajeros registrados.</td></tr>
+            <tr><td colspan="9" class="text-center text-muted py-3">Sin viajeros registrados.</td></tr>
             {% endfor %}
           </tbody>
         </table>
