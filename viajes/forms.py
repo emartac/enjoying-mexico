@@ -23,10 +23,15 @@ class ViajeForm(forms.ModelForm):
         if fecha_salida and fecha_regreso and fecha_regreso > fecha_salida:
             cleaned_data['precio_por_persona'] = 0
             cleaned_data['precio_frecuente'] = None
+        else:
+            if not cleaned_data.get('precio_por_persona'):
+                cleaned_data['precio_por_persona'] = 0
         return cleaned_data
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['precio_por_persona'].required = False
+        self.fields['precio_frecuente'].required = False
         self.helper = FormHelper()
         self.helper.form_tag = False
         self.helper.layout = Layout(
