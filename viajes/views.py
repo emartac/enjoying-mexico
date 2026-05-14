@@ -44,13 +44,21 @@ class ViajeDetailView(LoginRequiredMixin, DetailView):
             'habitacion__tipo'
         ).order_by('-creado')
 
-        ctx['viajeros'] = (
+        from collections import OrderedDict
+        viajeros_qs = (
             ClienteReservacion.objects
             .filter(reservacion__viaje=self.object)
             .exclude(reservacion__estado='cancelada')
             .select_related('cliente', 'reservacion', 'reservacion__habitacion__tipo')
-            .order_by('reservacion__codigo', 'cliente__apellido')
+            .order_by('reservacion__codigo', '-es_titular', 'cliente__apellido')
         )
+        grupos_viajeros = OrderedDict()
+        for cr in viajeros_qs:
+            rid = cr.reservacion_id
+            if rid not in grupos_viajeros:
+                grupos_viajeros[rid] = {'reservacion': cr.reservacion, 'viajeros': []}
+            grupos_viajeros[rid]['viajeros'].append(cr)
+        ctx['grupos_viajeros'] = list(grupos_viajeros.values())
 
         ctx['puntos_abordaje'] = self.object.puntos_abordaje.all()
 
