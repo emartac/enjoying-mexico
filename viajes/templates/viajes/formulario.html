@@ -84,6 +84,27 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+  // Habilitar/deshabilitar precios según duración del viaje
+  var inputSalida   = document.getElementById('id_fecha_salida');
+  var inputRegreso  = document.getElementById('id_fecha_regreso');
+  var inputPrecio   = document.getElementById('id_precio_por_persona');
+  var inputFrecuente = document.getElementById('id_precio_frecuente');
+
+  function actualizarPrecios() {
+    var s = inputSalida.value, r = inputRegreso.value;
+    var esUnDia = !s || !r || s === r;
+    inputPrecio.disabled    = !esUnDia;
+    inputFrecuente.disabled = !esUnDia;
+    if (!esUnDia) {
+      inputPrecio.value    = '0';
+      inputFrecuente.value = '';
+    }
+  }
+
+  inputSalida.addEventListener('change', actualizarPrecios);
+  inputRegreso.addEventListener('change', actualizarPrecios);
+  actualizarPrecios(); // ejecutar al cargar para viajes existentes
+
   var totalForms = document.getElementById('id_abordaje-TOTAL_FORMS');
   var tbody = document.getElementById('abordaje-tbody');
   var msgVacio = document.getElementById('msg-vacio');

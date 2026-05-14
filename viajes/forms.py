@@ -16,6 +16,15 @@ class ViajeForm(forms.ModelForm):
             'incluye': forms.Textarea(attrs={'rows': 3}),
         }
 
+    def clean(self):
+        cleaned_data = super().clean()
+        fecha_salida = cleaned_data.get('fecha_salida')
+        fecha_regreso = cleaned_data.get('fecha_regreso')
+        if fecha_salida and fecha_regreso and fecha_regreso > fecha_salida:
+            cleaned_data['precio_por_persona'] = 0
+            cleaned_data['precio_frecuente'] = None
+        return cleaned_data
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
