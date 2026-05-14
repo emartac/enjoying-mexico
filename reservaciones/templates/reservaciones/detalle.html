@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% block titulo %}{{ reservacion.codigo }}{% endblock %}
+{% block breadcrumb %}<nav aria-label="breadcrumb"><ol class="breadcrumb mb-3"><li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li><li class="breadcrumb-item"><a href="{% url 'reservaciones:lista' %}">Reservaciones</a></li><li class="breadcrumb-item active">{{ reservacion.codigo }}</li></ol></nav>{% endblock %}
 
 {% block contenido %}
 

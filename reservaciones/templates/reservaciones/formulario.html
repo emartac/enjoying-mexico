@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
 {% block titulo %}{{ titulo }}{% endblock %}
+{% block breadcrumb %}<nav aria-label="breadcrumb"><ol class="breadcrumb mb-3"><li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li><li class="breadcrumb-item"><a href="{% url 'reservaciones:lista' %}">Reservaciones</a></li>{% if object %}<li class="breadcrumb-item"><a href="{% url 'reservaciones:detalle' object.pk %}">{{ object.codigo }}</a></li>{% endif %}<li class="breadcrumb-item active">{{ titulo }}</li></ol></nav>{% endblock %}
 
 {% block contenido %}
 <div class="row justify-content-center">

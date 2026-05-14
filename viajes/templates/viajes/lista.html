@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% block titulo %}Viajes{% endblock %}
+{% block breadcrumb %}<nav aria-label="breadcrumb"><ol class="breadcrumb mb-3"><li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li><li class="breadcrumb-item active">Viajes</li></ol></nav>{% endblock %}
 
 {% block contenido %}
 <div class="d-flex justify-content-between align-items-center mb-3">

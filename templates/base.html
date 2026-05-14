@@ -94,6 +94,8 @@
 
 <div class="container-fluid py-4 px-4">
 
+  {% block breadcrumb %}{% endblock %}
+
   {% if messages %}
     {% for msg in messages %}
       <div class="alert alert-{{ msg.tags|default:'info' }} alert-dismissible fade show" role="alert">
