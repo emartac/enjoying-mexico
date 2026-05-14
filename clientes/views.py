@@ -4,7 +4,9 @@ from django.contrib.auth.decorators import login_required
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.db.models import Q
+from django.db.models.deletion import ProtectedError
 from django.http import JsonResponse
+from django.shortcuts import redirect
 from .models import Cliente
 from .forms import ClienteForm
 
@@ -90,8 +92,12 @@ class ClienteDeleteView(LoginRequiredMixin, DeleteView):
         return ctx
 
     def form_valid(self, form):
-        messages.success(self.request, f'Cliente {self.object} eliminado.')
-        return super().form_valid(form)
+        try:
+            messages.success(self.request, f'Cliente {self.object} eliminado.')
+            return super().form_valid(form)
+        except ProtectedError:
+            messages.error(self.request, f'No se puede eliminar a {self.object}: tiene reservaciones asociadas.')
+            return redirect('clientes:detalle', pk=self.object.pk)
 
 
 @login_required

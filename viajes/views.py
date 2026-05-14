@@ -5,6 +5,7 @@ from django.urls import reverse_lazy, reverse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
 from django.http import JsonResponse
+from django.db.models.deletion import ProtectedError
 from .models import Viaje, ViajeHabitacion
 from .forms import ViajeForm, ViajeHabitacionForm, PuntoAbordajeFormSet
 
@@ -292,5 +293,9 @@ class ViajeDeleteView(LoginRequiredMixin, DeleteView):
         return ctx
 
     def form_valid(self, form):
-        messages.success(self.request, 'Viaje eliminado.')
-        return super().form_valid(form)
+        try:
+            messages.success(self.request, 'Viaje eliminado.')
+            return super().form_valid(form)
+        except ProtectedError:
+            messages.error(self.request, f'No se puede eliminar "{self.object.nombre}": tiene reservaciones asociadas.')
+            return redirect('viajes:detalle', pk=self.object.pk)

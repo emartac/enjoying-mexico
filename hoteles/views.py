@@ -2,6 +2,8 @@ from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.contrib import messages
+from django.db.models.deletion import ProtectedError
+from django.shortcuts import redirect
 from .models import TipoHabitacion, Habitacion
 from .forms import TipoHabitacionForm, HabitacionForm
 
@@ -54,6 +56,14 @@ class TipoHabitacionDeleteView(LoginRequiredMixin, DeleteView):
         ctx = super().get_context_data(**kwargs)
         ctx['titulo'] = f'Eliminar tipo: {self.object.nombre}'
         return ctx
+
+    def form_valid(self, form):
+        try:
+            messages.success(self.request, f'Tipo "{self.object.nombre}" eliminado.')
+            return super().form_valid(form)
+        except ProtectedError:
+            messages.error(self.request, f'No se puede eliminar "{self.object.nombre}": tiene habitaciones asociadas.')
+            return redirect('hoteles:tipos_lista')
 
 
 class HabitacionListView(LoginRequiredMixin, ListView):
@@ -140,3 +150,11 @@ class HabitacionDeleteView(LoginRequiredMixin, DeleteView):
         ctx = super().get_context_data(**kwargs)
         ctx['titulo'] = f'Eliminar habitación: {self.object}'
         return ctx
+
+    def form_valid(self, form):
+        try:
+            messages.success(self.request, f'Habitación {self.object.numero} eliminada.')
+            return super().form_valid(form)
+        except ProtectedError:
+            messages.error(self.request, f'No se puede eliminar la habitación {self.object.numero}: tiene reservaciones asociadas.')
+            return redirect('hoteles:habitaciones_lista')

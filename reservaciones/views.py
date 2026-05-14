@@ -5,6 +5,7 @@ from django.urls import reverse_lazy, reverse
 from django.shortcuts import get_object_or_404, redirect
 from django.http import HttpResponse
 from django.contrib import messages
+from django.db.models.deletion import ProtectedError
 
 from django.db.models import Prefetch
 from .models import Reservacion, ClienteReservacion, Pago
@@ -137,8 +138,12 @@ class ReservacionDeleteView(LoginRequiredMixin, DeleteView):
         return ctx
 
     def form_valid(self, form):
-        messages.success(self.request, f'Reservación {self.object.codigo} eliminada.')
-        return super().form_valid(form)
+        try:
+            messages.success(self.request, f'Reservación {self.object.codigo} eliminada.')
+            return super().form_valid(form)
+        except ProtectedError:
+            messages.error(self.request, f'No se puede eliminar {self.object.codigo}: tiene pagos u otros registros asociados.')
+            return redirect('reservaciones:detalle', pk=self.object.pk)
 
 
 @login_required
