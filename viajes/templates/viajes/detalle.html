@@ -257,28 +257,62 @@
       </div>
       <div class="modal-body">
         <div id="hab-errores" class="alert alert-danger small py-2" style="display:none"></div>
-        <div class="row g-2">
-          <div class="col-8">
-            <label class="form-label small mb-1">Hotel *</label>
-            <input type="text" class="form-control form-control-sm" id="hab-hotel">
-          </div>
-          <div class="col-4">
-            <label class="form-label small mb-1">Número *</label>
-            <input type="text" class="form-control form-control-sm" id="hab-numero">
-          </div>
-          <div class="col-8">
-            <label class="form-label small mb-1">Tipo de habitación *</label>
-            <select class="form-select form-select-sm" id="hab-tipo">
+
+        <ul class="nav nav-tabs mb-3" id="habTabs">
+          <li class="nav-item">
+            <button class="nav-link active" data-hab-tab="existente">Habitación existente</button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-hab-tab="nueva">Nueva habitación</button>
+          </li>
+        </ul>
+
+        <!-- Tab: existente -->
+        <div id="tab-existente">
+          {% if habitaciones_disponibles %}
+          <div class="mb-2">
+            <label class="form-label small mb-1">Habitación *</label>
+            <select class="form-select form-select-sm" id="hab-existente-id">
               <option value="">— Selecciona —</option>
-              {% for t in tipos_habitacion %}
-              <option value="{{ t.pk }}">{{ t.nombre }} (hasta {{ t.capacidad }} persona{{ t.capacidad|pluralize:"s" }})</option>
+              {% for h in habitaciones_disponibles %}
+              <option value="{{ h.pk }}">{{ h.nombre_hotel }} — {{ h.tipo.nombre }} #{{ h.numero }} ({{ h.num_camas }} cama{{ h.num_camas|pluralize:"s" }})</option>
               {% endfor %}
             </select>
           </div>
-          <div class="col-4">
-            <label class="form-label small mb-1">Camas</label>
-            <input type="number" class="form-control form-control-sm" id="hab-camas" value="1" min="1">
+          {% else %}
+          <p class="text-muted small">No hay habitaciones disponibles sin asignar a este viaje.</p>
+          {% endif %}
+        </div>
+
+        <!-- Tab: nueva -->
+        <div id="tab-nueva" style="display:none">
+          <div class="row g-2">
+            <div class="col-8">
+              <label class="form-label small mb-1">Hotel *</label>
+              <input type="text" class="form-control form-control-sm" id="hab-hotel">
+            </div>
+            <div class="col-4">
+              <label class="form-label small mb-1">Número *</label>
+              <input type="text" class="form-control form-control-sm" id="hab-numero">
+            </div>
+            <div class="col-8">
+              <label class="form-label small mb-1">Tipo *</label>
+              <select class="form-select form-select-sm" id="hab-tipo">
+                <option value="">— Selecciona —</option>
+                {% for t in tipos_habitacion %}
+                <option value="{{ t.pk }}">{{ t.nombre }} (hasta {{ t.capacidad }} persona{{ t.capacidad|pluralize:"s" }})</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-4">
+              <label class="form-label small mb-1">Camas</label>
+              <input type="number" class="form-control form-control-sm" id="hab-camas" value="1" min="1">
+            </div>
           </div>
+        </div>
+
+        <!-- Precios (comunes a ambos tabs) -->
+        <div class="row g-2 mt-1">
           <div class="col-6">
             <label class="form-label small mb-1">Precio regular *</label>
             <div class="input-group input-group-sm">
@@ -307,32 +341,49 @@
 
 <script>
 (function () {
-  var btn = document.getElementById('btn-guardar-hab');
-  if (!btn) return;
-  btn.addEventListener('click', function () {
+  var tabActivo = 'existente';
+
+  document.querySelectorAll('[data-hab-tab]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      tabActivo = btn.dataset.habTab;
+      document.querySelectorAll('[data-hab-tab]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-existente').style.display = tabActivo === 'existente' ? '' : 'none';
+      document.getElementById('tab-nueva').style.display     = tabActivo === 'nueva'     ? '' : 'none';
+    });
+  });
+
+  var btnGuardar = document.getElementById('btn-guardar-hab');
+  if (!btnGuardar) return;
+
+  btnGuardar.addEventListener('click', function () {
     var errDiv = document.getElementById('hab-errores');
     errDiv.style.display = 'none';
     var csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    var body = new URLSearchParams({
-      nombre_hotel:     document.getElementById('hab-hotel').value.trim(),
-      tipo:             document.getElementById('hab-tipo').value,
-      numero:           document.getElementById('hab-numero').value.trim(),
-      num_camas:        document.getElementById('hab-camas').value,
+    var params = {
+      modo:             tabActivo,
       precio_total:     document.getElementById('hab-precio').value,
       precio_frecuente: document.getElementById('hab-frecuente').value,
-    });
+    };
+    if (tabActivo === 'existente') {
+      params.habitacion_id = document.getElementById('hab-existente-id').value;
+    } else {
+      params.nombre_hotel = document.getElementById('hab-hotel').value.trim();
+      params.tipo         = document.getElementById('hab-tipo').value;
+      params.numero       = document.getElementById('hab-numero').value.trim();
+      params.num_camas    = document.getElementById('hab-camas').value;
+    }
     fetch('{% url "viajes:habitacion_agregar_ajax" viaje.pk %}', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': csrf },
-      body: body.toString(),
+      body: new URLSearchParams(params).toString(),
     })
     .then(r => r.json())
     .then(data => {
       if (data.ok) {
         window.location.reload();
       } else {
-        var msgs = Object.values(data.errors).join(' ');
-        errDiv.textContent = msgs;
+        errDiv.textContent = Object.values(data.errors).join(' ');
         errDiv.style.display = '';
       }
     });
