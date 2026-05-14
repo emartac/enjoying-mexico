@@ -222,10 +222,17 @@
               <td>{{ cr.cliente.telefono|default:"—" }}</td>
               <td><a href="{% url 'reservaciones:detalle' cr.reservacion.pk %}">{{ cr.reservacion.codigo }}</a></td>
               <td>{% if cr.reservacion.habitacion %}{{ cr.reservacion.habitacion.tipo.nombre }} #{{ cr.reservacion.habitacion.numero }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
+              {% if cr.es_titular %}
               <td>${{ cr.reservacion.total }}</td>
               <td class="text-success">${{ cr.reservacion.total_pagado }}</td>
               <td class="{% if cr.reservacion.saldo_pendiente > 0 %}text-danger{% else %}text-success{% endif %}">${{ cr.reservacion.saldo_pendiente }}</td>
-              <td>{% if cr.es_titular %}<span class="badge bg-primary">Titular</span>{% endif %}</td>
+              <td><span class="badge bg-primary">Titular</span></td>
+              {% else %}
+              <td class="text-muted">—</td>
+              <td class="text-muted">—</td>
+              <td class="text-muted">—</td>
+              <td></td>
+              {% endif %}
             </tr>
             {% empty %}
             <tr><td colspan="9" class="text-center text-muted py-3">Sin viajeros registrados.</td></tr>
