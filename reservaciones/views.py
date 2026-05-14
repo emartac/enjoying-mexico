@@ -61,6 +61,16 @@ class ReservacionDetailView(LoginRequiredMixin, DetailView):
         ctx['pagos'] = self.object.pagos.order_by('-fecha')
         ctx['agregar_form'] = AgregarClienteForm(self.object)
         ctx['pago_form'] = PagoForm()
+        if self.object.habitacion:
+            ocupados = ClienteReservacion.objects.filter(
+                reservacion__habitacion=self.object.habitacion,
+                reservacion__viaje=self.object.viaje,
+            ).exclude(reservacion__estado='cancelada').count()
+            ctx['hab_ocupados'] = ocupados
+            ctx['hab_llena'] = ocupados >= self.object.habitacion.tipo.capacidad
+        else:
+            ctx['hab_ocupados'] = 0
+            ctx['hab_llena'] = False
         return ctx
 
 
@@ -161,6 +171,16 @@ def cambiar_estado(request, pk, nuevo_estado):
 def agregar_cliente(request, pk):
     reservacion = get_object_or_404(Reservacion, pk=pk)
     if request.method == 'POST':
+        if reservacion.habitacion:
+            ocupados = ClienteReservacion.objects.filter(
+                reservacion__habitacion=reservacion.habitacion,
+                reservacion__viaje=reservacion.viaje,
+            ).exclude(reservacion__estado='cancelada').count()
+            if ocupados >= reservacion.habitacion.tipo.capacidad:
+                messages.error(request,
+                    f'La habitación {reservacion.habitacion.numero} ya está llena '
+                    f'({ocupados}/{reservacion.habitacion.tipo.capacidad} lugar(es)).')
+                return redirect('reservaciones:detalle', pk=pk)
         form = AgregarClienteForm(reservacion, request.POST)
         if form.is_valid():
             cliente = form.cleaned_data['cliente']

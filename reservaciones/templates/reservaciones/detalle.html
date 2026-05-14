@@ -130,6 +130,7 @@
     <div class="card shadow-sm">
       <div class="card-header d-flex justify-content-between align-items-center">
         <span><i class="bi bi-people me-1"></i>Clientes ({{ reservacion.num_clientes }}{% if reservacion.habitacion %}/{{ reservacion.habitacion.tipo.capacidad }}{% endif %})</span>
+        {% if hab_llena %}<span class="badge bg-danger">Habitación llena ({{ hab_ocupados }}/{{ reservacion.habitacion.tipo.capacidad }})</span>{% endif %}
       </div>
       <ul class="list-group list-group-flush">
         {% for cr in clientes_res %}
@@ -161,7 +162,7 @@
         <li class="list-group-item text-muted text-center py-3">Sin clientes asignados.</li>
         {% endfor %}
       </ul>
-      {% if not reservacion.habitacion or reservacion.num_clientes < reservacion.habitacion.tipo.capacidad %}
+      {% if not reservacion.habitacion or not hab_llena %}
       <div class="card-footer">
         <p class="small fw-semibold mb-2">Agregar cliente:</p>
         <form method="post" action="{% url 'reservaciones:agregar_cliente' reservacion.pk %}">
@@ -194,7 +195,7 @@
       </div>
       {% else %}
       <div class="card-footer text-muted small text-center">
-        <i class="bi bi-info-circle me-1"></i>Capacidad máxima alcanzada ({{ reservacion.habitacion.tipo.capacidad }} persona(s)).
+        <i class="bi bi-info-circle me-1"></i>Habitación llena — {{ hab_ocupados }}/{{ reservacion.habitacion.tipo.capacidad }} lugar(es) ocupados entre todas las reservaciones.
       </div>
       {% endif %}
     </div>

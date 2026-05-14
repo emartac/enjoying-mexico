@@ -18,14 +18,32 @@ class ReservacionForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         from viajes.models import ViajeHabitacion
         from hoteles.models import Habitacion
-        viaje_id = viaje_id or (self.instance.viaje_id if self.instance.pk else None)
-        if viaje_id:
-            ids = ViajeHabitacion.objects.filter(viaje_id=viaje_id).values_list('habitacion_id', flat=True)
+        self._viaje_id = viaje_id or (self.instance.viaje_id if self.instance.pk else None)
+        if self._viaje_id:
+            ids = ViajeHabitacion.objects.filter(viaje_id=self._viaje_id).values_list('habitacion_id', flat=True)
             self.fields['habitacion'].queryset = Habitacion.objects.filter(pk__in=ids).select_related('tipo')
         else:
             self.fields['habitacion'].queryset = Habitacion.objects.none()
         self.fields['habitacion'].required = False
         self.fields['habitacion'].empty_label = '— Sin habitación (viaje de un día) —'
+
+    def clean(self):
+        cleaned_data = super().clean()
+        habitacion = cleaned_data.get('habitacion')
+        viaje = cleaned_data.get('viaje')
+        if habitacion and viaje:
+            qs = ClienteReservacion.objects.filter(
+                reservacion__habitacion=habitacion,
+                reservacion__viaje=viaje,
+            ).exclude(reservacion__estado='cancelada')
+            if self.instance.pk:
+                qs = qs.exclude(reservacion_id=self.instance.pk)
+            ocupados = qs.count()
+            if ocupados >= habitacion.tipo.capacidad:
+                self.add_error('habitacion',
+                    f'La habitación {habitacion.numero} ya está llena '
+                    f'({ocupados}/{habitacion.tipo.capacidad} lugar(es) ocupados).')
+        return cleaned_data
         self.helper = FormHelper()
         self.helper.layout = Layout(
             Row(
