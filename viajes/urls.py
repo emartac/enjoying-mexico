@@ -11,6 +11,7 @@ urlpatterns = [
     path('<int:pk>/eliminar/', views.ViajeDeleteView.as_view(), name='eliminar'),
     path('<int:pk>/habitaciones/', views.ViajeHabitacionesView.as_view(), name='habitaciones'),
     path('<int:pk>/habitaciones/agregar/', views.ViajeHabitacionAgregarView.as_view(), name='habitacion_agregar'),
+    path('<int:pk>/habitaciones/agregar-ajax/', views.viaje_habitacion_agregar_ajax, name='habitacion_agregar_ajax'),
     path('<int:pk>/habitaciones/<int:vh_pk>/editar/', views.viaje_habitacion_editar, name='habitacion_editar'),
     path('<int:pk>/habitaciones/<int:vh_pk>/quitar/', views.viaje_habitacion_quitar, name='habitacion_quitar'),
 ]

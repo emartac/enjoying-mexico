@@ -69,9 +69,9 @@
     <div class="card shadow-sm mb-3">
       <div class="card-header d-flex justify-content-between align-items-center">
         <span><i class="bi bi-building me-1"></i>Hoteles y habitaciones</span>
-        <a href="{% url 'viajes:habitacion_agregar' viaje.pk %}" class="btn btn-sm btn-primary">
+        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalAgregarHabitacion">
           <i class="bi bi-plus-lg me-1"></i>Agregar habitación
-        </a>
+        </button>
       </div>
       {% if grupos_habitacion %}
       <div class="card-body p-0">
@@ -246,4 +246,97 @@
     </div>
   </div>
 </div>
+
+<!-- Modal: agregar habitación -->
+<div class="modal fade" id="modalAgregarHabitacion" tabindex="-1" aria-labelledby="modalAgregarHabLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalAgregarHabLabel"><i class="bi bi-door-open me-1"></i>Agregar habitación al viaje</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="hab-errores" class="alert alert-danger small py-2" style="display:none"></div>
+        <div class="row g-2">
+          <div class="col-8">
+            <label class="form-label small mb-1">Hotel *</label>
+            <input type="text" class="form-control form-control-sm" id="hab-hotel">
+          </div>
+          <div class="col-4">
+            <label class="form-label small mb-1">Número *</label>
+            <input type="text" class="form-control form-control-sm" id="hab-numero">
+          </div>
+          <div class="col-8">
+            <label class="form-label small mb-1">Tipo de habitación *</label>
+            <select class="form-select form-select-sm" id="hab-tipo">
+              <option value="">— Selecciona —</option>
+              {% for t in tipos_habitacion %}
+              <option value="{{ t.pk }}">{{ t.nombre }} (hasta {{ t.capacidad }} persona{{ t.capacidad|pluralize:"s" }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-4">
+            <label class="form-label small mb-1">Camas</label>
+            <input type="number" class="form-control form-control-sm" id="hab-camas" value="1" min="1">
+          </div>
+          <div class="col-6">
+            <label class="form-label small mb-1">Precio regular *</label>
+            <div class="input-group input-group-sm">
+              <span class="input-group-text">$</span>
+              <input type="number" class="form-control" id="hab-precio" step="0.01" min="0">
+            </div>
+          </div>
+          <div class="col-6">
+            <label class="form-label small mb-1">Precio frecuente</label>
+            <div class="input-group input-group-sm">
+              <span class="input-group-text">$</span>
+              <input type="number" class="form-control" id="hab-frecuente" step="0.01" min="0">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary btn-sm" id="btn-guardar-hab">
+          <i class="bi bi-save me-1"></i>Guardar habitación
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var btn = document.getElementById('btn-guardar-hab');
+  if (!btn) return;
+  btn.addEventListener('click', function () {
+    var errDiv = document.getElementById('hab-errores');
+    errDiv.style.display = 'none';
+    var csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    var body = new URLSearchParams({
+      nombre_hotel:     document.getElementById('hab-hotel').value.trim(),
+      tipo:             document.getElementById('hab-tipo').value,
+      numero:           document.getElementById('hab-numero').value.trim(),
+      num_camas:        document.getElementById('hab-camas').value,
+      precio_total:     document.getElementById('hab-precio').value,
+      precio_frecuente: document.getElementById('hab-frecuente').value,
+    });
+    fetch('{% url "viajes:habitacion_agregar_ajax" viaje.pk %}', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': csrf },
+      body: body.toString(),
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.ok) {
+        window.location.reload();
+      } else {
+        var msgs = Object.values(data.errors).join(' ');
+        errDiv.textContent = msgs;
+        errDiv.style.display = '';
+      }
+    });
+  });
+})();
+</script>
 {% endblock %}
