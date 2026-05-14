@@ -207,35 +207,35 @@
               <th>Nombre</th>
               <th>Email</th>
               <th>Teléfono</th>
-              <th>Titular</th>
+              <th class="text-end">Pago</th>
             </tr>
           </thead>
           <tbody>
             {% for grupo in grupos_viajeros %}
-            <tr class="table-light">
-              <td colspan="2" class="fw-semibold py-1">
-                <a href="{% url 'reservaciones:detalle' grupo.reservacion.pk %}">{{ grupo.reservacion.codigo }}</a>
+            <tr style="background:#f8f9fa; border-top: 2px solid #dee2e6;">
+              <td colspan="3" class="py-1 small">
+                <span class="fw-semibold text-secondary">{{ grupo.reservacion.codigo }}</span>
                 <span class="badge badge-{{ grupo.reservacion.estado }} ms-1">{{ grupo.reservacion.get_estado_display }}</span>
                 {% if grupo.reservacion.habitacion %}
-                <span class="text-muted fw-normal ms-2">{{ grupo.reservacion.habitacion.tipo.nombre }} #{{ grupo.reservacion.habitacion.numero }}</span>
+                <span class="text-muted ms-2">{{ grupo.reservacion.habitacion.tipo.nombre }} #{{ grupo.reservacion.habitacion.numero }}</span>
                 {% else %}
-                <span class="text-muted fw-normal ms-2">Viaje de un día</span>
+                <span class="text-muted ms-2">Viaje de un día</span>
                 {% endif %}
               </td>
-              <td colspan="2" class="text-end py-1 small">
-                <span class="text-muted">Total:</span> <strong>${{ grupo.reservacion.total }}</strong>
-                <span class="text-success ms-2">&#10003; ${{ grupo.reservacion.total_pagado }}</span>
-                <span class="ms-2 {% if grupo.reservacion.saldo_pendiente > 0 %}text-danger{% else %}text-success{% endif %}">
-                  Pend: ${{ grupo.reservacion.saldo_pendiente }}
-                </span>
+              <td class="text-end py-1 small text-nowrap">
+                <strong>${{ grupo.reservacion.total }}</strong>
+                <span class="text-success ms-1">&#10003;${{ grupo.reservacion.total_pagado }}</span>
+                {% if grupo.reservacion.saldo_pendiente > 0 %}
+                <span class="text-danger ms-1">&#8226;${{ grupo.reservacion.saldo_pendiente }}</span>
+                {% endif %}
               </td>
             </tr>
             {% for cr in grupo.viajeros %}
             <tr>
-              <td class="ps-4"><a href="{% url 'clientes:detalle' cr.cliente.pk %}">{{ cr.cliente }}</a></td>
-              <td>{{ cr.cliente.email }}</td>
-              <td>{{ cr.cliente.telefono|default:"—" }}</td>
-              <td>{% if cr.es_titular %}<span class="badge bg-primary">Titular</span>{% endif %}</td>
+              <td class="ps-3"><a href="{% url 'clientes:detalle' cr.cliente.pk %}">{{ cr.cliente }}</a>{% if cr.es_titular %} <span class="badge bg-primary">T</span>{% endif %}</td>
+              <td class="text-muted small">{{ cr.cliente.email }}</td>
+              <td class="text-muted small">{{ cr.cliente.telefono|default:"—" }}</td>
+              <td></td>
             </tr>
             {% endfor %}
             {% empty %}
