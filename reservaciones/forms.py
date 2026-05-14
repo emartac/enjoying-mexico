@@ -2,7 +2,7 @@ import datetime
 from django import forms
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Row, Column, Submit, ButtonHolder
-from .models import Reservacion, Pago
+from .models import Reservacion, Pago, ClienteReservacion
 from clientes.models import Cliente
 
 
@@ -26,6 +26,17 @@ class ReservacionForm(forms.ModelForm):
             self.fields['habitacion'].queryset = Habitacion.objects.none()
         self.fields['habitacion'].required = False
         self.fields['habitacion'].empty_label = '— Sin habitación (viaje de un día) —'
+        self.helper = FormHelper()
+        self.helper.layout = Layout(
+            Row(
+                Column('viaje', css_class='col-md-8'),
+                Column('estado', css_class='col-md-4'),
+            ),
+            'habitacion',
+            'precio_personalizado',
+            'notas',
+            ButtonHolder(Submit('submit', 'Guardar reservación', css_class='btn btn-primary')),
+        )
 
     def clean(self):
         cleaned_data = super().clean()
@@ -44,17 +55,6 @@ class ReservacionForm(forms.ModelForm):
                     f'La habitación {habitacion.numero} ya está llena '
                     f'({ocupados}/{habitacion.tipo.capacidad} lugar(es) ocupados).')
         return cleaned_data
-        self.helper = FormHelper()
-        self.helper.layout = Layout(
-            Row(
-                Column('viaje', css_class='col-md-8'),
-                Column('estado', css_class='col-md-4'),
-            ),
-            'habitacion',
-            'precio_personalizado',
-            'notas',
-            ButtonHolder(Submit('submit', 'Guardar reservación', css_class='btn btn-primary')),
-        )
 
 
 class AgregarClienteForm(forms.Form):
