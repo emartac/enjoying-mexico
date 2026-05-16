@@ -6,6 +6,7 @@ app_name = 'clientes'
 urlpatterns = [
     path('', views.ClienteListView.as_view(), name='lista'),
     path('nuevo/', views.ClienteCreateView.as_view(), name='crear'),
+    path('carga-masiva/', views.carga_masiva, name='carga_masiva'),
     path('buscar/', views.cliente_buscar, name='buscar'),
     path('crear-ajax/', views.cliente_crear_ajax, name='crear_ajax'),
     path('<int:pk>/', views.ClienteDetailView.as_view(), name='detalle'),

@@ -1,3 +1,5 @@
+import csv
+import io
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
@@ -6,7 +8,7 @@ from django.contrib import messages
 from django.db.models import Q
 from django.db.models.deletion import ProtectedError
 from django.http import JsonResponse
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from .models import Cliente
 from .forms import ClienteForm
 
@@ -98,6 +100,96 @@ class ClienteDeleteView(LoginRequiredMixin, DeleteView):
         except ProtectedError:
             messages.error(self.request, f'No se puede eliminar a {self.object}: tiene reservaciones asociadas.')
             return redirect('clientes:detalle', pk=self.object.pk)
+
+
+def _parse_bool_csv(val):
+    return val.strip().lower() in ('si', 'sí', '1', 'true', 'yes', 's')
+
+
+@login_required
+def carga_masiva(request):
+    titulo = 'Carga masiva de clientes'
+    if request.method != 'POST':
+        return render(request, 'clientes/carga_masiva.html', {'titulo': titulo})
+
+    archivo = request.FILES.get('archivo')
+    if not archivo:
+        messages.error(request, 'Selecciona un archivo CSV.')
+        return render(request, 'clientes/carga_masiva.html', {'titulo': titulo})
+
+    try:
+        contenido = archivo.read().decode('utf-8-sig')
+    except UnicodeDecodeError:
+        archivo.seek(0)
+        contenido = archivo.read().decode('latin-1')
+
+    reader = csv.DictReader(io.StringIO(contenido))
+    headers = [h.strip().lower() for h in (reader.fieldnames or [])]
+
+    columnas_requeridas = {'correo', 'email', 'nombre'}
+    if not (columnas_requeridas & set(headers)):
+        messages.error(request, 'El archivo no tiene las columnas requeridas (nombre, correo/email).')
+        return render(request, 'clientes/carga_masiva.html', {'titulo': titulo})
+
+    def col(row, *nombres):
+        for n in nombres:
+            val = row.get(n, '').strip()
+            if val:
+                return val
+        return ''
+
+    resultados = []
+    creados = omitidos = errores = 0
+
+    for i, raw_row in enumerate(reader, start=2):
+        row = {k.strip().lower(): v for k, v in raw_row.items()}
+
+        nombre_raw = col(row, 'nombre')
+        apellido = col(row, 'apellido')
+        if not apellido and ' ' in nombre_raw:
+            partes = nombre_raw.rsplit(' ', 1)
+            nombre_raw, apellido = partes[0].strip(), partes[1].strip()
+
+        email = col(row, 'correo', 'email')
+        telefono = col(row, 'telefono', 'teléfono')
+        frecuente = _parse_bool_csv(col(row, 'viajero_frecuente', 'frecuente'))
+
+        fila = {'fila': i, 'nombre': f'{nombre_raw} {apellido}'.strip(), 'email': email}
+
+        if not nombre_raw or not email:
+            fila['estado'] = 'error'
+            fila['detalle'] = 'Nombre y correo son obligatorios.'
+            errores += 1
+        elif Cliente.objects.filter(email__iexact=email).exists():
+            fila['estado'] = 'omitido'
+            fila['detalle'] = 'El correo ya existe.'
+            omitidos += 1
+        else:
+            try:
+                Cliente.objects.create(
+                    nombre=nombre_raw,
+                    apellido=apellido,
+                    email=email,
+                    telefono=telefono,
+                    viajero_frecuente=frecuente,
+                )
+                fila['estado'] = 'creado'
+                fila['detalle'] = ''
+                creados += 1
+            except Exception as e:
+                fila['estado'] = 'error'
+                fila['detalle'] = str(e)
+                errores += 1
+
+        resultados.append(fila)
+
+    return render(request, 'clientes/carga_masiva.html', {
+        'titulo': titulo,
+        'resultados': resultados,
+        'creados': creados,
+        'omitidos': omitidos,
+        'errores': errores,
+    })
 
 
 @login_required
