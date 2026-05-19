@@ -1,0 +1,844 @@
+body
+	{
+	margin: 0 auto;
+	font-family:'Poppins', sans-serif;
+	font-size: 13.5px;
+	color:#1A2B48;
+}
+.Poppins{
+	font-family: 'Poppins', sans-serif;
+}
+.none{
+	display: none;
+}
+header{
+	width: 100%;
+}
+.borde{
+	border-right: 10px solid transparent;
+	border-left: 10px solid transparent;
+	border-image:url("../img/borde2.png") 700 round;
+	width: 100%;
+	}
+.separador{
+	text-align: center;margin: 25px 0px 40px 0px;
+}
+.separador img{
+	max-height:60px;display: inline-block;
+}
+/*Pie de pagina*/
+	.bordeflores2{
+		text-align: center;
+		margin: 0 auto;
+		border-top: 30px solid transparent;
+		border-image:url("../img/separador2.jpg") 90 round;
+		width: 50%;
+		margin-bottom: 20px;
+		margin-top: 20px;
+		}
+	.contacto{
+		font-weight: bold;
+		text-align: center;
+	}
+	.contacto1 h5{
+		padding-top: 10px;
+		margin-bottom: 25px;
+		color: #E61258;
+		font-weight: bold;
+	}
+	.contacto1 img{
+		max-height: 35px;
+		margin:0px 20px 0px 20px;
+		display: inline-block;
+	}
+	.botonwhats img{
+		width: 30px;
+	}
+	.botonwhats{
+		margin:30px;
+	}
+	.pie{
+		text-align: center;
+		color: white;
+		background-color: #30AB0F;
+		line-height: 35px;
+		font-size: 11px;
+	}
+	.iconosviaje{
+		text-align: center;
+	}
+	.iconosviaje img{
+		display: inline-block;
+		max-width: 100px;
+		margin: 20px;
+	}
+/*MENU DE NAVEGACION*/
+	.logo{
+		max-height: 50px;
+		margin-right: 50px;
+		margin-left: 20px;
+	}
+	.barra{
+		background-color:white !important;
+		font-family: 'Poppins', sans-serif;
+		font-weight: bold;
+		font-size: 13px;
+
+	}
+	.barra li a{
+		color:#1a2b48 !important;
+		margin: 0 auto;
+		margin-top: 10px;
+	
+	}
+	.barra li a:hover{
+		color: #E61258 !important;
+	}
+/*INICIO*/
+	/*slider*/
+	.carruselindex{
+		max-width: 1200px !important;
+		margin:0 auto !important;
+		margin-top: 20px;
+	}
+	.carruselindex img{
+		width: 100% !important;
+		margin: 0 auto !important;
+		height: 450px;
+		object-fit: cover;
+	}
+	@media (max-width: 850px){
+		.carruselindex img{
+			height: 280px;
+		}	
+		.barra li a{
+			color: #E61258 !important;
+			border-bottom:none;
+			margin-top: 8px;
+		}
+		.nosotros2 h1{
+			font-size: 31px;
+		}
+	}
+
+	/*PORTADA*/
+	.portada{
+		width: 100%;
+		height: 550px;
+		position: relative;
+	}
+	.portada img{
+		object-fit: cover;
+		width: 100%;
+		height: 100%;
+	}
+	.portada1 {
+		position: absolute;
+		top: 30%;
+		text-align: center;
+		width: 100%;
+	}
+	.portada1 img{
+		max-width: 150px;
+		display: inline-block;
+	}
+	.portada1 h1{
+		color: white;
+		text-shadow: black 0.1em 0.1em 0.2em;
+		font-family:'Caveat', sans-serif;
+		line-height: 70px;
+		letter-spacing: -1px;
+		text-align: center;
+		font-weight: bold;
+		font-size: 100px;
+	}
+	@media (max-width: 850px){
+		.portada1 h1{
+			font-size: 60px;
+			line-height: 40px;
+		}
+		.portada{
+			height: 400px;
+		}
+
+	}
+	/*PROXIMOS VIAJES*/
+		.pros{
+			text-align: center;
+			width: 100%;
+			color:#1A2B48;
+			margin: 20px 0px 30px 0px;	
+		}
+		.pros h1{
+			font-weight: bold;
+			color:#E3276E;
+			font-variant:small-caps;
+		}
+		.pros1{
+			display: inline-block;
+			vertical-align: top;
+			margin-bottom:20px;
+		}
+		.pros1 img{
+			height: 50px;
+			padding-top: 10px;		
+		}
+		.pros1 h6{
+			margin:5px;
+			font-size: 22px;
+			color:#36BCA1;
+			font-family:'Caveat', cursive;
+		}
+		.bordeflores{
+			text-align: center;
+			margin: 0 auto;
+			border-top: 10px solid transparent;
+			border-image:url("../img/borde3.jpg") 80 round;
+			width: 50%;
+			margin-bottom: 20px;
+			margin-top: 20px;
+		}
+		.urge{
+			margin-top: 50px;
+			width: 100% !important;
+			text-align: center;
+		}
+		.urge1{
+			text-align: center;
+			display: inline-block;
+			max-width: 400px;
+			font-size: 28px;
+			font-weight: bold;
+			font-family:'Caveat', cursive;
+			margin-bottom: 30px;
+		}
+		.urge1 img{
+			margin:15px 30px 0px 15px;
+			border-radius: 10px;
+			width: 90%;
+			max-width: 320px;
+		}
+		@media(max-width: 500px) {
+			.viajero{
+	    	    width: 320px !important;}
+	    	.borde{
+            	border-right: 10px solid transparent;
+            	border-left: 10px solid transparent;
+	    	}
+	    	.urge1{
+			text-align: center;
+			display: inline-block;
+			max-width: 450px;
+			}
+			.pros h1{
+				font-size: 35px;
+			}
+		}
+		
+	/*PORTADA 2*/
+	.fondorosa{
+		width: 100%;
+		text-align: center;
+		color: #36BCA1;
+		background-color: #FEF7EF;
+		padding-top: 20px;
+		font-size: 15px;
+	}
+	.fondorosa1 h2{
+		font-size: 22px;
+		font-weight: bold;
+		
+	}
+	.fondorosa1 h4{
+		font-family:'Caveat', cursive;
+		font-weight: bold;
+		margin-bottom: 5px;
+		color:#5CBC36;
+	}
+	.borderosa{
+		width: 120px;
+		height: 50px;
+		border-top: solid;
+		border-color: #EC927E;
+		display: inline-block;
+	}
+	.fondorosa1 img{
+		max-width:270px;
+		border-radius: 10px;
+		display: inline-block;
+		margin: 15px;
+	}
+	.fondorosa2 p{
+		max-width: 300px;
+		display: inline-block;
+	}
+	/*OPINIONES*/
+		.opinion{
+			width: 100%;
+			height: 100%;
+		}
+		.opinion h3{	
+			font-size: 23px;
+			margin: 0px 0px 20px 0px;
+			font-weight: bold;
+			color: #1A2B48;
+		}
+		.opinion h4{
+			font-family:'Caveat', cursive;
+			font-weight: bold;
+			color:#5CBC36;
+			margin-bottom: 10px;
+		}
+		.opina{
+	    	text-align: center;
+	    }
+	    .viajero img{
+			border-radius: 0px;
+			height: 240px;
+			width: 100%;
+			object-fit: cover;
+			margin-bottom: 15px;
+	    }
+	    .viajero{
+	    	width: 350px;
+			height: 450px;
+	    	display: inline-block;
+	    	margin:20px 0px 30px 0px;
+	    	text-align:justify;
+	    }
+	    .viajero h5{
+	    	font-family:'Caveat', cursive;
+	    	font-size: 25px;
+	    }
+	    .viajero h6{
+	    	text-align: right;
+	    	font-weight: bold;
+	    	font-size: 12px;
+	    	color:#36BCA1;
+	    }
+	    .carousel-control-prev-icon{
+  			background-color: #E00F5E;
+
+		}
+		.carousel-control-next-icon{
+  			background-color: #E00F5E;
+		}
+/*PÁGINAS TOURS*/
+	.portadaviaje img{
+		object-position: 0% 35% !important;
+		display: inline-block;
+	}
+	.portadaviaje{
+		text-align: center;
+		max-height: 420px !important;
+	}
+	.portadaviaje h1{
+		top:15% !important;
+	}
+	.viaja{
+		width: 100%;
+		padding: 0% 0% 0% 15%;
+	}
+	.viaja1 h2{
+		font-weight: bold;
+		font-size: 26px;
+	}
+	.viaja1 h4{
+		font-size: 15px;
+		color:#36BCA1;
+	}
+			@media(max-width: 800px) {
+			.viaja{
+	    	    padding: 0px 0px 0px 0px !important;
+	    		}
+	    	.viaja1 h2{
+				font-size: 24px;
+				}
+			.viaja1 li{
+				margin-right: 0px !important; 
+			}
+			.reservaya img{
+				max-width: 300px !important;
+			}
+			.noincluye{
+				margin-top: 20px;
+			}
+			}
+	.viaja1 b{
+		color: #EC927E;
+	}
+	.viaja1 li{
+		display: inline-block;
+		margin:10px;
+	}
+	.pdf{
+		text-align: center;
+		max-width: 490px;
+		margin-bottom: 20px;
+	}
+	.pdf a{
+		color: white;
+		font-weight: bold;
+		font-size: 14px;
+		text-align: center;
+		width: 230px;
+		display: inline-block;
+		padding:14px 0px 0px 0px;
+		margin-top: 25px;
+		text-decoration: none;
+		border-radius: 15px;
+		box-shadow: #686767 0.1em 0.1em 0.2em;	
+	}
+	.pdf h6{
+		font-weight: bold;
+	}
+	.viaja2{
+		color:#1A2B48;
+		text-align: center;
+		padding:20px;	
+	}
+	.viaja2 h3{
+		font-family: 'Caveat',cursive;
+		font-weight: bold;
+	}
+	.viaja2 p{
+		max-width: 500px;
+		display: inline-block;
+		margin-top: 10px;
+	}
+		.somos{
+			text-align: center;
+			color:#1A2B48;
+			padding-top:20px;
+			padding-bottom: 15px;
+		}
+		.somos h3{
+			font-family: 'Poppins', sans-serif;	
+			font-weight: bold;
+			font-size: 25px;
+			margin-bottom: 20px;
+		}
+		.somos h5{
+			font-family: 'Caveat', cursive;	
+			line-height: 0px;
+			font-weight: bold;
+			color:#5CBC36;
+		}
+	.experiencias{
+		text-align: center;
+		padding-top: 10px;
+	}
+	.experiencias1 img{
+		border-radius: 10px;
+		max-width: 600px;
+		width: 100%;
+	}
+	.experiencias h5{
+		margin-bottom: 15px;
+	}
+	.costos{
+		text-align: justify;
+		padding-top: 10px;
+		padding-left: 30px;
+		font-size: 15px;
+	}
+	.costos h4{
+	    margin-top: 45px;
+		font-weight: bold;
+		font-size: 23px;
+	}
+	.costos h3{
+		font-family: 'Caveat', cursive !important;
+		line-height: 10px;
+		font-weight: bold;
+		font-size: 23px !important;
+		color: #5CBC36;
+	}
+	.costos span{
+		font-weight: bold;	
+		font-size: 15px;
+	}
+	.costos b{
+		color: #D51D5E;
+		font-size: 13px;
+	}
+	.costos li{
+		margin: 0px 10px 0px 0px;
+	}
+	.incluye{
+		margin: 0 auto;
+		width: 100%;
+		text-align: center;
+		font-weight: bold;
+	}
+	.incluye img{
+		border: solid 10px white;
+		box-shadow: 3px 3px 15px 5px #A6A6A6;
+	}
+	.incluye p{
+		font-family: 'Caveat', cursive !important;
+		font-size: 23px;
+	}
+	.incluye h3{
+		color: #4EA22D;
+		margin-bottom: 10px !important;
+	}
+	.incluye ul{
+		text-align:left;
+		list-style-image: url('../img/checkmark.png');
+		display: inline-block;
+		width: 230px;
+	}
+	.incluye li{
+		margin:10px 0px 10px 0px;
+	}
+	.noincluye{
+		max-width: 300px;
+		font-weight: normal;
+	}
+	.noincluye li{
+		list-style-image: url('../img/reddot.png');
+	}
+	.noincluye h6{
+		color:#F06262;
+		font-weight: bold;
+	}
+/*PAGO A MESES*/
+	.pagomeses{
+		padding: 25px 0px 10px 0px;
+		text-align: center;
+	}
+	.pagomeses h3{
+		font-weight: bold;
+		font-size: 22px;
+	}
+	.pagomeses h4{
+		font-family: 'Caveat',cursive;
+		color: #36BCA1;
+		margin-top: 40px;
+		line-height: 10px;
+		font-weight: bold;
+	}
+	.pagomeses img{
+		max-width: 300px;
+		display: inline-block;
+		border-radius: 10px;
+	}
+	.pagomeses2 p{
+		display: inline-block;
+		background-color: #36BCA1;
+		width: 180px;
+		height: 30px;
+		padding-top: 5px;
+		color: white;
+		border-radius: 10px;
+		margin:20px 10px 20px 10px;
+	}
+	.pagomeses2 img{
+		max-width: 60px;
+		margin: 20px 20px 0px 20px;
+	}
+/*itinerario*/
+	.itinerario h3{
+		color: #1A2B48 !important;
+	}
+	.itinerario ul{
+		margin-top: 25px;
+		vertical-align: top;
+	}
+	.itinerario p{
+		background-color: #EC927E;
+		border-radius: 10px;
+		color: white;
+		width: 60px;
+		font-family:'Poppins', sans-serif !important;
+		font-size: 14px;
+		padding: 5px 10px 5px 15px;
+	}
+
+	.reservaya{
+		text-align: center;
+		padding: 20px 0px 20px 0px;
+	}
+	.reservaya h1{
+		font-family: 'Caveat',cursive;
+		color: #30AB0F;
+	}
+	.reservaya img{
+		max-width: 350px;
+		display: inline-block;
+		border-radius: 10px;
+		margin: 30px 0px 30px 0px;
+		border: solid 10px white;
+		box-shadow: 3px 3px 15px 5px #A6A6A6;
+		/*transform: rotate(4deg);*/
+	}
+/* TERMINOS Y CONDICIONES */
+	.terminos{
+		text-align: justify;
+	}
+	.terminos b{
+		color: #696969;
+	}
+	.terminos li{
+		padding-top: 5px;
+	}
+	.card-header{
+		background-color: white;
+		border-bottom: dashed 2px #EEEEEE;
+		padding: 15px 0px 20px 0px;
+	}
+	.card-header img{
+		margin:7px 0px 0px 5px;
+		height: 11px;
+		float: right;
+	}
+	.terminosheader{
+		font-size: 17px;
+		color: #1A2B48 !important;
+	}
+	.card{
+		border:none;
+	}
+
+/*PAGINA NOSOTROS*/
+	.nosotros{
+		text-align: center;
+		margin-top: 30px;
+		max-width: 1000px;
+		margin: 0 auto;
+	}
+	.nosotros p{
+		max-width: 800px;
+		margin: 0  auto;
+		padding: 10px;
+	}
+	.nosotros img{
+		margin:10px 0px 10px 0px;
+		width: 99%;
+	}
+	.nosotros1{
+		width: 100%;
+		position: relative;
+		text-align: center;
+	}
+	.nosotros1 img{
+		max-height: 400px;
+		object-fit: cover;
+		width: 100%;
+		object-position: 0% 30%;
+	}
+	.nosotros1 p{
+		display: inline-block;
+		max-width: 700px;
+		font-weight: bold;
+		padding: 40px 20px 0px 20px;
+		line-height: 26px;
+		font-size: 25px;
+		letter-spacing: .5px;
+		color: #019701;
+		font-family: 'Caveat', cursive;
+	}
+	.nosotros2{
+		position: absolute;
+		padding:10% 0% 0% 10%;
+		text-align: left;
+		text-shadow: black 0.1em 0.1em 0.7em;
+	}
+	.nosotros2 h3{
+		font-weight: bold;
+		font-family: 'Caveat', cursive;
+		color:#FFD800;
+		margin-bottom: 20px;
+	}
+	.nosotros2 h1{
+		font-weight: bold;
+		color: white;
+	}
+	.nosotros3{
+		padding: 20% 10% 0% 10%;
+		text-align: center;
+		color:#1A2B48;
+	}
+	.nosotros3 h2{
+		font-weight: bold;
+		font-family: 'Caveat', cursive;
+	}
+	.foto{
+		text-align: center;
+		max-width: 600px;
+		padding: 30px 20px 0px 20px;
+		margin-bottom: 30px;
+	}
+	.foto img{
+		width: 100%;
+		display: inline-block;
+		border-radius: 10px;
+		border: solid 10px white;
+		border-bottom: solid 60px white;
+		box-shadow: 3px 3px 15px 5px #A6A6A6;
+		transform: rotate(4deg);
+	}
+	.grande{
+		display: inline-block;
+	}
+	.chico{
+		display: none;
+	}
+		@media(max-width: 720px) {
+			.grande{
+				display: none;
+			}
+			.chico{
+				display: inline-block;
+			}
+			.nosotros3{
+				padding-top: 10% !important;
+			}
+			.reserva2 h3{
+				margin-bottom:5px !important;
+			}
+			.reserva2 h1{
+				font-size: 33px !important;
+			}
+			.reserva2{
+				padding-left: 20px !important;
+			}
+		}
+	.fotoright img{
+		transform: rotate(-4deg) !important;
+	}
+	.nosotros3 h3{
+		font-size: 26px;
+		font-weight: bold;
+		color:#E61258;
+	}
+	.nosotros3 h4{
+		font-weight: bold;
+		font-family: 'Caveat', cursive;
+		color: #5CBC36;
+		margin-bottom: -.5px;
+	}
+	.nosotros3azul h3{
+		color: #36BCA1 !important;
+	}
+	.mapa { 
+		padding-top: 25px !important;
+		font-weight: bold;
+		margin-bottom: 30px;
+	}
+	.mapa img{
+		max-height: 35px;
+	}
+	.mapa b{
+		color: #999999;
+	}
+	.mapa2{
+		text-align: left;
+		margin: 30px 0px 30px 0px ;
+	}
+/*RESERVACIONES*/
+	.reserva2{
+		padding-left: 20%;
+	}
+	.reserva2 h1{
+		font-size: 50px;
+	}
+	.reserva{
+		text-align:center; 
+		font-weight: bold;
+	}
+	.reserva h3{
+		font-weight: bold;
+	}
+	.reserva h4{
+		font-weight: bold;
+		font-family:'Caveat', cursive;
+		line-height: 15px;
+		color:#5CBC36;
+	}
+	.reserva3{
+		display: inline-block;
+		text-align: left;
+		color: white;
+	}
+	.reserva3 h5{
+		font-weight: bold;
+		line-height: 30px;
+	}
+	.reserva3 p{
+		font-weight: normal;
+	}
+	.reserva3 img{
+		padding-top: 35px;
+		width: 100%;
+	}
+	.reserva4{
+		padding: 20px 20px 10px 30px;
+		text-shadow: 2px 2px 35px black;
+		height: 100%;
+	}
+	.metodos h4{
+		margin-top: -10px !important;
+		color: #5CBC36;
+		font-weight: bold;
+	}
+	.metodos h2{
+		font-family:'Caveat',cursive;
+		font-weight: bold;
+	}
+	.metodos{
+		text-align: center;
+		padding: 25px 0px 25px 0px;
+	}
+	.pagos img{
+		height: 35px;
+		margin-bottom: 15px;
+	}
+	.pagos p{
+		line-height: 25px;
+		text-align: left;
+	}
+	.pagos span{
+		font-size: 14px;
+		letter-spacing: 1px;
+	}
+	.pagos{
+		text-align: right;
+		display: inline-block;
+		margin: 10px 5px 10px 5px;
+		border-radius: 10px;
+		color: white;
+		padding: 10px 20px 5px 20px;
+		font-size: 13px;
+		width: 350px;
+	}
+	.pagomeses3 h4{
+		margin-top: 0px;
+	}
+	.paypal img{
+		width: 130px;
+		margin-top: 30px;
+	}
+	.paypal a{
+		background-color: #F2911F;
+		padding: 10px 30px 10px 30px;
+		border-radius: 10px;
+		color: white;
+		box-shadow: 3px 3px 15px 5px #A6A6A6;
+	}
+	.paypal h2{
+		font-family: 'Caveat', cursive;
+	}
+	.paypal ol{
+		display: inline-block;
+		text-align: left;
+		margin-top: 25px;
+		vertical-align:bottom;
+	}
+	.paypal ol li{
+		margin-top: 10px;
+	}
+	.paypal{
+		padding-top: 15px;
+	}

@@ -85,6 +85,15 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Ruta al sitio HTML estático (Enjoying México público)
+# En local: coloca el sitio en turismo/sitio_publico/
+# En PythonAnywhere: ajusta esta ruta con la ubicación real
+STATIC_SITE_ROOT = config(
+    'STATIC_SITE_ROOT',
+    default=str(BASE_DIR / 'sitio_publico'),
+)
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -92,7 +101,7 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = 'bootstrap5'
 CRISPY_TEMPLATE_PACK = 'bootstrap5'
 
 LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/panel/'
 LOGOUT_REDIRECT_URL = '/login/'
 
 EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
