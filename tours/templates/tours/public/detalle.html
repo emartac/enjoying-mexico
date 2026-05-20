@@ -1,0 +1,171 @@
+{% extends 'tours/public/base_publica.html' %}
+{% block titulo %}{{ tour.titulo }} | Enjoying México{% endblock %}
+{% block og_image %}{{ tour.imagen_principal.url }}{% endblock %}
+
+{% block contenido %}
+<div class="portada portadaviaje">
+  <img src="{{ tour.imagen_principal.url }}" class="img-fluid" style="object-position: 50% 50% !important;">
+  <div class="portada1">
+    <h1><p>{{ tour.titulo }}</p></h1>
+    <img src="/img/logoborde.png" alt="" style="max-width:200px;width:30%;">
+  </div>
+</div>
+
+<div class="separador" style="margin-top:20px;"><img src="/img/separador2.jpg" class="img-fluid" alt=""></div>
+
+<div class="container-fluid">
+  <div class="viaja">
+    <div class="row">
+      <div class="col-lg-6 col-md-6 col-sm-12 col-12">
+        <div class="viaja1">
+          <div style="text-align:center;">
+            <h2>{{ tour.titulo }}</h2>
+            <div class="borderosa"></div><br>
+          </div>
+          <ul class="list-unstyled">
+            <li><b>Duración:</b> {{ tour.duracion }}</li>
+            <li><b>Salidas:</b>
+              <ul>
+                {% for fs in tour.proximas_fechas %}
+                <li>{{ fs.fecha|date:"l d \d\e F" }}</li>
+                {% endfor %}
+              </ul>
+            </li>
+            <li><b>Inicio de Registro:</b> {{ tour.inicio_registro }}</li>
+            <li><b>Salida:</b> {{ tour.hora_salida }}</li>
+            <li><b>Regreso:</b> {{ tour.hora_regreso }}</li>
+            <li><b>Lugar de Salida:</b>
+              <ul>
+                {% for lugar in lugares_salida %}
+                <li>{{ lugar }}</li>
+                {% endfor %}
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="col-lg-6 col-md-6 col-sm-12 col-12 pdf">
+        <a href="https://wa.me/5215544652641?text=Hola!%20Me%20interesa%20el%20tour%20{{ tour.titulo|urlencode }}" target="_blank" style="background-color:#299F20;"><p>Envíanos un WhatsApp</p></a>
+        <a href="tel:+525555652641" target="_blank" style="background-color:#F2911F;"><p>Llámanos al (55) 44 65 26 41</p></a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="separador" style="margin-top:20px;"><img src="/img/separador2.jpg" class="img-fluid" alt=""></div>
+
+<div class="viaja2">
+  <h3>{{ tour.titulo_descripcion }}</h3>
+  <p>{{ tour.descripcion }}</p>
+</div>
+
+<img src="/img/fondoazul1.png" alt="" style="width:100%;">
+<div class="somos container-fluid" style="background-color:#F3F8F8;">
+  <div class="row">
+    <div class="col-lg-6 col-md-6 col-sm-12 col-12 experiencias">
+      <h5>Vive</h5>
+      <h3>Experiencias</h3>
+      {% if tour.carrusel.all %}
+      <div id="carruselTour" class="carousel slide" data-ride="carousel">
+        <ol class="carousel-indicators">
+          {% for img in tour.carrusel.all %}
+          <li data-target="#carruselTour" data-slide-to="{{ forloop.counter0 }}" {% if forloop.first %}class="active"{% endif %}></li>
+          {% endfor %}
+        </ol>
+        <div class="carousel-inner">
+          {% for img in tour.carrusel.all %}
+          <div class="carousel-item experiencias1 {% if forloop.first %}active{% endif %}">
+            <img class="img-fluid" src="{{ img.imagen.url }}" alt="{{ tour.titulo }}">
+          </div>
+          {% endfor %}
+        </div>
+        <a class="carousel-control-prev" href="#carruselTour" role="button" data-slide="prev">
+          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        </a>
+        <a class="carousel-control-next" href="#carruselTour" role="button" data-slide="next">
+          <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        </a>
+      </div>
+      {% else %}
+      <img src="{{ tour.imagen_principal.url }}" class="img-fluid" alt="{{ tour.titulo }}">
+      {% endif %}
+    </div>
+    <div class="col-lg-6 col-md-6 col-sm-12 col-12 costos">
+      <h4>Costos</h4>
+      <h3>Precios por persona</h3>
+      <div class="borderosa"></div>
+      <ul class="list-unstyled">
+        <li><b>Costo Normal: </b><span> ${{ tour.costo }}</span></li><hr>
+        {% if tour.costo_frecuente %}
+        <li><b>Viajero Frecuente: </b><span>${{ tour.costo_frecuente }}</span></li><hr>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</div>
+
+<img src="/img/fondoazul2.png" alt="" style="width:100%;"><br>
+
+<div class="somos container-fluid">
+  <div class="row incluye">
+    <div class="col-lg-6 col-md-12 col-sm-12 col-12">
+      <h3>Incluye</h3>
+      <div class="borderosa" style="height:20px;"></div><br>
+      {% if tour.imagen_incluye %}
+      <img src="{{ tour.imagen_incluye.url }}" alt="" class="img-fluid">
+      {% endif %}
+    </div>
+    <div class="col-lg-6 col-md-12 col-sm-12 col-12">
+      <ul>
+        {% for item in incluye_items %}<li>{{ item }}</li>{% endfor %}
+      </ul>
+      {% if no_incluye_items %}
+      <ul class="noincluye">
+        <h6>No Incluye</h6>
+        {% for item in no_incluye_items %}<li>{{ item }}</li>{% endfor %}
+      </ul>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<img src="/img/fondorosa1.png" alt="" style="width:100%;">
+<div class="pagomeses" style="background-color:#FEF7EF;">
+  <img src="/img/protocolo4.jpg" alt="">
+  <h4>Aprovecha</h4>
+  <h3>Paga a Meses</h3>
+  <div class="pagomeses2">
+    {% for m in meses %}
+    <p><b>{{ m.n }} meses:</b> ${{ m.cuota }} por mes</p>
+    {% endfor %}
+    <br>
+    <img src="/img/iconospagos/Paypal1.png" alt=""><img src="/img/iconospagos/clip.jpg" alt="">
+  </div>
+</div>
+
+<img src="/img/fondorosa.png" alt="" style="width:100%;">
+
+{% if tour.itinerario.all %}
+<div class="somos container-fluid itinerario">
+  <div class="row incluye" style="margin-top:15px;">
+    <div class="col-lg-5 col-md-12 col-sm-12 col-12 somos">
+      <h5>Disfruta</h5>
+      <h3>Itinerario</h3>
+      {% if tour.imagen_itinerario %}
+      <img src="{{ tour.imagen_itinerario.url }}" alt="" class="img-fluid">
+      {% endif %}
+    </div>
+    <div class="col-lg-7 col-md-12 col-sm-12 col-12" style="padding-top:15px;">
+      {% for dia in tour.itinerario.all %}
+      <ul>
+        <p><b>Día {{ dia.dia }}{% if dia.titulo %} — {{ dia.titulo }}{% endif %}</b></p>
+        {% for act in dia.actividades.splitlines %}
+        {% if act.strip %}<li>{{ act.strip }}</li>{% endif %}
+        {% endfor %}
+      </ul>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

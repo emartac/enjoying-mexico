@@ -20,7 +20,11 @@ INSTALLED_APPS = [
     'hoteles',
     'viajes',
     'reservaciones',
+    'tours',
 ]
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

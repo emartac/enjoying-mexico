@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta property="og:image" content="{% block og_image %}{% endblock %}"/>
+<meta name="theme-color" content="#96BD3E">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no,maximum-scale=1.0,minimum-scale=1.0">
+<link rel="shortcut icon" href="/img/minilogo2.png">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css?family=Caveat:wght@700|Poppins&display=swap" rel="stylesheet">
+<link rel="stylesheet" type="text/css" href="/css/enjoy1.css">
+<title>{% block titulo %}Enjoying México | Tours en México{% endblock %}</title>
+</head>
+<body>
+<header>
+  <nav class="navbar navbar-expand-lg navbar-light bg-dark barra">
+    <a class="navbar-brand" href="/"><img src="/img/logo.png" class="img-fluid logo" alt="Enjoying México"></a>
+    <button class="navbar-toggler navbar-toggle" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+            aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon" id="menu"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item"><a class="nav-link" href="/">&nbsp;&nbsp;&nbsp;&nbsp;VIAJES&nbsp;&nbsp;&nbsp;&nbsp;</a></li>
+        <li class="nav-item"><a class="nav-link" href="/nosotros.html">&nbsp;&nbsp;&nbsp;&nbsp;NOSOTROS&nbsp;&nbsp;&nbsp;&nbsp;</a></li>
+        <li class="nav-item"><a class="nav-link" href="/reserva.html">&nbsp;&nbsp;&nbsp;&nbsp;RESERVA AHORA&nbsp;&nbsp;&nbsp;&nbsp;</a></li>
+        <li class="nav-item"><a class="nav-link" href="/terminos.html">&nbsp;&nbsp;&nbsp;&nbsp;TÉRMINOS Y CONDICIONES&nbsp;&nbsp;&nbsp;&nbsp;</a></li>
+      </ul>
+    </div>
+  </nav>
+</header>
+
+{% block contenido %}{% endblock %}
+
+<br>
+<div class="separador"><img src="/img/separador1.jpg" class="img-fluid" style="max-height:60px;" alt=""></div>
+<div class="reservaya">
+  <h1>Vamonos de Viaje...</h1>
+  <a href="/reserva.html"><img src="/img/reservaya.jpg" alt="Reserva Ahora"></a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://wa.me/5544652641"><img src="/img/protocolo5.jpg" alt="WhatsApp"></a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="/terminos.html"><img src="/img/protocolo6.jpg" alt="Términos"></a>
+</div>
+
+<div class="bordeflores2" style="width: 90%;"></div>
+<div class="contacto">
+  <div class="contacto1">
+    <h5>SÍGUENOS</h5>
+    <a href="https://www.facebook.com/enjoyingmx"><img src="/img/face.png" alt="Facebook"></a>
+    <a href="https://www.instagram.com/enjoying.mexico"><img src="/img/insta.png" alt="Instagram"></a>
+  </div><hr>
+  <div class="contacto1">
+    <img src="/img/oficina.png" alt="">Calle Valladolid &nbsp;#50, Roma Norte, Cuauhtémoc, CDMX&nbsp;&nbsp;|&nbsp;&nbsp;Lunes a Viernes de 10:00 a 18:00 hrs
+  </div><hr>
+  <div class="contacto1" style="color:#30AB0F;font-size:25px;font-family:'Caveat',cursive;">
+    <img src="/img/tel.png" alt="">(52) 55 44 65 26 41
+  </div>
+</div><hr>
+<div class="iconosviaje">
+  <img src="/img/iconosindex/pueblos-magicos.png" alt="">
+  <img src="/img/iconosindex/ciudades-patrimonio.png" alt="">
+  <img src="/img/iconosindex/viajemospormexico.png" alt="">
+  <img src="/img/iconosindex/canaco.png" alt="">
+  <img src="/img/iconosindex/mexicomagico.png" alt="">
+</div>
+<div class="pie">Derechos reservados: Experiencias Enjoying México 2025</div>
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

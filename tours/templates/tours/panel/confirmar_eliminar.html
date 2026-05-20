@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block titulo %}Eliminar tour{% endblock %}
+{% block breadcrumb %}<nav aria-label="breadcrumb"><ol class="breadcrumb mb-3"><li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li><li class="breadcrumb-item"><a href="{% url 'tours:panel_lista' %}">Tours</a></li><li class="breadcrumb-item active">Eliminar</li></ol></nav>{% endblock %}
+
+{% block contenido %}
+<div class="row justify-content-center">
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-header"><h5 class="mb-0 text-danger"><i class="bi bi-trash me-2"></i>Eliminar tour</h5></div>
+      <div class="card-body">
+        <p>¿Confirmas eliminar el tour <strong>{{ tour.titulo }}</strong>? Esta acción eliminará también las fechas, imágenes del carrusel e itinerario.</p>
+        <form method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger">Sí, eliminar</button>
+          <a href="{% url 'tours:panel_lista' %}" class="btn btn-outline-secondary ms-2">Cancelar</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

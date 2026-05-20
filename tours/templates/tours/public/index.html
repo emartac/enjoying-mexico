@@ -1,0 +1,53 @@
+{% extends 'tours/public/base_publica.html' %}
+{% block titulo %}Enjoying México | Tours en México{% endblock %}
+
+{% block contenido %}
+<div class="portada">
+  <img src="/img/descubre6.jpg" style="object-position: 50% 70% !important;">
+  <div class="portada1" style="top: 20%">
+    <h1><p>Descubre los</p><p>Colores de México</p></h1>
+    <img src="/img/logoborde.png" alt="">
+  </div>
+</div>
+
+<div class="separador" style="margin-top: 20px;"><img src="/img/separador2.jpg" class="img-fluid" alt=""></div>
+
+<div class="pros">
+  <h1><b>viaja como te gusta</b></h1><br>
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-lg-3 col-md-3 col-sm-6 col-12">
+        <div class="pros1"><img src="/img/iconosindex/grupo.png" alt=""><h6 style="font-family:Caveat,cursive;font-size:24px"><b>Grupos Reducidos</b></h6>Nos gusta viajar en grupos exclusivos. Disfruta de mejor atención y servicio de calidad.</div>
+      </div>
+      <div class="col-lg-3 col-md-3 col-sm-6 col-12">
+        <div class="pros1"><img src="/img/iconosindex/like.png" alt=""><h6 style="font-family:Caveat,cursive;font-size:24px"><b>Atención Personalizada</b></h6>Conoce los lugares a tu propio ritmo, con horarios amplios y flexibles.</div>
+      </div>
+      <div class="col-lg-3 col-md-3 col-sm-6 col-12">
+        <div class="pros1"><img src="/img/iconosindex/tarjeta.png" alt=""><h6 style="font-family:Caveat,cursive;font-size:24px"><b>Pagos a Plazos</b></h6>Aparta tu lugar y cubre el resto en cómodos pagos antes de tu viaje.</div>
+      </div>
+      <div class="col-lg-3 col-md-3 col-sm-6 col-12">
+        <div class="pros1"><img src="/img/iconosindex/bus.png" alt=""><h6 style="font-family:Caveat,cursive;font-size:24px"><b>Transporte de Lujo</b></h6>Todas nuestras unidades cuentan con A/C, cargadores y asientos reclinables.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% for grupo in grupos %}
+<div class="bordeflores"></div>
+<div class="container-fluid urge">
+  <h2 style="color: #ff900e"><b>{{ grupo.nombre|upper }}</b></h2>
+  {% for tour in grupo.tours %}
+  <div class="urge1">
+    <a href="{% url 'tours:detalle' tour.slug %}">
+      <img src="{{ tour.imagen_index.url }}" alt="{{ tour.titulo }}" class="img-fluid">
+    </a>
+    <p>{{ tour.duracion }} — Desde ${{ tour.costo }}</p>
+  </div>
+  {% endfor %}
+</div>
+{% empty %}
+<div class="container-fluid urge" style="padding: 40px; text-align: center;">
+  <p style="color: #888; font-size: 1.2rem;">Próximamente nuevos tours...</p>
+</div>
+{% endfor %}
+{% endblock %}
