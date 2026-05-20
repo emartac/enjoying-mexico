@@ -3,6 +3,7 @@ from collections import OrderedDict
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
+from django.db.models import Min
 from django.forms import inlineformset_factory
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
@@ -32,12 +33,12 @@ class IndexView(ListView):
 
     def get_queryset(self):
         hoy = datetime.date.today()
-        # Tours activos que tienen al menos una fecha futura
         return (Tour.objects
                 .filter(activo=True, fechas__fecha__gte=hoy)
+                .annotate(proxima_fecha=Min('fechas__fecha'))
                 .prefetch_related('fechas')
                 .distinct()
-                .order_by('fechas__fecha'))
+                .order_by('proxima_fecha'))
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
