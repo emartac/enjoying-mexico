@@ -20,26 +20,30 @@
         <div class="viaja1">
           <div style="text-align:center;">
             <h2>{{ tour.titulo }}</h2>
+            {% if tour.proximas_fechas %}
+            <h4 style="color:#62BF05;">
+              {% for fs in tour.proximas_fechas %}{{ fs.fecha|date:"d \d\e F"|upper }}{% if not forloop.last %} / {% endif %}{% endfor %}
+            </h4>
+            {% endif %}
             <div class="borderosa"></div><br>
           </div>
           <ul class="list-unstyled">
             <li><b>Duración:</b> {{ tour.duracion }}</li>
-            <li><b>Salidas:</b>
-              <ul>
-                {% for fs in tour.proximas_fechas %}
-                <li>{{ fs.fecha|date:"l d \d\e F" }}</li>
-                {% endfor %}
-              </ul>
+            <li style="margin-top:8px;">
+              <b>Salidas:</b>
+              {% for fs in tour.proximas_fechas %}
+                &nbsp;* {{ fs.fecha|date:"l d \d\e F" }}
+              {% endfor %}
+              &nbsp;&nbsp;&nbsp;<b>Inicio de Registro:</b> {{ tour.inicio_registro }}
             </li>
-            <li><b>Inicio de Registro:</b> {{ tour.inicio_registro }}</li>
-            <li><b>Salida:</b> {{ tour.hora_salida }}</li>
-            <li><b>Regreso:</b> {{ tour.hora_regreso }}</li>
-            <li><b>Lugar de Salida:</b>
-              <ul>
-                {% for lugar in lugares_salida %}
-                <li>{{ lugar }}</li>
-                {% endfor %}
-              </ul>
+            <li style="margin-top:8px;">
+              <b>Salida:</b> {{ tour.hora_salida }}
+              &nbsp;&nbsp;&nbsp;<b>Regreso:</b> {{ tour.hora_regreso }}
+            </li>
+            <li style="margin-top:8px;"><b>Lugar de Salida:</b><br>
+              {% for lugar in lugares_salida %}
+                &nbsp;&nbsp;{{ lugar }}{% if not forloop.last %}&nbsp;&nbsp;&nbsp;{% endif %}
+              {% endfor %}
             </li>
           </ul>
         </div>
