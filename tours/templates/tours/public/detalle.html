@@ -29,26 +29,30 @@
           </div>
           <ul class="list-unstyled">
             <li><b>Duración:</b> {{ tour.duracion }}</li>
-            <li style="margin-top:8px;">
-              <b>Salidas:</b>
-              {% for fs in tour.proximas_fechas %}
-                &nbsp;* {{ fs.fecha|date:"l d \d\e F" }}
-              {% endfor %}
-              &nbsp;&nbsp;&nbsp;<b>Inicio de Registro:</b> {{ tour.inicio_registro }}
+            <li style="margin-top:8px;"><b>Salidas:</b>
+              <ul>
+                {% for fs in tour.proximas_fechas %}
+                <li>{{ fs.fecha|date:"l d \d\e F" }}</li>
+                {% endfor %}
+              </ul>
             </li>
-            <li style="margin-top:8px;">
-              <b>Salida:</b> {{ tour.hora_salida }}
-              &nbsp;&nbsp;&nbsp;<b>Regreso:</b> {{ tour.hora_regreso }}
-            </li>
-            <li style="margin-top:8px;"><b>Lugar de Salida:</b><br>
-              {% for lugar in lugares_salida %}
-                &nbsp;&nbsp;{{ lugar }}{% if not forloop.last %}&nbsp;&nbsp;&nbsp;{% endif %}
-              {% endfor %}
+            <li style="margin-top:4px;"><b>Inicio de Registro:</b> {{ tour.inicio_registro }}</li>
+            <li style="margin-top:4px;"><b>Salida:</b> {{ tour.hora_salida }}</li>
+            <li style="margin-top:4px;"><b>Regreso:</b> {{ tour.hora_regreso }}</li>
+            <li style="margin-top:8px;"><b>Lugar de Salida:</b>
+              <ul>
+                {% for lugar in lugares_salida %}
+                <li>{{ lugar }}</li>
+                {% endfor %}
+              </ul>
             </li>
           </ul>
         </div>
       </div>
       <div class="col-lg-6 col-md-6 col-sm-12 col-12 pdf">
+        {% if tour.pdf_info %}
+        <a href="{{ tour.pdf_info.url }}" target="_blank" style="background-color:#E32842;"><p>Descarga Info PDF</p></a>
+        {% endif %}
         <a href="https://wa.me/5215544652641?text=Hola!%20Me%20interesa%20el%20tour%20{{ tour.titulo|urlencode }}" target="_blank" style="background-color:#299F20;"><p>Envíanos un WhatsApp</p></a>
         <a href="tel:+525555652641" target="_blank" style="background-color:#F2911F;"><p>Llámanos al (55) 44 65 26 41</p></a>
       </div>

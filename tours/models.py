@@ -28,6 +28,8 @@ class Tour(models.Model):
     imagen_index = models.ImageField('Imagen para el índice', upload_to='tours/index/')
     imagen_incluye = models.ImageField('Imagen sección incluye', upload_to='tours/incluye/', blank=True)
     imagen_itinerario = models.ImageField('Imagen itinerario', upload_to='tours/itinerario/', blank=True)
+    pdf_info = models.FileField('PDF informativo', upload_to='tours/pdf/', blank=True,
+                                help_text='Archivo PDF con información del tour')
     activo = models.BooleanField('Publicado', default=True)
     creado = models.DateTimeField(auto_now_add=True)
 

@@ -15,6 +15,7 @@ class TourForm(forms.ModelForm):
             'incluye', 'no_incluye',
             'imagen_principal', 'imagen_index',
             'imagen_incluye', 'imagen_itinerario',
+            'pdf_info',
             'activo',
         ]
         widgets = {
@@ -52,11 +53,12 @@ class TourForm(forms.ModelForm):
                 Row(Column('incluye', css_class='col-md-6'),
                     Column('no_incluye', css_class='col-md-6')),
             ),
-            Fieldset('Imágenes',
+            Fieldset('Imágenes y archivos',
                 Row(Column('imagen_principal', css_class='col-md-6'),
                     Column('imagen_index', css_class='col-md-6')),
                 Row(Column('imagen_incluye', css_class='col-md-6'),
                     Column('imagen_itinerario', css_class='col-md-6')),
+                'pdf_info',
             ),
             'activo',
         )
