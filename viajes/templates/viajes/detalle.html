@@ -79,7 +79,9 @@
           <th>Nombre</th>
           <th>Email</th>
           <th>Teléfono</th>
-          <th class="text-end">Pago</th>
+          <th class="text-end">Total</th>
+          <th class="text-end">Pagado</th>
+          <th class="text-end">Saldo</th>
         </tr>
       </thead>
       <tbody>
@@ -105,17 +107,19 @@
             <td class="text-muted small">{{ cr.cliente.telefono|default:"—" }}</td>
             {% if forloop.first %}
             <td rowspan="{{ grupo.viajeros|length }}" class="align-middle text-end small text-nowrap">
-              <strong>${{ grupo.reservacion.total }}</strong><br>
-              <span class="text-success">&#10003;${{ grupo.reservacion.total_pagado }}</span>
-              {% if grupo.reservacion.saldo_pendiente > 0 %}
-              <br><span class="text-danger">&#8226;${{ grupo.reservacion.saldo_pendiente }}</span>
-              {% endif %}
+              <strong>${{ grupo.reservacion.total }}</strong>
+            </td>
+            <td rowspan="{{ grupo.viajeros|length }}" class="align-middle text-end small text-nowrap text-success">
+              ${{ grupo.reservacion.total_pagado }}
+            </td>
+            <td rowspan="{{ grupo.viajeros|length }}" class="align-middle text-end small text-nowrap {% if grupo.reservacion.saldo_pendiente > 0 %}text-danger{% else %}text-muted{% endif %}">
+              ${{ grupo.reservacion.saldo_pendiente }}
             </td>
             {% endif %}
           </tr>
           {% endfor %}
         {% empty %}
-        <tr><td colspan="6" class="text-center text-muted py-3">Sin viajeros registrados.</td></tr>
+        <tr><td colspan="8" class="text-center text-muted py-3">Sin viajeros registrados.</td></tr>
         {% endfor %}
       </tbody>
     </table>
