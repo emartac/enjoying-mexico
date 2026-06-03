@@ -34,6 +34,23 @@
         </dl>
         {% if viaje.incluye %}<hr><p class="fw-semibold mb-1 small">Incluye:</p><p class="text-muted small mb-0">{{ viaje.incluye|linebreaksbr }}</p>{% endif %}
         {% if viaje.descripcion %}<hr><p class="text-muted small mb-0">{{ viaje.descripcion }}</p>{% endif %}
+        {% if total_hab %}
+        <hr>
+        <div class="d-flex justify-content-between small mb-1">
+          <span class="fw-semibold">Ocupación</span>
+          <span class="text-muted">{{ total_reservadas }}/{{ total_hab }} habitaciones</span>
+        </div>
+        <div class="progress" style="height:8px;">
+          <div class="progress-bar bg-success" style="width:{% widthratio total_reservadas total_hab 100 %}%"></div>
+        </div>
+        {% endif %}
+        {% if puntos_abordaje %}
+        <hr>
+        <p class="fw-semibold mb-1 small"><i class="bi bi-geo-alt me-1"></i>Puntos de abordaje</p>
+        {% for p in puntos_abordaje %}
+        <p class="small mb-1 text-muted"><i class="bi bi-clock me-1"></i>{{ p.hora }} — {{ p.lugar }}{% if p.referencia %}<br><span class="ms-3">{{ p.referencia }}</span>{% endif %}</p>
+        {% endfor %}
+        {% endif %}
       </div>
     </div>
   </div>
@@ -126,91 +143,47 @@
   </div>
 </div>
 
-{% if grupos_habitacion %}
-<div class="row g-3 mb-3">
-  <div class="col-md-8">
-    <div class="card shadow-sm h-100">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <span><i class="bi bi-door-open me-1"></i>Habitaciones</span>
-        <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalAgregarHabitacion">
-          <i class="bi bi-plus-lg me-1"></i>Agregar
-        </button>
-      </div>
-      <div class="table-responsive">
-        <table class="table table-sm mb-0">
-          <thead class="table-light">
-            <tr><th>Habitación</th><th>Tipo</th><th>Precio regular</th><th>Precio frecuente</th><th></th></tr>
-          </thead>
-          <tbody>
-            {% for tipo_nombre, grupo in grupos_habitacion.items %}
-            <tr class="table-secondary">
-              <td colspan="5" class="py-1 small fw-semibold">
-                {{ tipo_nombre }}
-                <span class="text-muted fw-normal ms-2">{{ grupo.total }} hab. — {{ grupo.reservadas }} reservadas, {{ grupo.disponibles }} disponibles</span>
-              </td>
-            </tr>
-            {% for vh in grupo.habitaciones %}
-            <tr>
-              <td class="ps-3">{{ vh.habitacion.nombre_hotel }} #{{ vh.habitacion.numero }}</td>
-              <td class="text-muted small">{{ vh.habitacion.tipo.nombre }}</td>
-              <td>${{ vh.precio_total }}</td>
-              <td>{% if vh.precio_frecuente %}${{ vh.precio_frecuente }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
-              <td class="text-end">
-                <a href="{% url 'viajes:habitacion_editar' viaje.pk vh.pk %}" class="btn btn-xs btn-outline-secondary btn-sm py-0 px-1"><i class="bi bi-pencil"></i></a>
-                <form method="post" action="{% url 'viajes:habitacion_quitar' viaje.pk vh.pk %}" class="d-inline" onsubmit="return confirm('¿Quitar habitación del viaje?')">
-                  {% csrf_token %}<button type="submit" class="btn btn-xs btn-outline-danger btn-sm py-0 px-1"><i class="bi bi-x-lg"></i></button>
-                </form>
-              </td>
-            </tr>
-            {% endfor %}
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
+<div class="card shadow-sm mb-3">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-door-open me-1"></i>Habitaciones</span>
+    <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalAgregarHabitacion">
+      <i class="bi bi-plus-lg me-1"></i>Agregar
+    </button>
   </div>
-
-  <div class="col-md-4">
-    <div class="card shadow-sm {% if puntos_abordaje %}mb-3{% else %}h-100{% endif %}">
-      <div class="card-header"><i class="bi bi-bar-chart me-1"></i>Ocupación general</div>
-      <div class="card-body p-2">
+  <div class="table-responsive">
+    <table class="table table-sm mb-0">
+      <thead class="table-light">
+        <tr><th>Habitación</th><th>Tipo</th><th>Precio regular</th><th>Precio frecuente</th><th></th></tr>
+      </thead>
+      <tbody>
         {% for tipo_nombre, grupo in grupos_habitacion.items %}
-        <div class="mb-2">
-          <div class="d-flex justify-content-between small mb-1">
-            <span>{{ tipo_nombre }}</span>
-            <span class="text-muted">{{ grupo.reservadas }}/{{ grupo.total }}</span>
-          </div>
-          <div class="progress" style="height:6px;">
-            {% if grupo.total > 0 %}
-            <div class="progress-bar bg-success" style="width:{% widthratio grupo.reservadas grupo.total 100 %}%"></div>
-            {% endif %}
-          </div>
-        </div>
+        <tr class="table-secondary">
+          <td colspan="5" class="py-1 small fw-semibold">
+            {{ tipo_nombre }}
+            <span class="text-muted fw-normal ms-2">{{ grupo.total }} hab. — {{ grupo.reservadas }} reservadas, {{ grupo.disponibles }} disponibles</span>
+          </td>
+        </tr>
+        {% for vh in grupo.habitaciones %}
+        <tr>
+          <td class="ps-3">{{ vh.habitacion.nombre_hotel }} #{{ vh.habitacion.numero }}</td>
+          <td class="text-muted small">{{ vh.habitacion.tipo.nombre }}</td>
+          <td>${{ vh.precio_total }}</td>
+          <td>{% if vh.precio_frecuente %}${{ vh.precio_frecuente }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
+          <td class="text-end">
+            <a href="{% url 'viajes:habitacion_editar' viaje.pk vh.pk %}" class="btn btn-xs btn-outline-secondary btn-sm py-0 px-1"><i class="bi bi-pencil"></i></a>
+            <form method="post" action="{% url 'viajes:habitacion_quitar' viaje.pk vh.pk %}" class="d-inline" onsubmit="return confirm('¿Quitar habitación del viaje?')">
+              {% csrf_token %}<button type="submit" class="btn btn-xs btn-outline-danger btn-sm py-0 px-1"><i class="bi bi-x-lg"></i></button>
+            </form>
+          </td>
+        </tr>
         {% endfor %}
-      </div>
-    </div>
-    {% if puntos_abordaje %}
-    <div class="card shadow-sm h-100">
-      <div class="card-header"><i class="bi bi-geo-alt me-1"></i>Puntos de abordaje</div>
-      <ul class="list-group list-group-flush">
-        {% for p in puntos_abordaje %}
-        <li class="list-group-item py-1 small">
-          <i class="bi bi-clock me-1 text-muted"></i>{{ p.hora }} — {{ p.lugar }}
-          {% if p.referencia %}<br><span class="text-muted ms-3">{{ p.referencia }}</span>{% endif %}
-        </li>
+        {% empty %}
+        <tr><td colspan="5" class="text-center text-muted py-3">Sin habitaciones asignadas.</td></tr>
         {% endfor %}
-      </ul>
-    </div>
-    {% endif %}
+      </tbody>
+    </table>
   </div>
 </div>
-{% else %}
-<div class="mb-3">
-  <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAgregarHabitacion">
-    <i class="bi bi-door-open me-1"></i>Agregar habitación al viaje
-  </button>
-</div>
-{% endif %}
 
 <!-- Modal: agregar habitación -->
 <div class="modal fade" id="modalAgregarHabitacion" tabindex="-1" aria-labelledby="modalAgregarHabLabel" aria-hidden="true">

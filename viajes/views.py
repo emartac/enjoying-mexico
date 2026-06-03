@@ -92,6 +92,8 @@ class ViajeDetailView(LoginRequiredMixin, DetailView):
             else:
                 g['disponibles'] += 1
         ctx['grupos_habitacion'] = dict(grupos)
+        ctx['total_hab'] = sum(g['total'] for g in grupos.values())
+        ctx['total_reservadas'] = sum(g['reservadas'] for g in grupos.values())
         return ctx
 
 
