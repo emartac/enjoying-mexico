@@ -30,8 +30,13 @@ class Viaje(models.Model):
         return f'{self.nombre} — {self.destino} ({self.fecha_salida})'
 
     @property
+    def es_viaje_dia(self):
+        return self.fecha_salida == self.fecha_regreso
+
+    @property
     def duracion_dias(self):
-        return (self.fecha_regreso - self.fecha_salida).days
+        dias = (self.fecha_regreso - self.fecha_salida).days
+        return dias if dias > 0 else 1
 
     @property
     def ocupacion_actual(self):

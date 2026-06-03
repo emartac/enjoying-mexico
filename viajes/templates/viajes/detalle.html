@@ -150,9 +150,11 @@
 <div class="card shadow-sm mb-3">
   <div class="card-header d-flex justify-content-between align-items-center">
     <span><i class="bi bi-door-open me-1"></i>Habitaciones</span>
+    {% if not viaje.es_viaje_dia %}
     <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalAgregarHabitacion">
       <i class="bi bi-plus-lg me-1"></i>Agregar
     </button>
+    {% endif %}
   </div>
   <div class="table-responsive">
     <table class="table table-sm mb-0">
