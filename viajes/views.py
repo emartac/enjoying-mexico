@@ -92,8 +92,14 @@ class ViajeDetailView(LoginRequiredMixin, DetailView):
             else:
                 g['disponibles'] += 1
         ctx['grupos_habitacion'] = dict(grupos)
-        ctx['total_hab'] = sum(g['total'] for g in grupos.values())
-        ctx['total_reservadas'] = sum(g['reservadas'] for g in grupos.values())
+        total_capacidad = sum(
+            vh.habitacion.tipo.capacidad
+            for g in grupos.values()
+            for vh in g['habitaciones']
+        )
+        ctx['total_viajeros'] = viajeros_qs.count()
+        ctx['cupo'] = total_capacidad if total_capacidad > 0 else self.object.capacidad_maxima
+        ctx['disponibles'] = ctx['cupo'] - ctx['total_viajeros'] if ctx['cupo'] else None
         return ctx
 
 

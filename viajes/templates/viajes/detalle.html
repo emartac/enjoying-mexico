@@ -36,12 +36,16 @@
         {% if viaje.descripcion %}<hr><p class="text-muted small mb-0">{{ viaje.descripcion }}</p>{% endif %}
         <hr>
         <div class="d-flex justify-content-between small mb-1">
-          <span class="fw-semibold">Viajeros</span>
-          <span class="text-muted">{{ total_viajeros }}{% if total_capacidad %}/{{ total_capacidad }}{% endif %}</span>
+          <span class="fw-semibold">Ocupación</span>
+          {% if cupo %}<span class="text-muted">{{ total_viajeros }}/{{ cupo }} viajeros</span>{% else %}<span class="text-muted">{{ total_viajeros }} viajeros</span>{% endif %}
         </div>
-        {% if total_capacidad %}
-        <div class="progress" style="height:8px;">
-          <div class="progress-bar bg-success" style="width:{% widthratio total_viajeros total_capacidad 100 %}%"></div>
+        {% if cupo %}
+        <div class="progress mb-1" style="height:8px;">
+          <div class="progress-bar bg-success" style="width:{% widthratio total_viajeros cupo 100 %}%"></div>
+        </div>
+        <div class="d-flex justify-content-between small">
+          <span class="text-success">{{ total_viajeros }} registrados</span>
+          <span class="{% if disponibles <= 0 %}text-danger{% else %}text-muted{% endif %}">{{ disponibles }} disponibles</span>
         </div>
         {% endif %}
         {% if puntos_abordaje %}
