@@ -111,7 +111,7 @@
           <tr>
             {% if forloop.first %}
             <td rowspan="{{ grupo.viajeros|length }}" class="align-middle small">
-              <span class="fw-semibold">{{ grupo.reservacion.codigo }}</span><br>
+              <a href="{% url 'reservaciones:detalle' grupo.reservacion.pk %}">{{ grupo.reservacion.codigo }}</a><br>
               <span class="badge badge-{{ grupo.reservacion.estado }}">{{ grupo.reservacion.get_estado_display }}</span>
             </td>
             <td rowspan="{{ grupo.viajeros|length }}" class="align-middle small text-muted">
