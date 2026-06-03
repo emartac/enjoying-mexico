@@ -34,21 +34,21 @@
         </dl>
         {% if viaje.incluye %}<hr><p class="fw-semibold mb-1 small">Incluye:</p><p class="text-muted small mb-0">{{ viaje.incluye|linebreaksbr }}</p>{% endif %}
         {% if viaje.descripcion %}<hr><p class="text-muted small mb-0">{{ viaje.descripcion }}</p>{% endif %}
-        {% if total_hab %}
+        {% if total_capacidad %}
         <hr>
         <div class="d-flex justify-content-between small mb-1">
           <span class="fw-semibold">Ocupación</span>
-          <span class="text-muted">{{ total_reservadas }}/{{ total_hab }} habitaciones</span>
+          <span class="text-muted">{{ total_viajeros }}/{{ total_capacidad }} viajeros</span>
         </div>
         <div class="progress" style="height:8px;">
-          <div class="progress-bar bg-success" style="width:{% widthratio total_reservadas total_hab 100 %}%"></div>
+          <div class="progress-bar bg-success" style="width:{% widthratio total_viajeros total_capacidad 100 %}%"></div>
         </div>
         {% endif %}
         {% if puntos_abordaje %}
         <hr>
         <p class="fw-semibold mb-1 small"><i class="bi bi-geo-alt me-1"></i>Puntos de abordaje</p>
         {% for p in puntos_abordaje %}
-        <p class="small mb-1 text-muted"><i class="bi bi-clock me-1"></i>{{ p.hora }} — {{ p.lugar }}{% if p.referencia %}<br><span class="ms-3">{{ p.referencia }}</span>{% endif %}</p>
+        <p class="small mb-1 text-muted">{{ p.punto }}<br><i class="bi bi-clock me-1"></i>Abordaje {{ p.hora_abordaje|time:"H:i" }} · Salida {{ p.hora_salida|time:"H:i" }}</p>
         {% endfor %}
         {% endif %}
       </div>
