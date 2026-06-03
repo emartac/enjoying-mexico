@@ -108,7 +108,7 @@
       <tbody>
         {% for grupo in grupos_viajeros %}
           {% for cr in grupo.viajeros %}
-          <tr>
+          <tr {% if forloop.first %}style="border-top: 2px solid #adb5bd;"{% endif %}>
             {% if forloop.first %}
             <td rowspan="{{ grupo.viajeros|length }}" class="align-middle small">
               <a href="{% url 'reservaciones:detalle' grupo.reservacion.pk %}">{{ grupo.reservacion.codigo }}</a><br>
