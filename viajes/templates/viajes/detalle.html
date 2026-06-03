@@ -34,12 +34,12 @@
         </dl>
         {% if viaje.incluye %}<hr><p class="fw-semibold mb-1 small">Incluye:</p><p class="text-muted small mb-0">{{ viaje.incluye|linebreaksbr }}</p>{% endif %}
         {% if viaje.descripcion %}<hr><p class="text-muted small mb-0">{{ viaje.descripcion }}</p>{% endif %}
-        {% if total_capacidad %}
         <hr>
         <div class="d-flex justify-content-between small mb-1">
-          <span class="fw-semibold">Ocupación</span>
-          <span class="text-muted">{{ total_viajeros }}/{{ total_capacidad }} viajeros</span>
+          <span class="fw-semibold">Viajeros</span>
+          <span class="text-muted">{{ total_viajeros }}{% if total_capacidad %}/{{ total_capacidad }}{% endif %}</span>
         </div>
+        {% if total_capacidad %}
         <div class="progress" style="height:8px;">
           <div class="progress-bar bg-success" style="width:{% widthratio total_viajeros total_capacidad 100 %}%"></div>
         </div>
