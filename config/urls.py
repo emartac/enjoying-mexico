@@ -11,8 +11,8 @@ urlpatterns = [
     # Autenticación
     path('', include('django.contrib.auth.urls')),
 
-    # Inicio del sistema — redirige a la lista de viajes
-    path('panel/', RedirectView.as_view(pattern_name='viajes:lista'), name='home'),
+    # Inicio del sistema — redirige a agregar cliente
+    path('panel/', RedirectView.as_view(pattern_name='clientes:crear'), name='home'),
 
     # Apps del sistema de reservas
     path('clientes/', include('clientes.urls', namespace='clientes')),
