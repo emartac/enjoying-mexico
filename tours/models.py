@@ -3,6 +3,9 @@ import datetime
 from django.db import models
 from django.utils.text import slugify
 
+MESES_ES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto',
+            'septiembre', 'octubre', 'noviembre', 'diciembre']
+
 
 def _slug(texto):
     texto = unicodedata.normalize('NFKD', texto).encode('ascii', 'ignore').decode('ascii')
@@ -33,6 +36,12 @@ class Tour(models.Model):
     titulo_tarjeta = models.CharField(
         'Título corto para la tarjeta', max_length=60, blank=True,
         help_text='Opcional. Si lo dejas vacío se usa el título del tour.')
+    color_fecha = models.CharField(
+        'Color de la cinta de la fecha', max_length=7, default='#ef5a8a')
+    SOMBREADO = [('suave', 'Suave'), ('normal', 'Normal'), ('fuerte', 'Fuerte')]
+    sombreado = models.CharField(
+        'Sombreado sobre la foto', max_length=10, choices=SOMBREADO, default='normal',
+        help_text='Usa "Fuerte" si la foto es muy clara y el texto no se lee bien.')
     imagen_incluye = models.ImageField('Imagen sección incluye', upload_to='tours/incluye/', blank=True)
     imagen_itinerario = models.ImageField('Imagen itinerario', upload_to='tours/itinerario/', blank=True)
     pdf_info = models.FileField('PDF informativo', upload_to='tours/pdf/', blank=True,
@@ -66,6 +75,19 @@ class Tour(models.Model):
     @property
     def ultima_fecha(self):
         return self.fechas.order_by('fecha').last()
+
+    @property
+    def texto_fecha_tarjeta(self):
+        """Fechas próximas del mismo mes, ej. '16 de mayo' o '16 y 23 de mayo'."""
+        fechas = list(self.proximas_fechas)
+        if not fechas:
+            return ''
+        primera = fechas[0].fecha
+        dias = [str(f.fecha.day) for f in fechas
+                if (f.fecha.year, f.fecha.month) == (primera.year, primera.month)]
+        dias = list(dict.fromkeys(dias))
+        texto = dias[0] if len(dias) == 1 else ', '.join(dias[:-1]) + ' y ' + dias[-1]
+        return f'{texto} de {MESES_ES[primera.month - 1]}'
 
 
 class FechaSalida(models.Model):

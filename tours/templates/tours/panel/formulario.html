@@ -46,11 +46,11 @@
             Texto automático desactivado: se mostrará la imagen tal cual.
           </div>
           {% if tour and tour.imagen_index %}
-            {% include 'tours/partials/tarjeta.html' with imagen_url=tour.imagen_index.url titulo=tour.titulo_tarjeta|default:tour.titulo fecha=tour.proximas_fechas.first.fecha id_prefijo="preview-tarjeta" %}
+            {% include 'tours/partials/tarjeta.html' with imagen_url=tour.imagen_index.url titulo=tour.titulo_tarjeta|default:tour.titulo fecha_texto=tour.texto_fecha_tarjeta color=tour.color_fecha sombreado=tour.sombreado id_prefijo="preview-tarjeta" %}
           {% elif tour %}
-            {% include 'tours/partials/tarjeta.html' with imagen_url="" titulo=tour.titulo_tarjeta|default:tour.titulo fecha=None id_prefijo="preview-tarjeta" %}
+            {% include 'tours/partials/tarjeta.html' with imagen_url="" titulo=tour.titulo_tarjeta|default:tour.titulo fecha_texto=tour.texto_fecha_tarjeta color=tour.color_fecha sombreado=tour.sombreado id_prefijo="preview-tarjeta" %}
           {% else %}
-            {% include 'tours/partials/tarjeta.html' with imagen_url="" titulo="Título del tour" fecha=None id_prefijo="preview-tarjeta" %}
+            {% include 'tours/partials/tarjeta.html' with imagen_url="" titulo="Título del tour" fecha_texto="" id_prefijo="preview-tarjeta" %}
           {% endif %}
           <div class="small text-muted mt-2">Se actualiza al subir la imagen, cambiar el título o las fechas.</div>
         </div>
@@ -112,6 +112,8 @@
   var inpTitulo = document.querySelector('[name="titulo"]');
   var inpTituloTarjeta = document.querySelector('[name="titulo_tarjeta"]');
   var chkTexto = document.querySelector('[name="texto_automatico"]');
+  var inpColor = document.querySelector('[name="color_fecha"]');
+  var selSombreado = document.querySelector('[name="sombreado"]');
   var MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto',
                'septiembre','octubre','noviembre','diciembre'];
 
@@ -133,9 +135,24 @@
     });
     fechas.sort();
     if (!fechas.length) { fechaEl.style.display = 'none'; return; }
-    var p = fechas[0].split('-');
-    fechaEl.textContent = parseInt(p[2], 10) + ' de ' + MESES[parseInt(p[1], 10) - 1];
+    // Juntar las fechas del mismo mes que la próxima: "16 y 23 de mayo"
+    var mes = fechas[0].slice(0, 7);
+    var dias = [];
+    fechas.forEach(function (f) {
+      var d = String(parseInt(f.slice(8, 10), 10));
+      if (f.slice(0, 7) === mes && dias.indexOf(d) === -1) dias.push(d);
+    });
+    var texto = dias.length === 1 ? dias[0] : dias.slice(0, -1).join(', ') + ' y ' + dias[dias.length - 1];
+    fechaEl.textContent = texto + ' de ' + MESES[parseInt(mes.slice(5, 7), 10) - 1];
     fechaEl.style.display = '';
+  }
+
+  function actualizarEstilo() {
+    if (inpColor) tarjeta.style.setProperty('--em-color-fecha', inpColor.value);
+    if (selSombreado) {
+      tarjeta.classList.remove('sombra-suave', 'sombra-normal', 'sombra-fuerte');
+      tarjeta.classList.add('sombra-' + selSombreado.value);
+    }
   }
 
   function actualizarModo() {
@@ -154,6 +171,8 @@
     if (el) el.addEventListener('input', actualizarTitulo);
   });
   if (chkTexto) chkTexto.addEventListener('change', actualizarModo);
+  if (inpColor) inpColor.addEventListener('input', actualizarEstilo);
+  if (selSombreado) selSombreado.addEventListener('change', actualizarEstilo);
   // Las filas de fecha se pueden agregar dinámicamente: escuchar en todo el formulario
   document.addEventListener('input', function (e) {
     if (e.target.name && e.target.name.indexOf('fechas-') === 0) actualizarFecha();
@@ -165,6 +184,7 @@
   actualizarTitulo();
   actualizarFecha();
   actualizarModo();
+  actualizarEstilo();
 })();
 </script>
 {% endblock %}

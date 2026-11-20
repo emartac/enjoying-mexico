@@ -12,7 +12,12 @@
     background: #ddd;
     vertical-align: top;
     container-type: inline-size;
+    /* Niveles de sombreado (oscurecido arriba y sombra del título) */
+    --em-oscuro: .35;
+    --em-sombra-titulo: .7;
   }
+  .tarjeta-em.sombra-suave  { --em-oscuro: .15; --em-sombra-titulo: .5; }
+  .tarjeta-em.sombra-fuerte { --em-oscuro: .6;  --em-sombra-titulo: .9; }
   .tarjeta-em img.tarjeta-em-foto {
     position: absolute;
     inset: 0;
@@ -31,7 +36,7 @@
     align-items: center;
     padding-top: 6%;
     /* Oscurece levemente la parte superior para que el texto se lea */
-    background: linear-gradient(to bottom, rgba(0,0,0,.35) 0%, rgba(0,0,0,.12) 40%, rgba(0,0,0,0) 60%);
+    background: linear-gradient(to bottom, rgba(0,0,0,var(--em-oscuro)) 0%, rgba(0,0,0,calc(var(--em-oscuro) / 3)) 40%, rgba(0,0,0,0) 62%);
     pointer-events: none;
   }
   .tarjeta-em img.tarjeta-em-logo {
@@ -49,12 +54,12 @@
     line-height: 1.05;
     text-align: center;
     padding: 2% 6% 0;
-    text-shadow: 0 2px 4px rgba(0,0,0,.7), 0 0 12px rgba(0,0,0,.45);
+    text-shadow: 2px 3px 3px rgba(0,0,0,var(--em-sombra-titulo)), 0 0 14px rgba(0,0,0,calc(var(--em-sombra-titulo) * .6));
     overflow-wrap: break-word;
   }
   .tarjeta-em-fecha {
     margin-top: 3%;
-    background: #ef5a8a;
+    background: var(--em-color-fecha, #ef5a8a);
     color: #fff;
     font-family: 'Poppins', sans-serif;
     font-weight: 700;
@@ -62,7 +67,7 @@
     letter-spacing: .5px;
     text-transform: uppercase;
     padding: .6% 11%;
-    clip-path: polygon(4% 0, 96% 0, 100% 50%, 96% 100%, 4% 100%, 0 50%);
-    box-shadow: 0 2px 6px rgba(0,0,0,.25);
+    text-shadow: 0 1px 2px rgba(0,0,0,.25);
+    box-shadow: 0 3px 8px rgba(0,0,0,.35);
   }
 </style>

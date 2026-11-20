@@ -41,7 +41,7 @@
   <div class="urge1">
     <a href="{% url 'tours:detalle' tour.slug %}">
       {% if tour.texto_automatico %}
-        {% include 'tours/partials/tarjeta.html' with imagen_url=tour.imagen_index.url titulo=tour.titulo_tarjeta|default:tour.titulo fecha=tour.proxima_fecha %}
+        {% include 'tours/partials/tarjeta.html' with imagen_url=tour.imagen_index.url titulo=tour.titulo_tarjeta|default:tour.titulo fecha_texto=tour.texto_fecha_tarjeta color=tour.color_fecha sombreado=tour.sombreado %}
       {% else %}
       <img src="{{ tour.imagen_index.url }}" alt="{{ tour.titulo }}" class="img-fluid">
       {% endif %}

@@ -1,3 +1,4 @@
+import re
 from django import forms
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Row, Column, Fieldset, Submit, ButtonHolder, HTML
@@ -14,7 +15,7 @@ class TourForm(forms.ModelForm):
             'costo', 'costo_frecuente',
             'incluye', 'no_incluye',
             'imagen_principal', 'imagen_index',
-            'texto_automatico', 'titulo_tarjeta',
+            'texto_automatico', 'titulo_tarjeta', 'color_fecha', 'sombreado',
             'imagen_incluye', 'imagen_itinerario',
             'pdf_info',
             'activo',
@@ -24,7 +25,14 @@ class TourForm(forms.ModelForm):
             'lugar_salida': forms.Textarea(attrs={'rows': 3}),
             'incluye': forms.Textarea(attrs={'rows': 5}),
             'no_incluye': forms.Textarea(attrs={'rows': 4}),
+            'color_fecha': forms.TextInput(attrs={'type': 'color', 'class': 'form-control form-control-color'}),
         }
+
+    def clean_color_fecha(self):
+        color = (self.cleaned_data.get('color_fecha') or '').strip()
+        if not re.fullmatch(r'#[0-9a-fA-F]{6}', color):
+            raise forms.ValidationError('Elige un color válido.')
+        return color.lower()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -59,6 +67,8 @@ class TourForm(forms.ModelForm):
                     Column('imagen_index', css_class='col-md-6')),
                 Row(Column('texto_automatico', css_class='col-md-6'),
                     Column('titulo_tarjeta', css_class='col-md-6')),
+                Row(Column('color_fecha', css_class='col-md-6'),
+                    Column('sombreado', css_class='col-md-6')),
                 Row(Column('imagen_incluye', css_class='col-md-6'),
                     Column('imagen_itinerario', css_class='col-md-6')),
                 'pdf_info',
