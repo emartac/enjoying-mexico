@@ -107,6 +107,16 @@ class ReservacionDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['clientes_res'] = self.object.clientes_reservacion.select_related('cliente').order_by('-es_titular', 'cliente__apellido')
+        clientes = [cr.cliente for cr in ctx['clientes_res']]
+        titular = next((cr.cliente for cr in ctx['clientes_res'] if cr.es_titular), None)
+        ctx['titular'] = titular
+        if titular is None:
+            ctx['aviso_titular'] = 'Esta reservación no tiene titular.'
+        elif not titular.datos_contacto_completos:
+            ctx['aviso_titular'] = f'Al titular {titular} le falta {" y ".join(titular.datos_faltantes)}.'
+        ctx['con_correo'] = [c for c in clientes if c.email]
+        ctx['sin_correo'] = [c for c in clientes if not c.email]
+        ctx['desglose'] = self.object.desglose_precio() if self.object.precio_personalizado is None else []
         ctx['pagos'] = self.object.pagos.order_by('-fecha')
         ctx['agregar_form'] = AgregarClienteForm(self.object)
         ctx['pago_form'] = PagoForm()
@@ -123,16 +133,20 @@ class ReservacionDetailView(LoginRequiredMixin, DetailView):
         return ctx
 
 
-class ReservacionCreateView(LoginRequiredMixin, CreateView):
-    model = Reservacion
-    form_class = ReservacionForm
-    template_name = 'reservaciones/formulario.html'
+class ClientesReservacionMixin:
+    """Clientes elegidos en la misma pantalla de crear/editar reservación."""
+
+    def _viaje_id(self):
+        valor = self.request.GET.get('viaje') or self.request.POST.get('viaje')
+        if valor and str(valor).isdigit():
+            return int(valor)
+        return getattr(self.object, 'viaje_id', None) if getattr(self, 'object', None) else None
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        viaje_id = self.request.GET.get('viaje') or self.request.POST.get('viaje')
+        viaje_id = self._viaje_id()
         if viaje_id:
-            kwargs['viaje_id'] = int(viaje_id)
+            kwargs['viaje_id'] = viaje_id
         return kwargs
 
     def get_initial(self):
@@ -143,90 +157,141 @@ class ReservacionCreateView(LoginRequiredMixin, CreateView):
         return initial
 
     def _clientes_seleccionados(self):
-        """Clientes elegidos en la pantalla (POST al guardar, GET al cambiar de viaje)."""
+        """[{id, nombre, email, telefono, frecuente, titular}] según POST, la URL
+        (al cambiar de viaje) o, al editar, los clientes que ya tiene la reservación."""
         data = self.request.POST if self.request.method == 'POST' else self.request.GET
-        ids = []
-        for v in data.getlist('clientes'):
-            if v.isdigit() and int(v) not in ids:
-                ids.append(int(v))
+        obj = getattr(self, 'object', None)
+        if self.request.method != 'POST' and 'clientes' not in data and obj and obj.pk:
+            existentes = obj.clientes_reservacion.select_related('cliente').order_by('-es_titular', 'pk')
+            ids = [cr.cliente_id for cr in existentes]
+            titular = next((str(cr.cliente_id) for cr in existentes if cr.es_titular), '')
+        else:
+            ids = []
+            for v in data.getlist('clientes'):
+                if v.isdigit() and int(v) not in ids:
+                    ids.append(int(v))
+            titular = data.get('titular', '')
         encontrados = Cliente.objects.in_bulk(ids)
-        titular = data.get('titular', '')
         seleccion = [
-            {'id': c.pk, 'nombre': str(c), 'email': c.email, 'telefono': c.telefono or '',
-             'titular': str(c.pk) == titular}
+            {'id': c.pk, 'nombre': str(c), 'email': c.email or '', 'telefono': c.telefono or '',
+             'frecuente': c.viajero_frecuente, 'titular': str(c.pk) == titular}
             for c in (encontrados.get(i) for i in ids) if c
         ]
         if seleccion and not any(s['titular'] for s in seleccion):
             seleccion[0]['titular'] = True
         return seleccion
 
+    def _precios_para_js(self):
+        """Precios por persona para calcular el total en vivo en el formulario."""
+        from viajes.models import Viaje, ViajeHabitacion
+        viaje_id = self._viaje_id()
+        if not viaje_id:
+            return {}
+        viaje = Viaje.objects.filter(pk=viaje_id).first()
+        if not viaje:
+            return {}
+        num = lambda d: float(d) if d is not None else None
+        return {
+            'viaje': [num(viaje.precio_por_persona or 0), num(viaje.precio_frecuente)],
+            'habitaciones': {
+                str(vh.habitacion_id): [num(vh.precio_total), num(vh.precio_frecuente)]
+                for vh in ViajeHabitacion.objects.filter(viaje=viaje)
+            },
+        }
+
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['titulo'] = 'Nueva reservación'
         ctx['clientes_seleccionados'] = self._clientes_seleccionados()
+        ctx['precios'] = self._precios_para_js()
         return ctx
 
-    def get_success_url(self):
-        return reverse('reservaciones:detalle', kwargs={'pk': self.object.pk})
+    def _validar_clientes(self, form, seleccion):
+        """Devuelve True si los clientes son válidos; si no, agrega el error al formulario."""
+        if not seleccion:
+            form.add_error(None, 'Agrega al menos un cliente: la reservación necesita un titular.')
+            return False
+        titular = next(s for s in seleccion if s['titular'])
+        faltan = [n for n, v in (('correo', titular['email']), ('teléfono', titular['telefono'])) if not v]
+        if faltan:
+            form.add_error(None,
+                f'El titular {titular["nombre"]} no tiene {" ni ".join(faltan)}. '
+                'Completa sus datos o elige como titular a otro cliente que los tenga.')
+            return False
 
-    def form_valid(self, form):
-        viaje = form.cleaned_data['viaje']
         habitacion = form.cleaned_data.get('habitacion')
-        seleccion = self._clientes_seleccionados()
-
-        if habitacion and seleccion:
+        viaje = form.cleaned_data['viaje']
+        if habitacion:
             ocupados = ClienteReservacion.objects.filter(
-                reservacion__habitacion=habitacion,
-                reservacion__viaje=viaje,
-            ).exclude(reservacion__estado='cancelada').count()
-            libres = habitacion.tipo.capacidad - ocupados
+                reservacion__habitacion=habitacion, reservacion__viaje=viaje,
+            ).exclude(reservacion__estado='cancelada')
+            if getattr(self, 'object', None) and self.object.pk:
+                ocupados = ocupados.exclude(reservacion_id=self.object.pk)
+            libres = habitacion.tipo.capacidad - ocupados.count()
             if len(seleccion) > libres:
                 form.add_error('habitacion',
                     f'La habitación {habitacion.numero} solo tiene {max(libres, 0)} lugar(es) libre(s) '
                     f'y seleccionaste {len(seleccion)} cliente(s).')
-                return self.form_invalid(form)
+                return False
+        return True
 
+    def _guardar_clientes(self, reservacion, seleccion):
+        """Deja en la reservación exactamente los clientes elegidos, con su titular."""
+        ids = [s['id'] for s in seleccion]
+        titular_id = next(s['id'] for s in seleccion if s['titular'])
+        reservacion.clientes_reservacion.exclude(cliente_id__in=ids).delete()
+        existentes = {cr.cliente_id: cr for cr in reservacion.clientes_reservacion.all()}
+        for cid in ids:
+            es_titular = cid == titular_id
+            cr = existentes.get(cid)
+            if cr is None:
+                ClienteReservacion.objects.create(reservacion=reservacion, cliente_id=cid, es_titular=es_titular)
+            elif cr.es_titular != es_titular:
+                cr.es_titular = es_titular
+                cr.save(update_fields=['es_titular'])
+
+    def form_valid(self, form):
+        seleccion = self._clientes_seleccionados()
+        if not self._validar_clientes(form, seleccion):
+            return self.form_invalid(form)
+        viaje = form.cleaned_data['viaje']
         form.instance.fecha_checkin = viaje.fecha_salida
         form.instance.fecha_checkout = viaje.fecha_regreso
         with transaction.atomic():
             response = super().form_valid(form)
-            for s in seleccion:
-                ClienteReservacion.objects.create(
-                    reservacion=self.object, cliente_id=s['id'], es_titular=s['titular'])
-
-        if seleccion:
-            messages.success(self.request,
-                f'Reservación {self.object.codigo} creada con {len(seleccion)} cliente(s).')
-        else:
-            messages.success(self.request,
-                f'Reservación {self.object.codigo} creada. Agrega los clientes a continuación.')
+            self._guardar_clientes(self.object, seleccion)
+        messages.success(self.request, self.mensaje_exito(len(seleccion)))
         return response
 
+    def get_success_url(self):
+        return reverse('reservaciones:detalle', kwargs={'pk': self.object.pk})
 
-class ReservacionUpdateView(LoginRequiredMixin, UpdateView):
+
+class ReservacionCreateView(LoginRequiredMixin, ClientesReservacionMixin, CreateView):
     model = Reservacion
     form_class = ReservacionForm
     template_name = 'reservaciones/formulario.html'
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs['viaje_id'] = self.object.viaje_id
-        return kwargs
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['titulo'] = 'Nueva reservación'
+        return ctx
+
+    def mensaje_exito(self, num):
+        return f'Reservación {self.object.codigo} creada con {num} cliente(s).'
+
+
+class ReservacionUpdateView(LoginRequiredMixin, ClientesReservacionMixin, UpdateView):
+    model = Reservacion
+    form_class = ReservacionForm
+    template_name = 'reservaciones/formulario.html'
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['titulo'] = f'Editar reservación {self.object.codigo}'
         return ctx
 
-    def get_success_url(self):
-        return reverse('reservaciones:detalle', kwargs={'pk': self.object.pk})
-
-    def form_valid(self, form):
-        viaje = form.cleaned_data['viaje']
-        form.instance.fecha_checkin = viaje.fecha_salida
-        form.instance.fecha_checkout = viaje.fecha_regreso
-        messages.success(self.request, 'Reservación actualizada.')
-        return super().form_valid(form)
+    def mensaje_exito(self, num):
+        return f'Reservación actualizada ({num} cliente(s)).'
 
 
 class ReservacionDeleteView(LoginRequiredMixin, DeleteView):
@@ -418,8 +483,10 @@ def enviar_pases(request, pk):
     reservacion = get_object_or_404(Reservacion, pk=pk)
     if request.method == 'POST':
         try:
-            enviar_pases_abordaje(request, reservacion)
-            messages.success(request, f'Pases de abordaje enviados a {reservacion.num_clientes} pasajero(s).')
+            enviados, omitidos = enviar_pases_abordaje(request, reservacion)
+            messages.success(request, f'Pases de abordaje enviados a {enviados} viajero(s).')
+            if omitidos:
+                messages.warning(request, 'Sin correo, no recibieron su pase: ' + ', '.join(str(c) for c in omitidos) + '.')
         except ValueError as e:
             messages.error(request, str(e))
         except Exception as e:
@@ -433,7 +500,7 @@ def enviar_email_confirmacion(request, pk):
     if request.method == 'POST':
         try:
             enviar_email_reservacion(request, reservacion)
-            messages.success(request, 'Email de confirmación enviado exitosamente.')
+            messages.success(request, 'Correo de confirmación enviado.')
         except ValueError as e:
             messages.error(request, str(e))
         except Exception as e:

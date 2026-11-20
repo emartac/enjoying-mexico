@@ -16,8 +16,14 @@ class ClienteForm(forms.ModelForm):
             'notas': forms.Textarea(attrs={'rows': 2}),
         }
 
+    def clean_email(self):
+        email = (self.cleaned_data.get('email') or '').strip()
+        return email or None
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['email'].help_text = 'Opcional. Obligatorio si será titular de una reservación.'
+        self.fields['telefono'].help_text = 'Opcional. Obligatorio si será titular de una reservación.'
         self.helper = FormHelper()
         self.helper.layout = Layout(
             Row(

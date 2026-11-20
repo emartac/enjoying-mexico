@@ -107,7 +107,7 @@ def generar_pdf_reservacion(request, reservacion):
         pdf.tabla_fila([
             i,
             str(cr.cliente),
-            cr.cliente.email,
+            cr.cliente.email or '-',
             'Si' if cr.es_titular else '',
         ], [10, 75, 75, 20])
     pdf.ln(4)
@@ -425,6 +425,10 @@ def enviar_pases_abordaje(request, reservacion):
     )
     if not clientes_res:
         raise ValueError('La reservación no tiene clientes registrados.')
+    omitidos = [cr.cliente for cr in clientes_res if not cr.cliente.email]
+    clientes_res = [cr for cr in clientes_res if cr.cliente.email]
+    if not clientes_res:
+        raise ValueError('Ningún viajero de la reservación tiene correo.')
 
     viaje = reservacion.viaje
     puntos = list(viaje.puntos_abordaje.order_by('hora_abordaje'))
@@ -498,11 +502,13 @@ def enviar_pases_abordaje(request, reservacion):
         )
         msg.send()
 
+    return len(clientes_res), omitidos
+
 
 def enviar_email_reservacion(request, reservacion):
-    destinatarios = list(reservacion.clientes.values_list('email', flat=True))
+    destinatarios = [e for e in reservacion.clientes.values_list('email', flat=True) if e]
     if not destinatarios:
-        raise ValueError('La reservación no tiene clientes registrados.')
+        raise ValueError('Ningún cliente de la reservación tiene correo.')
 
     clientes_res = reservacion.clientes_reservacion.select_related('cliente').order_by('-es_titular')
     pagos = reservacion.pagos.order_by('fecha')

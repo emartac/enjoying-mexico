@@ -6,27 +6,27 @@
 {% block contenido %}
 <div class="row justify-content-center">
   <div class="col-lg-9">
-    <form method="post" id="form-reservacion">
+    <h4 class="mb-3"><i class="bi bi-calendar-check me-2"></i>{{ titulo }}</h4>
+    <form method="post" id="form-reservacion" novalidate>
       {% csrf_token %}
+
+      {# ── 1. Viaje ── #}
       <div class="card shadow-sm mb-3">
-        <div class="card-header">
-          <h5 class="mb-0"><i class="bi bi-calendar-check me-2"></i>{{ titulo }}</h5>
-        </div>
-        <div class="card-body">
-          {% if form.non_field_errors %}
-          <div class="alert alert-danger py-2">{{ form.non_field_errors|join:" " }}</div>
-          {% endif %}
-          {% crispy form %}
+        <div class="card-header fw-semibold"><span class="badge rounded-pill bg-primary me-2">1</span>Viaje</div>
+        <div class="card-body pb-1">
+          {{ form.viaje|as_crispy_field }}
         </div>
       </div>
 
-      {% if not object %}
-      {# ── Clientes: se agregan aquí mismo, sin salir de la pantalla ── #}
+      {# ── 2. Clientes ── #}
       <div class="card shadow-sm mb-3">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <span><i class="bi bi-people me-1"></i>Clientes de la reservación (<span id="num-clientes">0</span>)</span>
+        <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
+          <span><span class="badge rounded-pill bg-primary me-2">2</span>Clientes (<span id="num-clientes">0</span>)</span>
         </div>
         <div class="card-body">
+          {% if form.non_field_errors %}
+          <div class="alert alert-danger py-2 small"><i class="bi bi-exclamation-triangle me-1"></i>{{ form.non_field_errors|join:" " }}</div>
+          {% endif %}
           <div class="d-flex gap-2 mb-2">
             <div class="position-relative flex-grow-1">
               <input type="text" class="form-control" id="buscar-cliente-input"
@@ -43,50 +43,48 @@
           <div id="sin-clientes" class="text-muted small text-center py-3 border rounded">
             Busca un cliente o crea uno nuevo para agregarlo a la reservación.
           </div>
-          <div class="form-text">El titular es quien aparece como responsable de la reservación.</div>
+          <div class="form-text">El <strong>titular</strong> es el responsable de la reservación y debe tener correo y teléfono. Marca otro titular con <i class="bi bi-star"></i>.</div>
           <div id="inputs-clientes"></div>
         </div>
       </div>
-      {% endif %}
+
+      {# ── 3. Habitación, precio y estado ── #}
+      <div class="card shadow-sm mb-3">
+        <div class="card-header fw-semibold"><span class="badge rounded-pill bg-primary me-2">3</span>Alojamiento y precio</div>
+        <div class="card-body pb-1">
+          {{ form.habitacion|as_crispy_field }}
+          <div class="row">
+            <div class="col-md-6">{{ form.precio_personalizado|as_crispy_field }}</div>
+            <div class="col-md-6">{{ form.estado|as_crispy_field }}</div>
+          </div>
+          {{ form.notas|as_crispy_field }}
+
+          {# Total estimado en vivo #}
+          <div class="border rounded p-2 mb-3 bg-light" id="resumen-total">
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="fw-semibold">Total estimado</span>
+              <span class="fs-5 fw-bold" id="total-estimado">—</span>
+            </div>
+            <div class="small text-muted" id="desglose-total"></div>
+          </div>
+        </div>
+      </div>
 
       <div class="d-flex gap-2 mb-2">
         <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Guardar reservación</button>
         <a href="{% if object %}{% url 'reservaciones:detalle' object.pk %}{% else %}{% url 'reservaciones:lista' %}{% endif %}" class="btn btn-outline-secondary">Cancelar</a>
       </div>
     </form>
-    <div class="mt-2">
-      <a href="{% url 'reservaciones:lista' %}" class="text-secondary"><i class="bi bi-arrow-left me-1"></i>Volver a la lista</a>
-    </div>
   </div>
 </div>
 
-{% if not object %}
 {% include 'reservaciones/partials/modal_nuevo_cliente.html' %}
 {{ clientes_seleccionados|json_script:"clientes-iniciales" }}
-{% endif %}
+{{ precios|json_script:"precios-viaje" }}
 {% endblock %}
 
 {% block extra_js %}
 <script>
-(function () {
-  // Al cambiar de viaje se recarga la página para filtrar habitaciones;
-  // se conservan los clientes ya elegidos en la URL
-  var viajeSelect = document.getElementById('id_viaje');
-  if (viajeSelect) {
-    viajeSelect.addEventListener('change', function () {
-      if (!this.value) return;
-      var params = new URLSearchParams({ viaje: this.value });
-      document.querySelectorAll('#inputs-clientes input[name="clientes"]').forEach(function (i) {
-        params.append('clientes', i.value);
-      });
-      var tit = document.querySelector('#inputs-clientes input[name="titular"]');
-      if (tit) params.append('titular', tit.value);
-      window.location.href = '?' + params.toString();
-    });
-  }
-})();
-
-{% if not object %}
 (function () {
   const searchInput = document.getElementById('buscar-cliente-input');
   const resultsBox  = document.getElementById('buscar-resultados');
@@ -94,26 +92,61 @@
   const vacio       = document.getElementById('sin-clientes');
   const inputs      = document.getElementById('inputs-clientes');
   const contador    = document.getElementById('num-clientes');
+  const selHab      = document.getElementById('id_habitacion');
+  const inpPrecio   = document.getElementById('id_precio_personalizado');
+  const viajeSelect = document.getElementById('id_viaje');
+  const urlEditarCliente = '{% url "clientes:editar" 0 %}';
 
-  // Clientes elegidos: [{id, nombre, email, telefono, titular}]
+  // Clientes elegidos: [{id, nombre, email, telefono, frecuente, titular}]
   let seleccion = JSON.parse(document.getElementById('clientes-iniciales').textContent || '[]');
+  const precios = JSON.parse(document.getElementById('precios-viaje').textContent || '{}');
   let timer;
 
-  function escHtml(s) {
-    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const escHtml = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const dinero = n => '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  // ── Total estimado ────────────────────────────────────────────────
+  function actualizarTotal() {
+    const totalEl = document.getElementById('total-estimado');
+    const desglose = document.getElementById('desglose-total');
+    const personalizado = inpPrecio && inpPrecio.value.trim() !== '' ? parseFloat(inpPrecio.value) : null;
+    if (personalizado !== null && !isNaN(personalizado)) {
+      totalEl.textContent = dinero(personalizado);
+      desglose.textContent = 'Precio personalizado: no cambia al agregar o quitar clientes.';
+      return;
+    }
+    if (!precios.viaje) { totalEl.textContent = '—'; desglose.textContent = 'Elige un viaje para calcular el total.'; return; }
+    const hab = selHab && selHab.value ? precios.habitaciones[selHab.value] : null;
+    const [regular, frecuente] = hab || precios.viaje;
+    const nFrec = frecuente !== null ? seleccion.filter(c => c.frecuente).length : 0;
+    const nReg = seleccion.length ? seleccion.length - nFrec : 1;
+    const total = nReg * regular + nFrec * (frecuente || 0);
+    totalEl.textContent = dinero(total);
+    const partes = [];
+    if (nReg) partes.push(nReg + ' × ' + dinero(regular) + ' (regular)');
+    if (nFrec) partes.push(nFrec + ' × ' + dinero(frecuente) + ' (frecuente)');
+    desglose.textContent = partes.join(' + ') + (seleccion.length ? '' : ' · sin clientes se estima 1 persona');
   }
 
+  // ── Lista de clientes ─────────────────────────────────────────────
   function render() {
     if (seleccion.length && !seleccion.some(c => c.titular)) seleccion[0].titular = true;
     lista.innerHTML = '';
     inputs.innerHTML = '';
     seleccion.forEach(function (c, idx) {
+      const faltan = [];
+      if (c.titular && !c.email) faltan.push('correo');
+      if (c.titular && !c.telefono) faltan.push('teléfono');
       const li = document.createElement('li');
-      li.className = 'list-group-item d-flex justify-content-between align-items-center';
+      li.className = 'list-group-item d-flex justify-content-between align-items-center' + (faltan.length ? ' list-group-item-warning' : '');
       li.innerHTML =
         '<div><strong>' + escHtml(c.nombre) + '</strong>' +
           (c.titular ? ' <span class="badge bg-primary">Titular</span>' : '') +
-          '<br><small class="text-muted">' + escHtml(c.email) + (c.telefono ? ' · ' + escHtml(c.telefono) : '') + '</small></div>' +
+          (c.frecuente ? ' <span class="badge bg-info text-dark">Frecuente</span>' : '') +
+          '<br><small class="text-muted">' + (c.email ? escHtml(c.email) : 'sin correo') + ' · ' + (c.telefono ? escHtml(c.telefono) : 'sin teléfono') + '</small>' +
+          (faltan.length ? '<br><small class="text-danger"><i class="bi bi-exclamation-triangle me-1"></i>Al titular le falta ' + faltan.join(' y ') +
+            '. <a href="' + urlEditarCliente.replace('/0/', '/' + c.id + '/') + '" target="_blank">Completar datos</a> y vuelve a agregarlo, o elige otro titular.</small>' : '') +
+        '</div>' +
         '<div class="d-flex gap-1">' +
           (c.titular ? '' : '<button type="button" class="btn btn-sm btn-outline-primary" data-accion="titular" data-idx="' + idx + '" title="Marcar como titular"><i class="bi bi-star"></i></button>') +
           '<button type="button" class="btn btn-sm btn-outline-danger" data-accion="quitar" data-idx="' + idx + '" title="Quitar"><i class="bi bi-x-lg"></i></button>' +
@@ -124,37 +157,39 @@
     });
     vacio.style.display = seleccion.length ? 'none' : '';
     contador.textContent = seleccion.length;
+    actualizarTotal();
   }
 
   lista.addEventListener('click', function (e) {
     const btn = e.target.closest('button[data-accion]');
     if (!btn) return;
     const idx = parseInt(btn.dataset.idx, 10);
-    if (btn.dataset.accion === 'quitar') {
-      seleccion.splice(idx, 1);
-    } else {
-      seleccion.forEach((c, i) => c.titular = (i === idx));
-    }
+    if (btn.dataset.accion === 'quitar') seleccion.splice(idx, 1);
+    else seleccion.forEach((c, i) => c.titular = (i === idx));
     render();
   });
 
   function agregar(c) {
-    if (!seleccion.some(s => String(s.id) === String(c.id))) {
-      seleccion.push({ id: c.id, nombre: c.nombre, email: c.email, telefono: c.telefono, titular: false });
-      render();
+    const existente = seleccion.find(s => String(s.id) === String(c.id));
+    if (existente) {
+      // Si se volvió a agregar tras completar sus datos, refrescarlos
+      Object.assign(existente, { email: c.email, telefono: c.telefono, frecuente: !!c.frecuente });
+    } else {
+      seleccion.push({ id: c.id, nombre: c.nombre, email: c.email, telefono: c.telefono, frecuente: !!c.frecuente, titular: false });
     }
+    render();
     searchInput.value = '';
     resultsBox.style.display = 'none';
     searchInput.focus();
   }
 
+  // ── Búsqueda ──────────────────────────────────────────────────────
   searchInput.addEventListener('input', function () {
     clearTimeout(timer);
     const q = this.value.trim();
     if (q.length < 2) { resultsBox.style.display = 'none'; return; }
     timer = setTimeout(() => buscar(q), 280);
   });
-  // Enter en el buscador no debe enviar el formulario
   searchInput.addEventListener('keydown', function (e) {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -169,19 +204,20 @@
       .then(r => r.json())
       .then(data => {
         if (searchInput.value.trim() !== q) return;
-        const ids = seleccion.map(s => String(s.id));
-        const disponibles = data.clientes.filter(c => ids.indexOf(String(c.id)) === -1);
         resultsBox.innerHTML = '';
-        if (!disponibles.length) {
+        if (!data.clientes.length) {
           resultsBox.innerHTML = '<div class="list-group-item text-muted small py-2">Sin resultados. ' +
             '<a href="#" data-bs-toggle="modal" data-bs-target="#modalNuevoCliente">Crear cliente nuevo</a></div>';
         } else {
-          disponibles.forEach(c => {
+          data.clientes.forEach(c => {
+            const ya = seleccion.some(s => String(s.id) === String(c.id));
             const b = document.createElement('button');
             b.type = 'button';
             b.className = 'list-group-item list-group-item-action py-2 small';
             b.innerHTML = '<strong>' + escHtml(c.nombre) + '</strong>' +
-              '<span class="text-muted ms-2">' + escHtml(c.email) + (c.telefono ? ' · ' + escHtml(c.telefono) : '') + '</span>';
+              (c.frecuente ? ' <span class="badge bg-info text-dark">Frecuente</span>' : '') +
+              (ya ? ' <span class="badge bg-secondary">ya agregado</span>' : '') +
+              '<span class="text-muted ms-2">' + (c.email ? escHtml(c.email) : 'sin correo') + (c.telefono ? ' · ' + escHtml(c.telefono) : '') + '</span>';
             b.addEventListener('click', () => agregar(c));
             resultsBox.appendChild(b);
           });
@@ -194,7 +230,7 @@
     if (!resultsBox.contains(e.target) && e.target !== searchInput) resultsBox.style.display = 'none';
   });
 
-  // Crear cliente nuevo desde la ventana emergente y agregarlo a la lista
+  // ── Cliente nuevo desde la ventana emergente ─────────────────────
   document.getElementById('btn-guardar-nc').addEventListener('click', function () {
     const errDiv = document.getElementById('nc-errores');
     errDiv.style.display = 'none';
@@ -225,8 +261,21 @@
     });
   });
 
+  // ── Cambiar de viaje recarga la página (para filtrar habitaciones) ─
+  if (viajeSelect) {
+    viajeSelect.addEventListener('change', function () {
+      if (!this.value) return;
+      const params = new URLSearchParams({ viaje: this.value });
+      seleccion.forEach(c => params.append('clientes', c.id));
+      const tit = seleccion.find(c => c.titular);
+      if (tit) params.append('titular', tit.id);
+      window.location.href = '?' + params.toString();
+    });
+  }
+  if (selHab) selHab.addEventListener('change', actualizarTotal);
+  if (inpPrecio) inpPrecio.addEventListener('input', actualizarTotal);
+
   render();
 })();
-{% endif %}
 </script>
 {% endblock %}

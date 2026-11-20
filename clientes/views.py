@@ -130,9 +130,8 @@ def carga_masiva(request):
     reader = csv.DictReader(io.StringIO(contenido))
     headers = [h.strip().lower() for h in (reader.fieldnames or [])]
 
-    columnas_requeridas = {'correo', 'email', 'nombre'}
-    if not (columnas_requeridas & set(headers)):
-        messages.error(request, 'El archivo no tiene las columnas requeridas (nombre, correo/email).')
+    if 'nombre' not in headers:
+        messages.error(request, 'El archivo no tiene la columna requerida "nombre".')
         return render(request, 'clientes/carga_masiva.html', {'titulo': titulo})
 
     def col(row, *nombres):
@@ -160,11 +159,11 @@ def carga_masiva(request):
 
         fila = {'fila': i, 'nombre': f'{nombre_raw} {apellido}'.strip(), 'email': email}
 
-        if not nombre_raw or not email:
+        if not nombre_raw:
             fila['estado'] = 'error'
-            fila['detalle'] = 'Nombre y correo son obligatorios.'
+            fila['detalle'] = 'El nombre es obligatorio.'
             errores += 1
-        elif Cliente.objects.filter(email__iexact=email).exists():
+        elif email and Cliente.objects.filter(email__iexact=email).exists():
             fila['estado'] = 'omitido'
             fila['detalle'] = 'El correo ya existe.'
             omitidos += 1
@@ -173,7 +172,7 @@ def carga_masiva(request):
                 Cliente.objects.create(
                     nombre=nombre_raw,
                     apellido=apellido,
-                    email=email,
+                    email=email or None,
                     telefono=telefono,
                     viajero_frecuente=frecuente,
                 )
@@ -211,7 +210,8 @@ def cliente_buscar(request):
         )
     qs = qs.order_by('apellido', 'nombre')[:10]
     return JsonResponse({'clientes': [
-        {'id': c.pk, 'nombre': str(c), 'email': c.email, 'telefono': c.telefono or ''}
+        {'id': c.pk, 'nombre': str(c), 'email': c.email or '', 'telefono': c.telefono or '',
+         'frecuente': c.viajero_frecuente}
         for c in qs
     ]})
 
@@ -225,8 +225,8 @@ def cliente_crear_ajax(request):
         cliente = form.save()
         return JsonResponse({
             'ok': True, 'id': cliente.pk,
-            'nombre': str(cliente), 'email': cliente.email,
-            'telefono': cliente.telefono or '',
+            'nombre': str(cliente), 'email': cliente.email or '',
+            'telefono': cliente.telefono or '', 'frecuente': cliente.viajero_frecuente,
         })
     return JsonResponse({
         'ok': False,

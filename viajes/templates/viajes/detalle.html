@@ -124,7 +124,7 @@
             </td>
             {% endif %}
             <td><a href="{% url 'clientes:detalle' cr.cliente.pk %}">{{ cr.cliente }}</a>{% if cr.es_titular %} <span class="badge bg-primary">T</span>{% endif %}</td>
-            <td class="text-muted small">{{ cr.cliente.email }}</td>
+            <td class="text-muted small">{{ cr.cliente.email|default:"—" }}</td>
             <td class="text-muted small">{{ cr.cliente.telefono|default:"—" }}</td>
             {% if forloop.first %}
             <td rowspan="{{ grupo.viajeros|length }}" class="align-middle text-end small text-nowrap">

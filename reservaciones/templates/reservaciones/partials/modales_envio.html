@@ -1,0 +1,95 @@
+{% comment %}
+Ventanas de confirmación antes de enviar correos desde el detalle de la reservación.
+Requiere en el contexto: reservacion, con_correo, sin_correo, titular, aviso_titular.
+{% endcomment %}
+
+{# ── Confirmación de reservación ── #}
+<div class="modal fade" id="modalEnviarConfirmacion" tabindex="-1" aria-labelledby="modalEnviarConfirmacionLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalEnviarConfirmacionLabel"><i class="bi bi-envelope me-1"></i>Enviar confirmación</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        {% if con_correo %}
+          <p class="mb-2">Se enviará el correo de confirmación de <strong>{{ reservacion.codigo }}</strong>, con el PDF adjunto, a:</p>
+          <ul class="list-unstyled small mb-2">
+            {% for c in con_correo %}
+            <li><i class="bi bi-check-circle text-success me-1"></i>{{ c }} — <span class="text-muted">{{ c.email }}</span>{% if titular and c.pk == titular.pk %} <span class="badge bg-primary">Titular</span>{% endif %}</li>
+            {% endfor %}
+          </ul>
+          {% if sin_correo %}
+          <div class="small text-muted">
+            No lo recibirán (sin correo):
+            {% for c in sin_correo %}{{ c }}{% if not forloop.last %}, {% endif %}{% endfor %}
+          </div>
+          {% endif %}
+          {% if aviso_titular %}<div class="alert alert-warning small py-2 mt-2 mb-0"><i class="bi bi-exclamation-triangle me-1"></i>{{ aviso_titular }}</div>{% endif %}
+        {% else %}
+          <div class="alert alert-warning mb-0"><i class="bi bi-exclamation-triangle me-1"></i>Ningún cliente de esta reservación tiene correo. Agrega un correo al titular para poder enviar la confirmación.</div>
+        {% endif %}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+        {% if con_correo %}
+        <form method="post" action="{% url 'reservaciones:enviar_email' reservacion.pk %}" class="form-envio">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-info btn-sm"><i class="bi bi-send me-1"></i>Enviar a {{ con_correo|length }} destinatario(s)</button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ── Pases de abordaje ── #}
+<div class="modal fade" id="modalEnviarPases" tabindex="-1" aria-labelledby="modalEnviarPasesLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalEnviarPasesLabel"><i class="bi bi-ticket-perforated me-1"></i>Enviar pases de abordaje</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        {% if con_correo %}
+          <p class="mb-2">Cada viajero recibirá <strong>su propio pase</strong> en PDF:</p>
+          <ul class="list-unstyled small mb-2">
+            {% for c in con_correo %}
+            <li><i class="bi bi-check-circle text-success me-1"></i>{{ c }} — <span class="text-muted">{{ c.email }}</span></li>
+            {% endfor %}
+          </ul>
+          {% if sin_correo %}
+          <div class="alert alert-light border small py-2 mb-0">
+            <i class="bi bi-info-circle me-1"></i>Sin correo, no recibirán su pase:
+            {% for c in sin_correo %}<strong>{{ c }}</strong>{% if not forloop.last %}, {% endif %}{% endfor %}.
+            Agrega su correo en su ficha para que lo reciba.
+          </div>
+          {% endif %}
+        {% else %}
+          <div class="alert alert-warning mb-0"><i class="bi bi-exclamation-triangle me-1"></i>Ningún viajero de esta reservación tiene correo.</div>
+        {% endif %}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+        {% if con_correo %}
+        <form method="post" action="{% url 'reservaciones:enviar_pases' reservacion.pk %}" class="form-envio">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-success btn-sm"><i class="bi bi-send me-1"></i>Enviar {{ con_correo|length }} pase(s)</button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Evita doble envío y muestra que se está procesando (los correos tardan unos segundos)
+document.querySelectorAll('form.form-envio').forEach(function (f) {
+  f.addEventListener('submit', function () {
+    const b = f.querySelector('button[type=submit]');
+    b.disabled = true;
+    b.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Enviando…';
+  });
+});
+</script>

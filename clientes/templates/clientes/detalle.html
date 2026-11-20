@@ -27,7 +27,7 @@
           <dt class="col-sm-5">Nombre completo</dt>
           <dd class="col-sm-7">{{ cliente.nombre_completo }}</dd>
           <dt class="col-sm-5">Correo</dt>
-          <dd class="col-sm-7"><a href="mailto:{{ cliente.email }}">{{ cliente.email }}</a></dd>
+          <dd class="col-sm-7">{% if cliente.email %}<a href="mailto:{{ cliente.email }}">{{ cliente.email }}</a>{% else %}<span class="text-muted">—</span>{% endif %}</dd>
           <dt class="col-sm-5">Teléfono</dt>
           <dd class="col-sm-7">{{ cliente.telefono }}</dd>
           <dt class="col-sm-5">Dirección</dt>

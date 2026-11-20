@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load formato %}
 {% block titulo %}{{ reservacion.codigo }}{% endblock %}
 {% block breadcrumb %}<nav aria-label="breadcrumb"><ol class="breadcrumb mb-3"><li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li><li class="breadcrumb-item"><a href="{% url 'reservaciones:lista' %}">Reservaciones</a></li><li class="breadcrumb-item active">{{ reservacion.codigo }}</li></ol></nav>{% endblock %}
 
@@ -20,18 +21,12 @@
     <a href="{% url 'reservaciones:pdf' reservacion.pk %}" class="btn btn-outline-dark btn-sm" target="_blank">
       <i class="bi bi-file-earmark-pdf me-1"></i>PDF
     </a>
-    <form method="post" action="{% url 'reservaciones:enviar_email' reservacion.pk %}" class="d-inline">
-      {% csrf_token %}
-      <button class="btn btn-outline-info btn-sm" type="submit">
-        <i class="bi bi-envelope me-1"></i>Enviar email
-      </button>
-    </form>
-    <form method="post" action="{% url 'reservaciones:enviar_pases' reservacion.pk %}" class="d-inline">
-      {% csrf_token %}
-      <button class="btn btn-outline-success btn-sm" type="submit">
-        <i class="bi bi-ticket-perforated me-1"></i>Enviar pases
-      </button>
-    </form>
+    <button class="btn btn-outline-info btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#modalEnviarConfirmacion">
+      <i class="bi bi-envelope me-1"></i>Enviar confirmación
+    </button>
+    <button class="btn btn-outline-success btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#modalEnviarPases">
+      <i class="bi bi-ticket-perforated me-1"></i>Enviar pases
+    </button>
     {% if reservacion.estado == 'pendiente' %}
     <form method="post" action="{% url 'reservaciones:confirmar' reservacion.pk %}" class="d-inline">
       {% csrf_token %}
@@ -52,6 +47,16 @@
     {% endif %}
   </div>
 </div>
+
+{% if aviso_titular %}
+<div class="alert alert-warning d-flex align-items-center gap-2 py-2">
+  <i class="bi bi-exclamation-triangle-fill"></i>
+  <div>
+    <strong>{{ aviso_titular }}</strong> El titular debe tener correo y teléfono.
+    {% if titular %}<a href="{% url 'clientes:editar' titular.pk %}" class="alert-link">Completar datos de {{ titular }}</a>{% else %}<a href="{% url 'reservaciones:editar' reservacion.pk %}" class="alert-link">Elegir titular</a>{% endif %}
+  </div>
+</div>
+{% endif %}
 
 <!-- Estado actual -->
 <div class="mb-3">
@@ -105,21 +110,28 @@
       <div class="card-header"><i class="bi bi-cash-coin me-1"></i>Resumen financiero</div>
       <div class="card-body">
         <table class="table table-sm mb-0">
+          {% for r in desglose %}
           <tr>
-            <td>{% if reservacion.habitacion %}Habitación{% else %}Viaje de un día{% endif %} ({{ reservacion.num_clientes }} persona(s))</td>
-            <td class="text-end">${{ reservacion.costo_habitacion }}</td>
+            <td>{{ r.etiqueta }} <span class="text-muted">({{ r.cantidad }} × {{ r.unitario|dinero }})</span></td>
+            <td class="text-end">{{ r.subtotal|dinero }}</td>
           </tr>
+          {% empty %}
+          <tr>
+            <td>Precio personalizado <span class="text-muted">({{ reservacion.num_clientes }} persona(s))</span></td>
+            <td class="text-end">{{ reservacion.costo_habitacion|dinero }}</td>
+          </tr>
+          {% endfor %}
           <tr class="fw-bold">
             <td>Total</td>
-            <td class="text-end">${{ reservacion.total }}</td>
+            <td class="text-end">{{ reservacion.total|dinero }}</td>
           </tr>
           <tr class="text-success">
             <td>Total pagado</td>
-            <td class="text-end">${{ reservacion.total_pagado }}</td>
+            <td class="text-end">{{ reservacion.total_pagado|dinero }}</td>
           </tr>
           <tr class="{% if reservacion.saldo_pendiente > 0 %}text-danger{% else %}text-success{% endif %} fw-semibold">
             <td>Saldo pendiente</td>
-            <td class="text-end">${{ reservacion.saldo_pendiente }}</td>
+            <td class="text-end">{{ reservacion.saldo_pendiente|dinero }}</td>
           </tr>
         </table>
       </div>
@@ -139,7 +151,7 @@
           <div>
             <a href="{% url 'clientes:detalle' cr.cliente.pk %}">{{ cr.cliente }}</a>
             {% if cr.es_titular %}<span class="badge bg-primary ms-1">Titular</span>{% endif %}
-            <br><small class="text-muted">{{ cr.cliente.email }}</small>
+            <br><small class="text-muted">{{ cr.cliente.email|default:"sin correo" }}{% if cr.cliente.telefono %} · {{ cr.cliente.telefono }}{% endif %}</small>
           </div>
           <div class="d-flex gap-1">
             {% if not cr.es_titular %}
@@ -245,6 +257,7 @@
 
 {% include 'reservaciones/partials/modal_nuevo_cliente.html' %}
 {% include 'reservaciones/partials/modal_pago.html' %}
+{% include 'reservaciones/partials/modales_envio.html' %}
 
 <script>
 // Registrar pago desde el modal (sin salir de la reservación)

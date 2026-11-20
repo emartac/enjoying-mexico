@@ -78,28 +78,45 @@ class Reservacion(models.Model):
     def num_clientes(self):
         return self.clientes.count()
 
+    def precios_unitarios(self):
+        """(precio regular, precio frecuente o None) por persona, según habitación o viaje."""
+        from decimal import Decimal
+        if self.habitacion_id:
+            from viajes.models import ViajeHabitacion
+            vh = ViajeHabitacion.objects.filter(viaje_id=self.viaje_id, habitacion_id=self.habitacion_id).first()
+            if not vh:
+                return Decimal(0), None
+            return vh.precio_total, vh.precio_frecuente
+        return (self.viaje.precio_por_persona or Decimal(0)), self.viaje.precio_frecuente
+
+    def desglose_precio(self):
+        """Renglones del cálculo: cada viajero frecuente paga el precio frecuente
+        (si el viaje o la habitación lo tiene) y los demás el regular."""
+        clientes = [cr.cliente for cr in self.clientes_reservacion.select_related('cliente')]
+        regular, frecuente = self.precios_unitarios()
+        num_frecuentes = sum(1 for c in clientes if c.viajero_frecuente) if frecuente is not None else 0
+        num_regulares = len(clientes) - num_frecuentes
+        if not clientes:
+            num_regulares = 1  # sin clientes se estima una persona
+        renglones = []
+        if num_regulares:
+            renglones.append({'etiqueta': 'Precio regular', 'cantidad': num_regulares,
+                              'unitario': regular, 'subtotal': regular * num_regulares})
+        if num_frecuentes:
+            renglones.append({'etiqueta': 'Viajero frecuente', 'cantidad': num_frecuentes,
+                              'unitario': frecuente, 'subtotal': frecuente * num_frecuentes})
+        return renglones
+
     @property
     def costo_habitacion(self):
         if self.precio_personalizado is not None:
             return self.precio_personalizado
-        if not self.habitacion_id:
-            num_personas = self.clientes_reservacion.count() or 1
-            titular = self.clientes_reservacion.filter(es_titular=True).select_related('cliente').first()
-            if titular and titular.cliente.viajero_frecuente and self.viaje.precio_frecuente is not None:
-                return self.viaje.precio_frecuente * num_personas
-            if self.viaje.precio_por_persona:
-                return self.viaje.precio_por_persona * num_personas
-            return 0
-        from viajes.models import ViajeHabitacion
-        try:
-            vh = ViajeHabitacion.objects.get(viaje=self.viaje, habitacion=self.habitacion)
-            titular = self.clientes_reservacion.filter(es_titular=True).select_related('cliente').first()
-            num_personas = self.clientes_reservacion.count() or 1
-            if titular and titular.cliente.viajero_frecuente and vh.precio_frecuente is not None:
-                return vh.precio_frecuente * num_personas
-            return vh.precio_total * num_personas
-        except ViajeHabitacion.DoesNotExist:
-            return 0
+        return sum((r['subtotal'] for r in self.desglose_precio()), 0)
+
+    @property
+    def titular(self):
+        cr = self.clientes_reservacion.filter(es_titular=True).select_related('cliente').first()
+        return cr.cliente if cr else None
 
     @property
     def costo_viaje(self):

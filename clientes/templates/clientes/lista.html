@@ -51,7 +51,7 @@
             <a href="{% url 'clientes:detalle' cliente.pk %}">{{ cliente }}</a>
             {% if cliente.viajero_frecuente %}<span class="badge bg-warning text-dark ms-1"><i class="bi bi-star-fill me-1"></i>Frecuente</span>{% endif %}
           </td>
-          <td>{{ cliente.email }}</td>
+          <td>{{ cliente.email|default:"—" }}</td>
           <td>{{ cliente.telefono }}</td>
           <td class="text-end">
             <a href="{% url 'clientes:editar' cliente.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>

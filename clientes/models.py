@@ -11,8 +11,8 @@ class Cliente(models.Model):
 
     nombre = models.CharField('Nombre', max_length=100)
     apellido = models.CharField('Apellido', max_length=100)
-    email = models.EmailField('Correo electrónico', unique=True)
-    telefono = models.CharField('Teléfono', max_length=25)
+    email = models.EmailField('Correo electrónico', unique=True, null=True, blank=True)
+    telefono = models.CharField('Teléfono', max_length=25, blank=True)
     tipo_documento = models.CharField('Tipo de documento', max_length=20, choices=TIPO_DOC, default='pasaporte', blank=True)
     numero_documento = models.CharField('Número de documento', max_length=50, blank=True)
     fecha_nacimiento = models.DateField('Fecha de nacimiento', null=True, blank=True, editable=False)
@@ -30,6 +30,15 @@ class Cliente(models.Model):
 
     def __str__(self):
         return f'{self.nombre} {self.apellido}'
+
+    @property
+    def datos_contacto_completos(self):
+        """El titular de una reservación necesita correo y teléfono."""
+        return bool(self.email and self.telefono)
+
+    @property
+    def datos_faltantes(self):
+        return [n for n, v in (('correo', self.email), ('teléfono', self.telefono)) if not v]
 
     @property
     def nombre_completo(self):
