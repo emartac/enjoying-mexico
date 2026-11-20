@@ -20,6 +20,10 @@ urlpatterns = [
     path('viajes/', include('viajes.urls', namespace='viajes')),
     path('reservaciones/', include('reservaciones.urls', namespace='reservaciones')),
 
+    # El índice estático viejo (enlazado desde "VIAJES" en las páginas antiguas)
+    # redirige al índice dinámico
+    path('index.html', RedirectView.as_view(url='/', permanent=False)),
+
     # Tours (índice dinámico + panel + detalle)
     path('', include('tours.urls', namespace='tours')),
 

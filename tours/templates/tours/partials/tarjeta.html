@@ -1,0 +1,12 @@
+{% comment %}
+Tarjeta del índice con logo, título y fecha superpuestos a la foto.
+Variables: imagen_url, titulo, fecha (date o None), id_prefijo (opcional, para la vista previa del panel)
+{% endcomment %}
+<div class="tarjeta-em"{% if id_prefijo %} id="{{ id_prefijo }}"{% endif %}>
+  <img class="tarjeta-em-foto" src="{{ imagen_url }}" alt="{{ titulo }}">
+  <div class="tarjeta-em-capa">
+    <img class="tarjeta-em-logo" src="/img/logoborde.png" alt="Enjoying México">
+    <div class="tarjeta-em-titulo">{{ titulo }}</div>
+    <div class="tarjeta-em-fecha"{% if not fecha %} style="display:none"{% endif %}>{% if fecha %}{{ fecha|date:"j \d\e F" }}{% endif %}</div>
+  </div>
+</div>

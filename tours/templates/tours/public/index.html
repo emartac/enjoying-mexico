@@ -2,6 +2,7 @@
 {% block titulo %}Enjoying México | Tours en México{% endblock %}
 
 {% block contenido %}
+{% include 'tours/partials/tarjeta_estilos.html' %}
 <div class="portada">
   <img src="/img/descubre6.jpg" style="object-position: 50% 70% !important;">
   <div class="portada1" style="top: 20%">
@@ -39,7 +40,11 @@
   {% for tour in grupo.tours %}
   <div class="urge1">
     <a href="{% url 'tours:detalle' tour.slug %}">
+      {% if tour.texto_automatico %}
+        {% include 'tours/partials/tarjeta.html' with imagen_url=tour.imagen_index.url titulo=tour.titulo_tarjeta|default:tour.titulo fecha=tour.proxima_fecha %}
+      {% else %}
       <img src="{{ tour.imagen_index.url }}" alt="{{ tour.titulo }}" class="img-fluid">
+      {% endif %}
     </a>
     <p>{{ tour.duracion }} — Desde ${{ tour.costo }}</p>
   </div>

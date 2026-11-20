@@ -38,6 +38,24 @@
         </div>
       </div>
 
+      <div class="card shadow-sm mb-3">
+        <div class="card-header fw-semibold"><i class="bi bi-eye me-1"></i>Vista previa de la tarjeta del índice</div>
+        <div class="card-body text-center">
+          {% include 'tours/partials/tarjeta_estilos.html' %}
+          <div id="preview-sin-texto" class="small text-muted mb-2" style="display:none">
+            Texto automático desactivado: se mostrará la imagen tal cual.
+          </div>
+          {% if tour and tour.imagen_index %}
+            {% include 'tours/partials/tarjeta.html' with imagen_url=tour.imagen_index.url titulo=tour.titulo_tarjeta|default:tour.titulo fecha=tour.proximas_fechas.first.fecha id_prefijo="preview-tarjeta" %}
+          {% elif tour %}
+            {% include 'tours/partials/tarjeta.html' with imagen_url="" titulo=tour.titulo_tarjeta|default:tour.titulo fecha=None id_prefijo="preview-tarjeta" %}
+          {% else %}
+            {% include 'tours/partials/tarjeta.html' with imagen_url="" titulo="Título del tour" fecha=None id_prefijo="preview-tarjeta" %}
+          {% endif %}
+          <div class="small text-muted mt-2">Se actualiza al subir la imagen, cambiar el título o las fechas.</div>
+        </div>
+      </div>
+
       {% if tour %}
       <div class="card shadow-sm mb-3">
         <div class="card-header fw-semibold"><i class="bi bi-images me-1"></i>Secciones adicionales</div>
@@ -79,6 +97,74 @@
     last.parentNode.insertBefore(nuevo, document.getElementById('btn-add-fecha'));
     totalForms.value = n + 1;
   });
+})();
+
+// Vista previa de la tarjeta del índice
+(function () {
+  var tarjeta = document.getElementById('preview-tarjeta');
+  if (!tarjeta) return;
+  var foto = tarjeta.querySelector('.tarjeta-em-foto');
+  var capa = tarjeta.querySelector('.tarjeta-em-capa');
+  var tituloEl = tarjeta.querySelector('.tarjeta-em-titulo');
+  var fechaEl = tarjeta.querySelector('.tarjeta-em-fecha');
+  var avisoSinTexto = document.getElementById('preview-sin-texto');
+  var inpImagen = document.querySelector('input[name="imagen_index"]');
+  var inpTitulo = document.querySelector('[name="titulo"]');
+  var inpTituloTarjeta = document.querySelector('[name="titulo_tarjeta"]');
+  var chkTexto = document.querySelector('[name="texto_automatico"]');
+  var MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto',
+               'septiembre','octubre','noviembre','diciembre'];
+
+  if (!foto.getAttribute('src')) foto.style.visibility = 'hidden';
+
+  function actualizarTitulo() {
+    var t = (inpTituloTarjeta && inpTituloTarjeta.value.trim()) ||
+            (inpTitulo && inpTitulo.value.trim()) || 'Título del tour';
+    tituloEl.textContent = t;
+  }
+
+  function actualizarFecha() {
+    var hoy = new Date().toISOString().slice(0, 10);
+    var fechas = [];
+    document.querySelectorAll('input[type="date"][name^="fechas-"]').forEach(function (inp) {
+      var fila = inp.closest('.fecha-row');
+      var borrar = fila && fila.querySelector('input[type="checkbox"][name$="-DELETE"]');
+      if (inp.value && inp.value >= hoy && !(borrar && borrar.checked)) fechas.push(inp.value);
+    });
+    fechas.sort();
+    if (!fechas.length) { fechaEl.style.display = 'none'; return; }
+    var p = fechas[0].split('-');
+    fechaEl.textContent = parseInt(p[2], 10) + ' de ' + MESES[parseInt(p[1], 10) - 1];
+    fechaEl.style.display = '';
+  }
+
+  function actualizarModo() {
+    var activo = !chkTexto || chkTexto.checked;
+    capa.style.display = activo ? '' : 'none';
+    avisoSinTexto.style.display = activo ? 'none' : '';
+  }
+
+  if (inpImagen) inpImagen.addEventListener('change', function () {
+    if (inpImagen.files && inpImagen.files[0]) {
+      foto.src = URL.createObjectURL(inpImagen.files[0]);
+      foto.style.visibility = '';
+    }
+  });
+  [inpTitulo, inpTituloTarjeta].forEach(function (el) {
+    if (el) el.addEventListener('input', actualizarTitulo);
+  });
+  if (chkTexto) chkTexto.addEventListener('change', actualizarModo);
+  // Las filas de fecha se pueden agregar dinámicamente: escuchar en todo el formulario
+  document.addEventListener('input', function (e) {
+    if (e.target.name && e.target.name.indexOf('fechas-') === 0) actualizarFecha();
+  });
+  document.addEventListener('change', function (e) {
+    if (e.target.name && e.target.name.indexOf('fechas-') === 0) actualizarFecha();
+  });
+
+  actualizarTitulo();
+  actualizarFecha();
+  actualizarModo();
 })();
 </script>
 {% endblock %}

@@ -26,6 +26,13 @@ class Tour(models.Model):
     no_incluye = models.TextField('No incluye', help_text='Un elemento por línea')
     imagen_principal = models.ImageField('Imagen principal (portada)', upload_to='tours/principal/')
     imagen_index = models.ImageField('Imagen para el índice', upload_to='tours/index/')
+    texto_automatico = models.BooleanField(
+        'Poner logo, título y fecha sobre la imagen del índice', default=True,
+        help_text='Sube solo la foto: el logo, el título y la próxima fecha se agregan automáticamente. '
+                  'Desactívalo si la imagen ya trae el texto.')
+    titulo_tarjeta = models.CharField(
+        'Título corto para la tarjeta', max_length=60, blank=True,
+        help_text='Opcional. Si lo dejas vacío se usa el título del tour.')
     imagen_incluye = models.ImageField('Imagen sección incluye', upload_to='tours/incluye/', blank=True)
     imagen_itinerario = models.ImageField('Imagen itinerario', upload_to='tours/itinerario/', blank=True)
     pdf_info = models.FileField('PDF informativo', upload_to='tours/pdf/', blank=True,
