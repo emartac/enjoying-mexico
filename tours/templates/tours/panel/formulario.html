@@ -22,13 +22,22 @@
         <div class="card-header fw-semibold"><i class="bi bi-calendar-event me-1"></i>Fechas de salida</div>
         <div class="card-body">
           {{ formset.management_form }}
+          {% if formset.non_form_errors %}
+          <div class="alert alert-danger py-2 small">{{ formset.non_form_errors|join:" " }}</div>
+          {% endif %}
           {% for f in formset %}
-          <div class="d-flex gap-2 align-items-center mb-2 fecha-row">
-            {% for field in f.visible_fields %}
-            <div class="flex-grow-1">{{ field }}</div>
-            {% endfor %}
-            {% if f.instance.pk %}
-            <div>{{ f.DELETE.as_widget }}</div>
+          <div class="mb-2 fecha-row">
+            <div class="d-flex gap-2 align-items-center">
+              {% for hidden in f.hidden_fields %}{{ hidden }}{% endfor %}
+              <div class="flex-grow-1">{{ f.fecha }}</div>
+              {% if f.instance.pk %}
+              <label class="small text-muted text-nowrap" title="Eliminar esta fecha">
+                {{ f.DELETE }} <i class="bi bi-trash"></i>
+              </label>
+              {% endif %}
+            </div>
+            {% if f.errors %}
+            <div class="text-danger small">{% for field, errs in f.errors.items %}{{ errs|join:" " }} {% endfor %}</div>
             {% endif %}
           </div>
           {% endfor %}
@@ -46,9 +55,9 @@
             Texto automático desactivado: se mostrará la imagen tal cual.
           </div>
           {% if tour and tour.imagen_index %}
-            {% include 'tours/partials/tarjeta.html' with imagen_url=tour.imagen_index.url titulo=tour.titulo_tarjeta|default:tour.titulo fecha_texto=tour.texto_fecha_tarjeta color=tour.color_fecha sombreado=tour.sombreado id_prefijo="preview-tarjeta" %}
+            {% include 'tours/partials/tarjeta.html' with imagen_url=tour.imagen_index.url titulo=tour.titulo_tarjeta|default:tour.titulo subtitulo=tour.subtitulo_tarjeta fecha_texto=tour.texto_fecha_tarjeta color=tour.color_fecha sombreado=tour.sombreado id_prefijo="preview-tarjeta" %}
           {% elif tour %}
-            {% include 'tours/partials/tarjeta.html' with imagen_url="" titulo=tour.titulo_tarjeta|default:tour.titulo fecha_texto=tour.texto_fecha_tarjeta color=tour.color_fecha sombreado=tour.sombreado id_prefijo="preview-tarjeta" %}
+            {% include 'tours/partials/tarjeta.html' with imagen_url="" titulo=tour.titulo_tarjeta|default:tour.titulo subtitulo=tour.subtitulo_tarjeta fecha_texto=tour.texto_fecha_tarjeta color=tour.color_fecha sombreado=tour.sombreado id_prefijo="preview-tarjeta" %}
           {% else %}
             {% include 'tours/partials/tarjeta.html' with imagen_url="" titulo="Título del tour" fecha_texto="" id_prefijo="preview-tarjeta" %}
           {% endif %}
@@ -89,6 +98,8 @@
     var rows = document.querySelectorAll('.fecha-row');
     var last = rows[rows.length - 1];
     var nuevo = last.cloneNode(true);
+    // La fila nueva no lleva casilla de eliminar ni mensajes de error
+    nuevo.querySelectorAll('label, .text-danger').forEach(function (el) { el.remove(); });
     nuevo.querySelectorAll('input').forEach(function (inp) {
       inp.name = inp.name.replace(/-\d+-/, '-' + n + '-');
       inp.id = inp.id.replace(/-\d+-/, '-' + n + '-');
@@ -107,6 +118,9 @@
   var capa = tarjeta.querySelector('.tarjeta-em-capa');
   var tituloEl = tarjeta.querySelector('.tarjeta-em-titulo');
   var fechaEl = tarjeta.querySelector('.tarjeta-em-fecha');
+  var fechaTxt = fechaEl.querySelector('span');
+  var subtituloEl = tarjeta.querySelector('.tarjeta-em-subtitulo');
+  var inpSubtitulo = document.querySelector('[name="subtitulo_tarjeta"]');
   var avisoSinTexto = document.getElementById('preview-sin-texto');
   var inpImagen = document.querySelector('input[name="imagen_index"]');
   var inpTitulo = document.querySelector('[name="titulo"]');
@@ -123,6 +137,9 @@
     var t = (inpTituloTarjeta && inpTituloTarjeta.value.trim()) ||
             (inpTitulo && inpTitulo.value.trim()) || 'Título del tour';
     tituloEl.textContent = t;
+    var sub = inpSubtitulo ? inpSubtitulo.value.trim() : '';
+    subtituloEl.textContent = sub;
+    subtituloEl.style.display = sub ? '' : 'none';
   }
 
   function actualizarFecha() {
@@ -143,7 +160,7 @@
       if (f.slice(0, 7) === mes && dias.indexOf(d) === -1) dias.push(d);
     });
     var texto = dias.length === 1 ? dias[0] : dias.slice(0, -1).join(', ') + ' y ' + dias[dias.length - 1];
-    fechaEl.textContent = texto + ' de ' + MESES[parseInt(mes.slice(5, 7), 10) - 1];
+    fechaTxt.textContent = texto + ' de ' + MESES[parseInt(mes.slice(5, 7), 10) - 1];
     fechaEl.style.display = '';
   }
 
@@ -167,7 +184,7 @@
       foto.style.visibility = '';
     }
   });
-  [inpTitulo, inpTituloTarjeta].forEach(function (el) {
+  [inpTitulo, inpTituloTarjeta, inpSubtitulo].forEach(function (el) {
     if (el) el.addEventListener('input', actualizarTitulo);
   });
   if (chkTexto) chkTexto.addEventListener('change', actualizarModo);

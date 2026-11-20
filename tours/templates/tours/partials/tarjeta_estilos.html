@@ -57,8 +57,26 @@
     text-shadow: 2px 3px 3px rgba(0,0,0,var(--em-sombra-titulo)), 0 0 14px rgba(0,0,0,calc(var(--em-sombra-titulo) * .6));
     overflow-wrap: break-word;
   }
+  .tarjeta-em-subtitulo {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    color: #fff;
+    font-size: 3.6cqw;
+    letter-spacing: .3em;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 1.5% 8% 0;
+    line-height: 1.3;
+    text-shadow: 1px 1px 3px rgba(0,0,0,var(--em-sombra-titulo));
+  }
+  /* Cinta de la fecha con extremos rasgados; la sombra va en el contenedor
+     porque clip-path recortaría un box-shadow */
   .tarjeta-em-fecha {
     margin-top: 3%;
+    filter: drop-shadow(0 3px 4px rgba(0,0,0,.4));
+  }
+  .tarjeta-em-fecha span {
+    display: block;
     background: var(--em-color-fecha, #ef5a8a);
     color: #fff;
     font-family: 'Poppins', sans-serif;
@@ -66,8 +84,13 @@
     font-size: 4.8cqw;
     letter-spacing: .5px;
     text-transform: uppercase;
-    padding: .6% 11%;
-    text-shadow: 0 1px 2px rgba(0,0,0,.25);
-    box-shadow: 0 3px 8px rgba(0,0,0,.35);
+    white-space: nowrap;
+    padding: .12em 2.2em;
+    text-shadow: 1px 2px 2px rgba(0,0,0,.45);
+    clip-path: polygon(
+      2% 0, 98% 0, 99.6% 10%, 97.6% 22%, 100% 36%, 98.2% 50%, 99.8% 64%,
+      97.4% 78%, 99.4% 90%, 98.6% 100%, 1.6% 100%, 0 90%, 2.4% 77%,
+      .4% 63%, 2.6% 49%, 0 35%, 2.2% 21%, .6% 9%
+    );
   }
 </style>
