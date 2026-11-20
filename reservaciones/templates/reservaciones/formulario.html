@@ -6,30 +6,227 @@
 {% block contenido %}
 <div class="row justify-content-center">
   <div class="col-lg-9">
-    <div class="card shadow-sm">
-      <div class="card-header">
-        <h5 class="mb-0"><i class="bi bi-calendar-check me-2"></i>{{ titulo }}</h5>
-      </div>
-      <div class="card-body">
-        <form method="post">
-          {% csrf_token %}
+    <form method="post" id="form-reservacion">
+      {% csrf_token %}
+      <div class="card shadow-sm mb-3">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="bi bi-calendar-check me-2"></i>{{ titulo }}</h5>
+        </div>
+        <div class="card-body">
+          {% if form.non_field_errors %}
+          <div class="alert alert-danger py-2">{{ form.non_field_errors|join:" " }}</div>
+          {% endif %}
           {% crispy form %}
-        </form>
+        </div>
       </div>
-      <script>
-        document.addEventListener('DOMContentLoaded', function () {
-          var viajeSelect = document.getElementById('id_viaje');
-          if (viajeSelect) {
-            viajeSelect.addEventListener('change', function () {
-              if (this.value) window.location.href = '?viaje=' + this.value;
-            });
-          }
-        });
-      </script>
-    </div>
+
+      {% if not object %}
+      {# ── Clientes: se agregan aquí mismo, sin salir de la pantalla ── #}
+      <div class="card shadow-sm mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-people me-1"></i>Clientes de la reservación (<span id="num-clientes">0</span>)</span>
+        </div>
+        <div class="card-body">
+          <div class="d-flex gap-2 mb-2">
+            <div class="position-relative flex-grow-1">
+              <input type="text" class="form-control" id="buscar-cliente-input"
+                     placeholder="Buscar cliente por nombre, teléfono o correo…" autocomplete="off">
+              <div id="buscar-resultados" class="list-group position-absolute w-100 shadow"
+                   style="z-index:1050;display:none;max-height:260px;overflow-y:auto;top:100%;left:0"></div>
+            </div>
+            <button type="button" class="btn btn-outline-primary text-nowrap" data-bs-toggle="modal" data-bs-target="#modalNuevoCliente">
+              <i class="bi bi-person-plus-fill me-1"></i>Nuevo cliente
+            </button>
+          </div>
+
+          <ul class="list-group" id="lista-seleccionados"></ul>
+          <div id="sin-clientes" class="text-muted small text-center py-3 border rounded">
+            Busca un cliente o crea uno nuevo para agregarlo a la reservación.
+          </div>
+          <div class="form-text">El titular es quien aparece como responsable de la reservación.</div>
+          <div id="inputs-clientes"></div>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="d-flex gap-2 mb-2">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Guardar reservación</button>
+        <a href="{% if object %}{% url 'reservaciones:detalle' object.pk %}{% else %}{% url 'reservaciones:lista' %}{% endif %}" class="btn btn-outline-secondary">Cancelar</a>
+      </div>
+    </form>
     <div class="mt-2">
       <a href="{% url 'reservaciones:lista' %}" class="text-secondary"><i class="bi bi-arrow-left me-1"></i>Volver a la lista</a>
     </div>
   </div>
 </div>
+
+{% if not object %}
+{% include 'reservaciones/partials/modal_nuevo_cliente.html' %}
+{{ clientes_seleccionados|json_script:"clientes-iniciales" }}
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  // Al cambiar de viaje se recarga la página para filtrar habitaciones;
+  // se conservan los clientes ya elegidos en la URL
+  var viajeSelect = document.getElementById('id_viaje');
+  if (viajeSelect) {
+    viajeSelect.addEventListener('change', function () {
+      if (!this.value) return;
+      var params = new URLSearchParams({ viaje: this.value });
+      document.querySelectorAll('#inputs-clientes input[name="clientes"]').forEach(function (i) {
+        params.append('clientes', i.value);
+      });
+      var tit = document.querySelector('#inputs-clientes input[name="titular"]');
+      if (tit) params.append('titular', tit.value);
+      window.location.href = '?' + params.toString();
+    });
+  }
+})();
+
+{% if not object %}
+(function () {
+  const searchInput = document.getElementById('buscar-cliente-input');
+  const resultsBox  = document.getElementById('buscar-resultados');
+  const lista       = document.getElementById('lista-seleccionados');
+  const vacio       = document.getElementById('sin-clientes');
+  const inputs      = document.getElementById('inputs-clientes');
+  const contador    = document.getElementById('num-clientes');
+
+  // Clientes elegidos: [{id, nombre, email, telefono, titular}]
+  let seleccion = JSON.parse(document.getElementById('clientes-iniciales').textContent || '[]');
+  let timer;
+
+  function escHtml(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function render() {
+    if (seleccion.length && !seleccion.some(c => c.titular)) seleccion[0].titular = true;
+    lista.innerHTML = '';
+    inputs.innerHTML = '';
+    seleccion.forEach(function (c, idx) {
+      const li = document.createElement('li');
+      li.className = 'list-group-item d-flex justify-content-between align-items-center';
+      li.innerHTML =
+        '<div><strong>' + escHtml(c.nombre) + '</strong>' +
+          (c.titular ? ' <span class="badge bg-primary">Titular</span>' : '') +
+          '<br><small class="text-muted">' + escHtml(c.email) + (c.telefono ? ' · ' + escHtml(c.telefono) : '') + '</small></div>' +
+        '<div class="d-flex gap-1">' +
+          (c.titular ? '' : '<button type="button" class="btn btn-sm btn-outline-primary" data-accion="titular" data-idx="' + idx + '" title="Marcar como titular"><i class="bi bi-star"></i></button>') +
+          '<button type="button" class="btn btn-sm btn-outline-danger" data-accion="quitar" data-idx="' + idx + '" title="Quitar"><i class="bi bi-x-lg"></i></button>' +
+        '</div>';
+      lista.appendChild(li);
+      inputs.insertAdjacentHTML('beforeend', '<input type="hidden" name="clientes" value="' + c.id + '">');
+      if (c.titular) inputs.insertAdjacentHTML('beforeend', '<input type="hidden" name="titular" value="' + c.id + '">');
+    });
+    vacio.style.display = seleccion.length ? 'none' : '';
+    contador.textContent = seleccion.length;
+  }
+
+  lista.addEventListener('click', function (e) {
+    const btn = e.target.closest('button[data-accion]');
+    if (!btn) return;
+    const idx = parseInt(btn.dataset.idx, 10);
+    if (btn.dataset.accion === 'quitar') {
+      seleccion.splice(idx, 1);
+    } else {
+      seleccion.forEach((c, i) => c.titular = (i === idx));
+    }
+    render();
+  });
+
+  function agregar(c) {
+    if (!seleccion.some(s => String(s.id) === String(c.id))) {
+      seleccion.push({ id: c.id, nombre: c.nombre, email: c.email, telefono: c.telefono, titular: false });
+      render();
+    }
+    searchInput.value = '';
+    resultsBox.style.display = 'none';
+    searchInput.focus();
+  }
+
+  searchInput.addEventListener('input', function () {
+    clearTimeout(timer);
+    const q = this.value.trim();
+    if (q.length < 2) { resultsBox.style.display = 'none'; return; }
+    timer = setTimeout(() => buscar(q), 280);
+  });
+  // Enter en el buscador no debe enviar el formulario
+  searchInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const primero = resultsBox.querySelector('button');
+      if (primero && resultsBox.style.display !== 'none') primero.click();
+    }
+    if (e.key === 'Escape') resultsBox.style.display = 'none';
+  });
+
+  function buscar(q) {
+    fetch('{% url "clientes:buscar" %}?q=' + encodeURIComponent(q))
+      .then(r => r.json())
+      .then(data => {
+        if (searchInput.value.trim() !== q) return;
+        const ids = seleccion.map(s => String(s.id));
+        const disponibles = data.clientes.filter(c => ids.indexOf(String(c.id)) === -1);
+        resultsBox.innerHTML = '';
+        if (!disponibles.length) {
+          resultsBox.innerHTML = '<div class="list-group-item text-muted small py-2">Sin resultados. ' +
+            '<a href="#" data-bs-toggle="modal" data-bs-target="#modalNuevoCliente">Crear cliente nuevo</a></div>';
+        } else {
+          disponibles.forEach(c => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'list-group-item list-group-item-action py-2 small';
+            b.innerHTML = '<strong>' + escHtml(c.nombre) + '</strong>' +
+              '<span class="text-muted ms-2">' + escHtml(c.email) + (c.telefono ? ' · ' + escHtml(c.telefono) : '') + '</span>';
+            b.addEventListener('click', () => agregar(c));
+            resultsBox.appendChild(b);
+          });
+        }
+        resultsBox.style.display = 'block';
+      });
+  }
+
+  document.addEventListener('click', e => {
+    if (!resultsBox.contains(e.target) && e.target !== searchInput) resultsBox.style.display = 'none';
+  });
+
+  // Crear cliente nuevo desde la ventana emergente y agregarlo a la lista
+  document.getElementById('btn-guardar-nc').addEventListener('click', function () {
+    const errDiv = document.getElementById('nc-errores');
+    errDiv.style.display = 'none';
+    const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const body = new URLSearchParams({
+      nombre:            document.getElementById('nc-nombre').value.trim(),
+      apellido:          document.getElementById('nc-apellido').value.trim(),
+      email:             document.getElementById('nc-email').value.trim(),
+      telefono:          document.getElementById('nc-telefono').value.trim(),
+      viajero_frecuente: document.getElementById('nc-frecuente').checked ? 'on' : '',
+    });
+    fetch('{% url "clientes:crear_ajax" %}', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': csrf },
+      body: body.toString(),
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.ok) {
+        agregar(data);
+        bootstrap.Modal.getInstance(document.getElementById('modalNuevoCliente')).hide();
+        ['nc-nombre','nc-apellido','nc-email','nc-telefono'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('nc-frecuente').checked = false;
+      } else {
+        errDiv.textContent = Object.values(data.errors).flat().join(' ');
+        errDiv.style.display = '';
+      }
+    });
+  });
+
+  render();
+})();
+{% endif %}
+</script>
 {% endblock %}

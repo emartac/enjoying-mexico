@@ -240,50 +240,7 @@
 
 </div>
 
-<!-- Modal: nuevo cliente -->
-<div class="modal fade" id="modalNuevoCliente" tabindex="-1" aria-labelledby="modalNuevoClienteLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="modalNuevoClienteLabel"><i class="bi bi-person-plus me-1"></i>Nuevo cliente</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <div id="nc-errores" class="alert alert-danger small py-2" style="display:none"></div>
-        <div class="row g-2">
-          <div class="col-6">
-            <label class="form-label small mb-1">Nombre *</label>
-            <input type="text" class="form-control form-control-sm" id="nc-nombre">
-          </div>
-          <div class="col-6">
-            <label class="form-label small mb-1">Apellido *</label>
-            <input type="text" class="form-control form-control-sm" id="nc-apellido">
-          </div>
-          <div class="col-7">
-            <label class="form-label small mb-1">Email *</label>
-            <input type="email" class="form-control form-control-sm" id="nc-email">
-          </div>
-          <div class="col-5">
-            <label class="form-label small mb-1">Teléfono</label>
-            <input type="text" class="form-control form-control-sm" id="nc-telefono">
-          </div>
-          <div class="col-12">
-            <div class="form-check mt-1">
-              <input class="form-check-input" type="checkbox" id="nc-frecuente">
-              <label class="form-check-label small" for="nc-frecuente">Viajero frecuente</label>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
-        <button type="button" class="btn btn-primary btn-sm" id="btn-guardar-nc">
-          <i class="bi bi-save me-1"></i>Guardar y seleccionar
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
+{% include 'reservaciones/partials/modal_nuevo_cliente.html' %}
 
 <script>
 (function () {

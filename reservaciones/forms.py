@@ -27,6 +27,9 @@ class ReservacionForm(forms.ModelForm):
         self.fields['habitacion'].required = False
         self.fields['habitacion'].empty_label = '— Sin habitación (viaje de un día) —'
         self.helper = FormHelper()
+        # El <form> y el botón de guardar están en la plantilla, para poder
+        # agregar la sección de clientes antes del botón
+        self.helper.form_tag = False
         self.helper.layout = Layout(
             Row(
                 Column('viaje', css_class='col-md-8'),
@@ -35,7 +38,6 @@ class ReservacionForm(forms.ModelForm):
             'habitacion',
             'precio_personalizado',
             'notas',
-            ButtonHolder(Submit('submit', 'Guardar reservación', css_class='btn btn-primary')),
         )
 
     def clean(self):

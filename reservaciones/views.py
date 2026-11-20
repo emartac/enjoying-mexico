@@ -7,7 +7,9 @@ from django.http import HttpResponse
 from django.contrib import messages
 from django.db.models.deletion import ProtectedError
 
+from django.db import transaction
 from django.db.models import Prefetch
+from clientes.models import Cliente
 from .models import Reservacion, ClienteReservacion, Pago
 from .forms import ReservacionForm, AgregarClienteForm, PagoForm
 from .utils import generar_pdf_reservacion, enviar_email_reservacion, enviar_pases_abordaje
@@ -93,9 +95,28 @@ class ReservacionCreateView(LoginRequiredMixin, CreateView):
             initial['viaje'] = viaje_id
         return initial
 
+    def _clientes_seleccionados(self):
+        """Clientes elegidos en la pantalla (POST al guardar, GET al cambiar de viaje)."""
+        data = self.request.POST if self.request.method == 'POST' else self.request.GET
+        ids = []
+        for v in data.getlist('clientes'):
+            if v.isdigit() and int(v) not in ids:
+                ids.append(int(v))
+        encontrados = Cliente.objects.in_bulk(ids)
+        titular = data.get('titular', '')
+        seleccion = [
+            {'id': c.pk, 'nombre': str(c), 'email': c.email, 'telefono': c.telefono or '',
+             'titular': str(c.pk) == titular}
+            for c in (encontrados.get(i) for i in ids) if c
+        ]
+        if seleccion and not any(s['titular'] for s in seleccion):
+            seleccion[0]['titular'] = True
+        return seleccion
+
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['titulo'] = 'Nueva reservación'
+        ctx['clientes_seleccionados'] = self._clientes_seleccionados()
         return ctx
 
     def get_success_url(self):
@@ -103,10 +124,35 @@ class ReservacionCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         viaje = form.cleaned_data['viaje']
+        habitacion = form.cleaned_data.get('habitacion')
+        seleccion = self._clientes_seleccionados()
+
+        if habitacion and seleccion:
+            ocupados = ClienteReservacion.objects.filter(
+                reservacion__habitacion=habitacion,
+                reservacion__viaje=viaje,
+            ).exclude(reservacion__estado='cancelada').count()
+            libres = habitacion.tipo.capacidad - ocupados
+            if len(seleccion) > libres:
+                form.add_error('habitacion',
+                    f'La habitación {habitacion.numero} solo tiene {max(libres, 0)} lugar(es) libre(s) '
+                    f'y seleccionaste {len(seleccion)} cliente(s).')
+                return self.form_invalid(form)
+
         form.instance.fecha_checkin = viaje.fecha_salida
         form.instance.fecha_checkout = viaje.fecha_regreso
-        response = super().form_valid(form)
-        messages.success(self.request, f'Reservación {self.object.codigo} creada. Agrega los clientes a continuación.')
+        with transaction.atomic():
+            response = super().form_valid(form)
+            for s in seleccion:
+                ClienteReservacion.objects.create(
+                    reservacion=self.object, cliente_id=s['id'], es_titular=s['titular'])
+
+        if seleccion:
+            messages.success(self.request,
+                f'Reservación {self.object.codigo} creada con {len(seleccion)} cliente(s).')
+        else:
+            messages.success(self.request,
+                f'Reservación {self.object.codigo} creada. Agrega los clientes a continuación.')
         return response
 
 
