@@ -1,7 +1,13 @@
+from pathlib import Path
+
 from fpdf import FPDF
 from django.template.loader import render_to_string
 from django.core.mail import EmailMessage
 from django.conf import settings
+
+# Identidad de Enjoying México
+ROSA_MARCA = (230, 18, 88)   # #E61258
+LOGO_PDF = Path(__file__).resolve().parent / 'assets' / 'logo_pdf.png'
 
 
 class PDFReservacion(FPDF):
@@ -12,29 +18,33 @@ class PDFReservacion(FPDF):
         self.set_auto_page_break(auto=True, margin=15)
 
     def header(self):
-        self.set_fill_color(13, 110, 253)
-        self.rect(0, 0, 210, 28, 'F')
+        self.set_fill_color(*ROSA_MARCA)
+        self.rect(0, 0, 210, 32, 'F')
+        # Logo a la izquierda (versión con contorno blanco, se lee sobre el rosa)
+        if LOGO_PDF.exists():
+            self.image(str(LOGO_PDF), x=12, y=6, w=62)
+        # Título y código alineados a la derecha
         self.set_text_color(255, 255, 255)
         self.set_font('Helvetica', 'B', 16)
-        self.set_xy(15, 7)
-        self.cell(0, 8, 'Confirmacion de Reservacion', ln=False)
+        self.set_xy(80, 8)
+        self.cell(115, 8, 'Confirmacion de Reservacion', align='R')
         self.set_font('Helvetica', '', 10)
-        self.set_xy(15, 17)
-        self.cell(0, 6, f'Codigo: {self.reservacion.codigo}  |  {self.reservacion.get_estado_display()}')
+        self.set_xy(80, 18)
+        self.cell(115, 6, f'Codigo: {self.reservacion.codigo}  |  {self.reservacion.get_estado_display()}', align='R')
         self.set_text_color(0, 0, 0)
-        self.ln(20)
+        self.set_y(40)
 
     def footer(self):
         self.set_y(-12)
         self.set_font('Helvetica', 'I', 8)
         self.set_text_color(128, 128, 128)
         from datetime import datetime
-        self.cell(0, 5, f'Generado el {datetime.now().strftime("%d/%m/%Y %H:%M")}  |  Sistema de Reservaciones Turismo', align='C')
+        self.cell(0, 5, f'Generado el {datetime.now().strftime("%d/%m/%Y %H:%M")}  |  Enjoying Mexico', align='C')
 
     def seccion(self, titulo):
         self.set_font('Helvetica', 'B', 11)
-        self.set_fill_color(233, 236, 239)
-        self.set_text_color(13, 110, 253)
+        self.set_fill_color(252, 228, 236)   # rosa muy claro
+        self.set_text_color(*ROSA_MARCA)
         self.cell(0, 7, titulo, ln=True, fill=True)
         self.set_text_color(0, 0, 0)
         self.ln(1)
