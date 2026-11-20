@@ -231,9 +231,9 @@
         {% endfor %}
       </ul>
       <div class="card-footer">
-        <a href="{% url 'reservaciones:pago_crear' reservacion.pk %}" class="btn btn-success btn-sm w-100">
+        <button type="button" class="btn btn-success btn-sm w-100" data-bs-toggle="modal" data-bs-target="#modalPago">
           <i class="bi bi-plus-lg me-1"></i>Registrar pago
-        </a>
+        </button>
       </div>
     </div>
   </div>
@@ -241,6 +241,42 @@
 </div>
 
 {% include 'reservaciones/partials/modal_nuevo_cliente.html' %}
+{% include 'reservaciones/partials/modal_pago.html' %}
+
+<script>
+// Registrar pago desde el modal (sin salir de la reservación)
+(function () {
+  const form = document.getElementById('form-pago');
+  if (!form) return;
+  const campos = document.getElementById('pago-campos');
+  const errRed = document.getElementById('pago-error-red');
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    errRed.style.display = 'none';
+    const btn = form.querySelector('[type=submit]');
+    if (btn) btn.disabled = true;
+
+    fetch(form.action, {
+      method: 'POST',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      body: new FormData(form),
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.ok) {
+        window.location.href = data.redirect;
+      } else {
+        campos.innerHTML = data.html;
+      }
+    })
+    .catch(() => {
+      errRed.style.display = '';
+      if (btn) btn.disabled = false;
+    });
+  });
+})();
+</script>
 
 <script>
 (function () {

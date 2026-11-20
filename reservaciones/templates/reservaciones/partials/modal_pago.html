@@ -1,0 +1,29 @@
+<!-- Modal: registrar pago -->
+<div class="modal fade" id="modalPago" tabindex="-1" aria-labelledby="modalPagoLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalPagoLabel"><i class="bi bi-credit-card me-1"></i>Registrar pago</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <div class="d-flex flex-wrap gap-4 small text-muted mb-3">
+          <span><strong>Total:</strong> ${{ reservacion.total }}</span>
+          <span><strong>Pagado:</strong> ${{ reservacion.total_pagado }}</span>
+          <span class="{% if reservacion.saldo_pendiente > 0 %}text-danger{% else %}text-success{% endif %}">
+            <strong>Saldo:</strong> ${{ reservacion.saldo_pendiente }}
+          </span>
+        </div>
+        <div id="pago-error-red" class="alert alert-danger small py-2" style="display:none">
+          No se pudo guardar el pago. Revisa tu conexión e inténtalo de nuevo.
+        </div>
+        <form id="form-pago" method="post" action="{% url 'reservaciones:pago_crear' reservacion.pk %}">
+          {% csrf_token %}
+          <div id="pago-campos">
+            {% include 'reservaciones/partials/pago_form_campos.html' with form=pago_form %}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

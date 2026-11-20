@@ -3,7 +3,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse_lazy, reverse
 from django.shortcuts import get_object_or_404, redirect
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
+from django.template.loader import render_to_string
 from django.contrib import messages
 from django.db.models.deletion import ProtectedError
 
@@ -280,10 +281,25 @@ class PagoCreateView(LoginRequiredMixin, CreateView):
         ctx['titulo'] = 'Registrar pago'
         return ctx
 
+    def _es_ajax(self):
+        return self.request.headers.get('x-requested-with') == 'XMLHttpRequest'
+
     def form_valid(self, form):
         form.instance.reservacion = self.reservacion
         messages.success(self.request, 'Pago registrado exitosamente.')
-        return super().form_valid(form)
+        respuesta = super().form_valid(form)
+        if self._es_ajax():
+            return JsonResponse({'ok': True, 'redirect': self.get_success_url()})
+        return respuesta
+
+    def form_invalid(self, form):
+        if self._es_ajax():
+            html = render_to_string(
+                'reservaciones/partials/pago_form_campos.html',
+                {'form': form}, request=self.request,
+            )
+            return JsonResponse({'ok': False, 'html': html}, status=400)
+        return super().form_invalid(form)
 
     def get_success_url(self):
         return reverse('reservaciones:detalle', kwargs={'pk': self.reservacion.pk})

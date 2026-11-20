@@ -89,6 +89,8 @@ class PagoForm(forms.ModelForm):
         if not self.instance.pk and 'fecha' not in self.initial:
             self.initial['fecha'] = datetime.date.today()
         self.helper = FormHelper()
+        # Las plantillas ponen su propia etiqueta <form> (página y modal)
+        self.helper.form_tag = False
         self.helper.layout = Layout(
             Row(
                 Column('monto', css_class='col-md-4'),
