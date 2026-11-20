@@ -6,7 +6,7 @@ from django.core.mail import EmailMessage
 from django.conf import settings
 
 # Identidad de Enjoying México
-ROSA_MARCA = (230, 18, 88)   # #E61258
+ROSA_MARCA = (201, 68, 136)  # #C94488
 LOGO_PDF = Path(__file__).resolve().parent / 'assets' / 'logo_pdf.png'
 
 
@@ -43,7 +43,7 @@ class PDFReservacion(FPDF):
 
     def seccion(self, titulo):
         self.set_font('Helvetica', 'B', 11)
-        self.set_fill_color(252, 228, 236)   # rosa muy claro
+        self.set_fill_color(246, 228, 238)   # rosa muy claro
         self.set_text_color(*ROSA_MARCA)
         self.cell(0, 7, titulo, ln=True, fill=True)
         self.set_text_color(0, 0, 0)

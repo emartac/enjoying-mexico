@@ -3,7 +3,7 @@ Tarjeta del índice con logo, título y fecha superpuestos a la foto.
 Variables: imagen_url, titulo, subtitulo (opcional), fecha_texto (ej. "16 y 23 de mayo"), color (hex),
 sombreado (suave|normal|fuerte), id_prefijo (opcional, para la vista previa del panel)
 {% endcomment %}
-<div class="tarjeta-em sombra-{{ sombreado|default:'normal' }}"{% if id_prefijo %} id="{{ id_prefijo }}"{% endif %} style="--em-color-fecha: {{ color|default:'#ef5a8a' }};">
+<div class="tarjeta-em sombra-{{ sombreado|default:'normal' }}"{% if id_prefijo %} id="{{ id_prefijo }}"{% endif %} style="--em-color-fecha: {{ color|default:'#c94488' }};">
   <img class="tarjeta-em-foto" src="{{ imagen_url }}" alt="{{ titulo }}">
   <div class="tarjeta-em-capa">
     <img class="tarjeta-em-logo" src="/img/logoborde.png" alt="Enjoying México">

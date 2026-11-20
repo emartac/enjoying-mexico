@@ -40,7 +40,7 @@ class Tour(models.Model):
         'Texto secundario de la tarjeta', max_length=80, blank=True,
         help_text='Opcional. Aparece debajo del título en letras pequeñas, ej. "Guanajuato" o "Minas de tiza y Tlaxcala".')
     color_fecha = models.CharField(
-        'Color de la cinta de la fecha', max_length=7, default='#ef5a8a')
+        'Color de la cinta de la fecha', max_length=7, default='#c94488')
     SOMBREADO = [('suave', 'Suave'), ('normal', 'Normal'), ('fuerte', 'Fuerte')]
     sombreado = models.CharField(
         'Sombreado sobre la foto', max_length=10, choices=SOMBREADO, default='normal',
