@@ -3,7 +3,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse_lazy, reverse
 from django.shortcuts import get_object_or_404, redirect
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, FileResponse, Http404
 from django.template.loader import render_to_string
 from django.contrib import messages
 from django.db.models.deletion import ProtectedError
@@ -333,9 +333,29 @@ class PagoUpdateView(LoginRequiredMixin, UpdateView):
 def pago_eliminar(request, pk, pago_pk):
     pago = get_object_or_404(Pago, pk=pago_pk, reservacion_id=pk)
     if request.method == 'POST':
+        if pago.comprobante:
+            try:
+                pago.comprobante.delete(save=False)
+            except OSError:
+                pass
         pago.delete()
         messages.success(request, 'Pago eliminado.')
     return redirect('reservaciones:detalle', pk=pk)
+
+
+@login_required
+def pago_comprobante(request, pk, pago_pk):
+    """Muestra el comprobante solo a usuarios con sesión (no es un archivo público)."""
+    pago = get_object_or_404(Pago, pk=pago_pk, reservacion_id=pk)
+    if not pago.comprobante:
+        raise Http404
+    try:
+        archivo = pago.comprobante.open('rb')
+    except FileNotFoundError:
+        raise Http404
+    respuesta = FileResponse(archivo, content_type='image/jpeg')
+    respuesta['Cache-Control'] = 'private, max-age=3600'
+    return respuesta
 
 
 @login_required

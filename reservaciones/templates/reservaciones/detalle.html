@@ -217,6 +217,9 @@
               {% if pago.referencia %}<br><small class="text-muted">Ref: {{ pago.referencia }}</small>{% endif %}
             </div>
             <div class="d-flex gap-1">
+              {% if pago.comprobante %}
+              <a href="{% url 'reservaciones:pago_comprobante' reservacion.pk pago.pk %}" target="_blank" class="btn btn-xs btn-outline-info" style="font-size:.7rem;padding:2px 6px" title="Ver comprobante"><i class="bi bi-receipt"></i></a>
+              {% endif %}
               <a href="{% url 'reservaciones:pago_editar' reservacion.pk pago.pk %}" class="btn btn-xs btn-outline-secondary" style="font-size:.7rem;padding:2px 6px"><i class="bi bi-pencil"></i></a>
               <form method="post" action="{% url 'reservaciones:pago_eliminar' reservacion.pk pago.pk %}" class="d-inline">
                 {% csrf_token %}

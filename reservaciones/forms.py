@@ -4,6 +4,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Row, Column, Submit, ButtonHolder
 from .models import Reservacion, Pago, ClienteReservacion
 from clientes.models import Cliente
+from .imagenes import comprimir_comprobante
 
 
 class ReservacionForm(forms.ModelForm):
@@ -76,18 +77,27 @@ class AgregarClienteForm(forms.Form):
 
 
 class PagoForm(forms.ModelForm):
+    TAMANO_MAXIMO_MB = 15
+
+    quitar_comprobante = forms.BooleanField(required=False, label='Quitar el comprobante actual')
+
     class Meta:
         model = Pago
-        fields = ['monto', 'fecha', 'metodo', 'estado', 'referencia', 'notas']
+        fields = ['monto', 'fecha', 'metodo', 'estado', 'referencia', 'notas', 'comprobante']
         widgets = {
             'fecha': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
             'notas': forms.Textarea(attrs={'rows': 2}),
+            # accept="image/*" permite tomar la foto directo con la cámara del celular
+            'comprobante': forms.FileInput(attrs={'accept': 'image/*'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if not self.instance.pk and 'fecha' not in self.initial:
             self.initial['fecha'] = datetime.date.today()
+        tiene_comprobante = bool(self.instance.pk and self.instance.comprobante)
+        if not tiene_comprobante:
+            del self.fields['quitar_comprobante']
         self.helper = FormHelper()
         # Las plantillas ponen su propia etiqueta <form> (página y modal)
         self.helper.form_tag = False
@@ -102,5 +112,37 @@ class PagoForm(forms.ModelForm):
                 Column('referencia', css_class='col-md-6'),
             ),
             'notas',
+            'comprobante',
+            *(['quitar_comprobante'] if tiene_comprobante else []),
             ButtonHolder(Submit('submit', 'Guardar pago', css_class='btn btn-success')),
         )
+
+    def clean_comprobante(self):
+        archivo = self.cleaned_data.get('comprobante')
+        # Solo se procesa un archivo recién subido (no el que ya estaba guardado)
+        if archivo and hasattr(archivo, 'content_type'):
+            if archivo.size > self.TAMANO_MAXIMO_MB * 1024 * 1024:
+                raise forms.ValidationError(
+                    f'La imagen pesa más de {self.TAMANO_MAXIMO_MB} MB. Usa una más ligera.')
+            try:
+                return comprimir_comprobante(archivo)
+            except Exception:
+                raise forms.ValidationError('No se pudo leer la imagen. Usa un archivo PNG o JPG.')
+        return archivo
+
+    def save(self, commit=True):
+        storage = Pago._meta.get_field('comprobante').storage
+        anterior = None
+        if self.instance.pk:
+            anterior = Pago.objects.filter(pk=self.instance.pk).values_list('comprobante', flat=True).first() or None
+        nuevo_archivo = 'comprobante' in self.changed_data and self.cleaned_data.get('comprobante')
+        if self.cleaned_data.get('quitar_comprobante') and not nuevo_archivo:
+            self.instance.comprobante = None
+        pago = super().save(commit=commit)
+        # Borrar del disco el archivo que fue reemplazado o quitado
+        if commit and anterior and anterior != (pago.comprobante.name or None):
+            try:
+                storage.delete(anterior)
+            except OSError:
+                pass  # si no se puede borrar, no impedir que se guarde el pago
+        return pago

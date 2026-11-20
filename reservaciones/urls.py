@@ -18,6 +18,7 @@ urlpatterns = [
     path('<int:pk>/pagos/nuevo/', views.PagoCreateView.as_view(), name='pago_crear'),
     path('<int:pk>/pagos/<int:pago_pk>/editar/', views.PagoUpdateView.as_view(), name='pago_editar'),
     path('<int:pk>/pagos/<int:pago_pk>/eliminar/', views.pago_eliminar, name='pago_eliminar'),
+    path('<int:pk>/pagos/<int:pago_pk>/comprobante/', views.pago_comprobante, name='pago_comprobante'),
     path('<int:pk>/pdf/', views.generar_pdf, name='pdf'),
     path('<int:pk>/enviar-email/', views.enviar_email_confirmacion, name='enviar_email'),
     path('<int:pk>/pases/', views.enviar_pases, name='enviar_pases'),

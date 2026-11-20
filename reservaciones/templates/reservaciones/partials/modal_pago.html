@@ -17,7 +17,7 @@
         <div id="pago-error-red" class="alert alert-danger small py-2" style="display:none">
           No se pudo guardar el pago. Revisa tu conexión e inténtalo de nuevo.
         </div>
-        <form id="form-pago" method="post" action="{% url 'reservaciones:pago_crear' reservacion.pk %}">
+        <form id="form-pago" method="post" enctype="multipart/form-data" action="{% url 'reservaciones:pago_crear' reservacion.pk %}">
           {% csrf_token %}
           <div id="pago-campos">
             {% include 'reservaciones/partials/pago_form_campos.html' with form=pago_form %}

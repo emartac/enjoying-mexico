@@ -1,5 +1,8 @@
 import uuid
+import datetime
 import unicodedata
+from django.conf import settings
+from django.core.files.storage import FileSystemStorage
 from django.db import models
 from django.db.models import Sum
 from django.core.validators import MinValueValidator
@@ -130,6 +133,16 @@ class ClienteReservacion(models.Model):
         return f'{self.cliente} en {self.reservacion.codigo}'
 
 
+def almacenamiento_privado():
+    return FileSystemStorage(location=settings.PRIVATE_MEDIA_ROOT)
+
+
+def _ruta_comprobante(instance, filename):
+    # Nombre aleatorio: no se puede adivinar ni choca con otros archivos
+    hoy = datetime.date.today()
+    return f'comprobantes/{hoy:%Y/%m}/{uuid.uuid4().hex}.jpg'
+
+
 class Pago(models.Model):
     METODOS = [
         ('efectivo', 'Efectivo'),
@@ -156,6 +169,9 @@ class Pago(models.Model):
     estado = models.CharField('Estado', max_length=20, choices=ESTADOS, default='completado')
     referencia = models.CharField('Referencia / Comprobante', max_length=100, blank=True)
     notas = models.TextField('Notas', blank=True)
+    comprobante = models.ImageField(
+        'Comprobante', upload_to=_ruta_comprobante, storage=almacenamiento_privado,
+        blank=True, help_text='Imagen PNG o JPG. Se reduce automáticamente para ahorrar espacio.')
     creado = models.DateTimeField(auto_now_add=True)
 
     class Meta:

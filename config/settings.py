@@ -26,6 +26,10 @@ INSTALLED_APPS = [
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# Archivos privados (comprobantes de pago): fuera de MEDIA_ROOT para que no se
+# publiquen como estáticos; solo se sirven a usuarios con sesión iniciada
+PRIVATE_MEDIA_ROOT = config('PRIVATE_MEDIA_ROOT', default=str(BASE_DIR / 'archivos_privados'))
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
