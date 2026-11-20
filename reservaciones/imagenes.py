@@ -9,6 +9,10 @@ CALIDAD_JPG = 72     # calidad media-alta; el texto sigue siendo legible
 
 
 def comprimir_comprobante(archivo):
+    return comprimir_imagen(archivo, nombre='comprobante.jpg')
+
+
+def comprimir_imagen(archivo, nombre='imagen.jpg'):
     """Devuelve un ContentFile JPG reducido a partir de una imagen subida (PNG, JPG, etc.)."""
     imagen = Image.open(archivo)
     imagen = ImageOps.exif_transpose(imagen)  # respeta la rotación de fotos de celular
@@ -26,4 +30,4 @@ def comprimir_comprobante(archivo):
 
     salida = BytesIO()
     imagen.save(salida, 'JPEG', quality=CALIDAD_JPG, optimize=True, progressive=True)
-    return ContentFile(salida.getvalue(), name='comprobante.jpg')
+    return ContentFile(salida.getvalue(), name=nombre)

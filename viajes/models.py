@@ -18,6 +18,9 @@ class Viaje(models.Model):
     )
     incluye = models.TextField('¿Qué incluye?', blank=True, help_text='Lista de servicios incluidos')
     capacidad_maxima = models.PositiveIntegerField('Capacidad máxima de viajeros', default=0)
+    imagen_pase = models.ImageField(
+        'Imagen para el pase de abordaje', upload_to='viajes/pase/', blank=True,
+        help_text='Opcional. Foto horizontal del destino; aparece arriba del pase de abordaje.')
     activo = models.BooleanField('Activo', default=True)
     creado = models.DateTimeField(auto_now_add=True)
 

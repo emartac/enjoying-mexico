@@ -8,7 +8,7 @@ from .models import Viaje, ViajeHabitacion, ViajeHabitacionPrecio, PuntoAbordaje
 class ViajeForm(forms.ModelForm):
     class Meta:
         model = Viaje
-        fields = ['nombre', 'destino', 'fecha_salida', 'fecha_regreso', 'capacidad_maxima', 'precio_por_persona', 'precio_frecuente', 'incluye', 'descripcion', 'activo']
+        fields = ['nombre', 'destino', 'fecha_salida', 'fecha_regreso', 'capacidad_maxima', 'precio_por_persona', 'precio_frecuente', 'incluye', 'descripcion', 'imagen_pase', 'activo']
         widgets = {
             'fecha_salida': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
             'fecha_regreso': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
@@ -53,7 +53,19 @@ class ViajeForm(forms.ModelForm):
                 Column('incluye', css_class='col-md-6'),
                 Column('descripcion', css_class='col-md-6'),
             ),
+            'imagen_pase',
         )
+
+    def clean_imagen_pase(self):
+        imagen = self.cleaned_data.get('imagen_pase')
+        # Reducir solo las imágenes recién subidas
+        if imagen and hasattr(imagen, 'content_type'):
+            from reservaciones.imagenes import comprimir_imagen
+            try:
+                return comprimir_imagen(imagen, nombre='pase.jpg')
+            except Exception:
+                raise forms.ValidationError('No se pudo leer la imagen. Usa un archivo PNG o JPG.')
+        return imagen
 
 
 PuntoAbordajeFormSet = inlineformset_factory(
