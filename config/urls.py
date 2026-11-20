@@ -3,7 +3,7 @@ from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
-from .views import serve_sitio_publico
+from .views import serve_sitio_publico, tablero
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -11,8 +11,8 @@ urlpatterns = [
     # Autenticación
     path('', include('django.contrib.auth.urls')),
 
-    # Inicio del sistema — redirige a agregar cliente
-    path('panel/', RedirectView.as_view(pattern_name='clientes:crear'), name='home'),
+    # Inicio del sistema — tablero con próximas salidas, saldos y pagos
+    path('panel/', tablero, name='home'),
 
     # Apps del sistema de reservas
     path('clientes/', include('clientes.urls', namespace='clientes')),

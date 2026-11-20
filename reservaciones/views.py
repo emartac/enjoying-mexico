@@ -21,7 +21,23 @@ class ReservacionListView(LoginRequiredMixin, ListView):
     template_name = 'reservaciones/lista.html'
     context_object_name = 'reservaciones'
 
+    PERIODOS = [('proximos', 'Próximos y en curso'), ('pasados', 'Pasados'), ('todos', 'Todos')]
+
+    def _params(self):
+        g = self.request.GET
+        return {
+            'q': g.get('q', '').strip(),
+            'estado': g.get('estado', ''),
+            'viaje': g.get('viaje', ''),
+            'saldo': g.get('saldo', '') == '1',
+            'periodo': g.get('periodo', 'proximos') if g.get('periodo') in dict(self.PERIODOS) else 'proximos',
+            'orden': 'saldo' if g.get('orden') == 'saldo' else 'fecha',
+        }
+
     def get_queryset(self):
+        import datetime
+        from django.db.models import Q
+        p = self._params()
         qs = super().get_queryset().select_related('viaje', 'habitacion__tipo').prefetch_related(
             Prefetch(
                 'clientes_reservacion',
@@ -29,27 +45,57 @@ class ReservacionListView(LoginRequiredMixin, ListView):
                 to_attr='titulares',
             )
         ).order_by('viaje__fecha_salida', 'viaje__nombre', '-creado')
-        estado = self.request.GET.get('estado', '')
-        if estado:
-            qs = qs.filter(estado=estado)
-        q = self.request.GET.get('q', '').strip()
-        if q:
-            qs = qs.filter(codigo__icontains=q) | qs.filter(viaje__nombre__icontains=q) | qs.filter(viaje__destino__icontains=q)
-        return qs
+
+        hoy = datetime.date.today()
+        if p['periodo'] == 'proximos':
+            qs = qs.filter(viaje__fecha_regreso__gte=hoy)
+        elif p['periodo'] == 'pasados':
+            qs = qs.filter(viaje__fecha_regreso__lt=hoy).order_by('-viaje__fecha_salida', 'viaje__nombre', '-creado')
+        if p['estado']:
+            qs = qs.filter(estado=p['estado'])
+        if p['viaje'].isdigit():
+            qs = qs.filter(viaje_id=int(p['viaje']))
+        # Cada palabra debe coincidir con el código, el viaje o algún cliente de la reservación
+        for palabra in p['q'].split():
+            qs = qs.filter(
+                Q(codigo__icontains=palabra) | Q(viaje__nombre__icontains=palabra) |
+                Q(viaje__destino__icontains=palabra) |
+                Q(clientes__nombre__icontains=palabra) | Q(clientes__apellido__icontains=palabra) |
+                Q(clientes__telefono__icontains=palabra) | Q(clientes__email__icontains=palabra)
+            )
+        return qs.distinct()
 
     def get_context_data(self, **kwargs):
         from collections import OrderedDict
+        from viajes.models import Viaje
+        from .resumen import anotar_finanzas, sumar
         ctx = super().get_context_data(**kwargs)
+        p = self._params()
+
+        reservaciones = anotar_finanzas(list(ctx['reservaciones']))
+        if p['saldo']:
+            reservaciones = [r for r in reservaciones if r.fin_saldo > 0]
+
         grupos = OrderedDict()
-        for res in ctx['reservaciones']:
-            vid = res.viaje_id
-            if vid not in grupos:
-                grupos[vid] = {'viaje': res.viaje, 'reservaciones': []}
-            grupos[vid]['reservaciones'].append(res)
-        ctx['grupos'] = grupos.values()
+        for res in reservaciones:
+            grupos.setdefault(res.viaje_id, {'viaje': res.viaje, 'reservaciones': []})['reservaciones'].append(res)
+        for g in grupos.values():
+            if p['orden'] == 'saldo':
+                g['reservaciones'].sort(key=lambda r: r.fin_saldo, reverse=True)
+            g['total'] = sumar(g['reservaciones'], 'fin_total')
+            g['pagado'] = sumar(g['reservaciones'], 'fin_pagado')
+            g['saldo'] = sumar(g['reservaciones'], 'fin_saldo')
+            g['personas'] = sum(len(r.clientes_reservacion.all()) for r in g['reservaciones'] if r.estado != 'cancelada')
+
+        ctx['grupos'] = list(grupos.values())
+        ctx['num_resultados'] = len(reservaciones)
+        ctx['gran_saldo'] = sumar(reservaciones, 'fin_saldo')
+        ctx['gran_pagado'] = sumar(reservaciones, 'fin_pagado')
         ctx['estados'] = Reservacion.ESTADOS
-        ctx['estado_sel'] = self.request.GET.get('estado', '')
-        ctx['q'] = self.request.GET.get('q', '')
+        ctx['periodos'] = self.PERIODOS
+        ctx['viajes_filtro'] = Viaje.objects.filter(reservaciones__isnull=False).distinct().order_by('-fecha_salida')
+        ctx['p'] = p
+        ctx['hay_filtros'] = any([p['q'], p['estado'], p['viaje'], p['saldo'], p['orden'] == 'saldo', p['periodo'] != 'proximos'])
         return ctx
 
 

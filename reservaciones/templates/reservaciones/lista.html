@@ -1,81 +1,144 @@
 {% extends 'base.html' %}
+{% load formato %}
 {% block titulo %}Reservaciones{% endblock %}
 {% block breadcrumb %}<nav aria-label="breadcrumb"><ol class="breadcrumb mb-3"><li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li><li class="breadcrumb-item active">Reservaciones</li></ol></nav>{% endblock %}
 
 {% block contenido %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h4><i class="bi bi-calendar-check me-2"></i>Reservaciones</h4>
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <h4 class="mb-0"><i class="bi bi-calendar-check me-2"></i>Reservaciones</h4>
   <a href="{% url 'reservaciones:crear' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Nueva reservación</a>
 </div>
 
+{# ── Periodo ── #}
+<ul class="nav nav-pills mb-2">
+  {% for val, label in periodos %}
+  <li class="nav-item">
+    <a class="nav-link py-1 {% if p.periodo == val %}active{% endif %}" href="?periodo={{ val }}">{{ label }}</a>
+  </li>
+  {% endfor %}
+</ul>
+
+{# ── Filtros ── #}
 <div class="card shadow-sm mb-3">
   <div class="card-body py-2">
-    <form class="row g-2 align-items-center" method="get">
-      <div class="col-md-5">
+    <form class="row g-2 align-items-center" method="get" id="form-filtros">
+      <input type="hidden" name="periodo" value="{{ p.periodo }}">
+      <div class="col-lg-4 col-md-6">
         <div class="input-group">
           <span class="input-group-text"><i class="bi bi-search"></i></span>
-          <input type="text" name="q" class="form-control" placeholder="Código, destino o viaje…" value="{{ q }}">
+          <input type="search" name="q" class="form-control" value="{{ p.q }}"
+                 placeholder="Cliente, teléfono, correo, código o viaje…">
         </div>
       </div>
-      <div class="col-auto">
+      <div class="col-lg-3 col-md-6">
+        <select name="viaje" class="form-select" onchange="this.form.submit()">
+          <option value="">Todos los viajes</option>
+          {% for v in viajes_filtro %}
+          <option value="{{ v.pk }}" {% if p.viaje == v.pk|stringformat:"s" %}selected{% endif %}>{{ v.fecha_salida|date:"d/m/y" }} · {{ v.nombre }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-lg-2 col-md-4">
         <select name="estado" class="form-select" onchange="this.form.submit()">
           <option value="">Todos los estados</option>
           {% for val, label in estados %}
-          <option value="{{ val }}" {% if estado_sel == val %}selected{% endif %}>{{ label }}</option>
+          <option value="{{ val }}" {% if p.estado == val %}selected{% endif %}>{{ label }}</option>
           {% endfor %}
         </select>
       </div>
       <div class="col-auto">
+        <div class="form-check form-switch mb-0">
+          <input class="form-check-input" type="checkbox" role="switch" name="saldo" value="1" id="f-saldo"
+                 {% if p.saldo %}checked{% endif %} onchange="this.form.submit()">
+          <label class="form-check-label" for="f-saldo">Solo con saldo</label>
+        </div>
+      </div>
+      <div class="col-auto">
+        <select name="orden" class="form-select form-select-sm" onchange="this.form.submit()" title="Orden dentro de cada viaje">
+          <option value="fecha" {% if p.orden == 'fecha' %}selected{% endif %}>Más recientes</option>
+          <option value="saldo" {% if p.orden == 'saldo' %}selected{% endif %}>Mayor saldo primero</option>
+        </select>
+      </div>
+      <div class="col-auto">
         <button class="btn btn-outline-primary" type="submit">Buscar</button>
-        {% if q or estado_sel %}<a href="{% url 'reservaciones:lista' %}" class="btn btn-outline-secondary ms-1">Limpiar</a>{% endif %}
+        {% if hay_filtros %}<a href="{% url 'reservaciones:lista' %}" class="btn btn-outline-secondary ms-1">Limpiar</a>{% endif %}
       </div>
     </form>
   </div>
 </div>
 
+{# ── Resumen de lo que se está viendo ── #}
 {% if grupos %}
-  {% for grupo in grupos %}
-  <div class="card shadow-sm mb-3">
-    <div class="card-header d-flex justify-content-between align-items-center">
-      <span class="fw-semibold">
-        <i class="bi bi-map me-1"></i>{{ grupo.viaje.destino }}
-        <span class="text-muted fw-normal ms-2 small">{{ grupo.viaje.fecha_salida|date:"d/m/Y" }} — {{ grupo.viaje.fecha_regreso|date:"d/m/Y" }}</span>
-      </span>
-      <span class="badge bg-secondary">{{ grupo.reservaciones|length }} reservación(es)</span>
-    </div>
-    <div class="table-responsive">
-      <table class="table table-hover table-sm mb-0">
-        <thead class="table-light">
-          <tr>
-            <th>Código</th>
-            <th>Titular</th>
-            <th>Hotel / Habitación</th>
-            <th>Total</th>
-            <th>Estado</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for res in grupo.reservaciones %}
-          <tr>
-            <td><a href="{% url 'reservaciones:detalle' res.pk %}" class="fw-semibold">{{ res.codigo }}</a></td>
-            <td>{% if res.titulares %}<a href="{% url 'clientes:detalle' res.titulares.0.cliente.pk %}">{{ res.titulares.0.cliente }}</a>{% else %}<span class="text-muted">—</span>{% endif %}</td>
-            <td>{% if res.habitacion %}{{ res.habitacion.nombre_hotel }}<br><small class="text-muted">{{ res.habitacion.tipo.nombre }} #{{ res.habitacion.numero }}</small>{% else %}<span class="text-muted">Viaje de un día</span>{% endif %}</td>
-            <td>${{ res.total }}</td>
-            <td><span class="badge badge-{{ res.estado }}">{{ res.get_estado_display }}</span></td>
-            <td class="text-end">
-              <a href="{% url 'reservaciones:detalle' res.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
-  {% endfor %}
-{% else %}
-<div class="card shadow-sm">
-  <div class="card-body text-center text-muted py-4">No se encontraron reservaciones.</div>
+<div class="d-flex flex-wrap gap-3 small text-muted mb-2">
+  <span><strong class="text-body">{{ num_resultados }}</strong> reservación(es)</span>
+  <span>Cobrado: <strong class="text-success">{{ gran_pagado|dinero }}</strong></span>
+  <span>Por cobrar: <strong class="{% if gran_saldo > 0 %}text-danger{% else %}text-success{% endif %}">{{ gran_saldo|dinero }}</strong></span>
 </div>
 {% endif %}
+
+{% for grupo in grupos %}
+<div class="card shadow-sm mb-3">
+  <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <span class="fw-semibold">
+      <i class="bi bi-map me-1"></i><a href="{% url 'viajes:detalle' grupo.viaje.pk %}" class="text-reset">{{ grupo.viaje.nombre }}</a>
+      <span class="text-muted fw-normal ms-2 small">{{ grupo.viaje.fecha_salida|date:"d M Y" }}{% if grupo.viaje.fecha_regreso != grupo.viaje.fecha_salida %} — {{ grupo.viaje.fecha_regreso|date:"d M Y" }}{% endif %}</span>
+    </span>
+    <span class="small d-flex flex-wrap gap-3">
+      <span><i class="bi bi-people me-1"></i>{{ grupo.personas }}</span>
+      <span class="text-success">Cobrado {{ grupo.pagado|dinero }}</span>
+      <span class="{% if grupo.saldo > 0 %}text-danger fw-semibold{% else %}text-muted{% endif %}">Por cobrar {{ grupo.saldo|dinero }}</span>
+    </span>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover table-sm mb-0 align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Código</th>
+          <th>Titular</th>
+          <th>Hotel / Habitación</th>
+          <th class="text-end">Total</th>
+          <th class="text-end">Pagado</th>
+          <th class="text-end">Saldo</th>
+          <th>Estado</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for res in grupo.reservaciones %}
+        <tr {% if res.estado == 'cancelada' %}class="text-muted"{% endif %}>
+          <td><a href="{% url 'reservaciones:detalle' res.pk %}" class="fw-semibold">{{ res.codigo }}</a></td>
+          <td>
+            {% if res.titulares %}
+              {% with c=res.titulares.0.cliente %}
+              <a href="{% url 'clientes:detalle' c.pk %}">{{ c }}</a>
+              {% if c.telefono %}<br><small class="text-muted"><i class="bi bi-telephone me-1"></i>{{ c.telefono }}</small>{% endif %}
+              {% endwith %}
+            {% else %}<span class="text-muted">—</span>{% endif %}
+          </td>
+          <td>{% if res.habitacion %}{{ res.habitacion.nombre_hotel }}<br><small class="text-muted">{{ res.habitacion.tipo.nombre }} #{{ res.habitacion.numero }}</small>{% else %}<span class="text-muted">Viaje de un día</span>{% endif %}</td>
+          <td class="text-end text-nowrap">{{ res.fin_total|dinero }}</td>
+          <td class="text-end text-nowrap text-success">{{ res.fin_pagado|dinero }}</td>
+          <td class="text-end text-nowrap">
+            {% if res.estado == 'cancelada' %}<span class="text-muted">—</span>
+            {% elif res.fin_saldo > 0 %}<span class="text-danger fw-semibold">{{ res.fin_saldo|dinero }}</span>
+            {% else %}<span class="badge bg-success-subtle text-success-emphasis">Liquidado</span>{% endif %}
+          </td>
+          <td><span class="badge badge-{{ res.estado }}">{{ res.get_estado_display }}</span></td>
+          <td class="text-end">
+            <a href="{% url 'reservaciones:detalle' res.pk %}" class="btn btn-sm btn-outline-primary" title="Ver"><i class="bi bi-eye"></i></a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% empty %}
+<div class="card shadow-sm">
+  <div class="card-body text-center text-muted py-4">
+    No se encontraron reservaciones{% if p.periodo == 'proximos' %} próximas{% endif %}.
+    {% if p.periodo == 'proximos' and not hay_filtros %}<br><a href="?periodo=todos">Ver todas, incluidas las pasadas</a>{% elif hay_filtros %}<br><a href="{% url 'reservaciones:lista' %}">Quitar filtros</a>{% endif %}
+  </div>
+</div>
+{% endfor %}
 {% endblock %}

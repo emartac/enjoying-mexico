@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+{% load formato %}
+{% block titulo %}Inicio{% endblock %}
+
+{% block extra_head %}
+<style>
+  .kpi { border: 0; border-left: 4px solid var(--kpi-color, #C94488); }
+  .kpi .kpi-valor { font-size: 1.5rem; font-weight: 700; line-height: 1.1; }
+  .kpi .kpi-etiqueta { font-size: .8rem; color: #6c757d; text-transform: uppercase; letter-spacing: .03em; }
+  .accion-rapida { display: flex; flex-direction: column; align-items: center; justify-content: center;
+                   gap: .25rem; padding: .9rem .5rem; text-align: center; height: 100%; }
+  .accion-rapida i { font-size: 1.4rem; }
+  .lista-compacta .list-group-item { padding: .55rem .9rem; }
+  .barra-ocupacion { height: 6px; }
+</style>
+{% endblock %}
+
+{% block contenido %}
+{# ── Acciones rápidas + buscador de clientes ── #}
+<div class="row g-2 mb-3">
+  <div class="col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <label for="buscador-tablero" class="form-label fw-semibold mb-1"><i class="bi bi-search me-1"></i>Buscar cliente</label>
+        <div class="position-relative">
+          <input type="search" id="buscador-tablero" class="form-control" autocomplete="off"
+                 placeholder="Nombre, teléfono, correo o documento…">
+          <div id="resultados-tablero" class="list-group position-absolute w-100 shadow-sm d-none" style="z-index:1050;max-height:320px;overflow-y:auto"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="row g-2 h-100">
+      <div class="col-4"><a href="{% url 'reservaciones:crear' %}" class="btn btn-primary accion-rapida w-100"><i class="bi bi-calendar-plus"></i><span>Nueva reservación</span></a></div>
+      <div class="col-4"><a href="{% url 'clientes:crear' %}" class="btn btn-outline-primary accion-rapida w-100"><i class="bi bi-person-plus"></i><span>Nuevo cliente</span></a></div>
+      <div class="col-4"><a href="{% url 'reservaciones:lista' %}?saldo=1" class="btn btn-outline-danger accion-rapida w-100"><i class="bi bi-cash-coin"></i><span>Cobrar saldos</span></a></div>
+    </div>
+  </div>
+</div>
+
+{# ── Indicadores ── #}
+<div class="row g-2 mb-3">
+  <div class="col-6 col-lg-3">
+    <a href="{% url 'reservaciones:lista' %}?saldo=1" class="text-decoration-none text-reset">
+      <div class="card shadow-sm kpi h-100" style="--kpi-color:#dc3545"><div class="card-body py-2">
+        <div class="kpi-etiqueta">Por cobrar</div>
+        <div class="kpi-valor text-danger">{{ total_por_cobrar|dinero }}</div>
+        <div class="small text-muted">{{ num_con_saldo }} reservación(es) con saldo</div>
+      </div></div>
+    </a>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card shadow-sm kpi h-100" style="--kpi-color:#198754"><div class="card-body py-2">
+      <div class="kpi-etiqueta">Cobrado este mes</div>
+      <div class="kpi-valor text-success">{{ cobrado_mes|dinero }}</div>
+      <div class="small text-muted">desde el 1 de {{ hoy|date:"F" }}</div>
+    </div></div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <a href="{% url 'reservaciones:lista' %}" class="text-decoration-none text-reset">
+      <div class="card shadow-sm kpi h-100"><div class="card-body py-2">
+        <div class="kpi-etiqueta">Reservaciones activas</div>
+        <div class="kpi-valor">{{ reservaciones_activas }}</div>
+        <div class="small text-muted">en viajes próximos o en curso</div>
+      </div></div>
+    </a>
+  </div>
+  <div class="col-6 col-lg-3">
+    <a href="{% url 'reservaciones:lista' %}?estado=pendiente" class="text-decoration-none text-reset">
+      <div class="card shadow-sm kpi h-100" style="--kpi-color:#ffc107"><div class="card-body py-2">
+        <div class="kpi-etiqueta">Por confirmar</div>
+        <div class="kpi-valor">{{ pendientes_confirmar }}</div>
+        <div class="small text-muted">reservaciones pendientes</div>
+      </div></div>
+    </a>
+  </div>
+</div>
+
+<div class="row g-3">
+  {# ── Próximas salidas ── #}
+  <div class="col-lg-7">
+    <div class="card shadow-sm mb-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-semibold"><i class="bi bi-bus-front me-1"></i>Próximas salidas</span>
+        <a href="{% url 'viajes:lista' %}" class="small">Ver todos</a>
+      </div>
+      <ul class="list-group list-group-flush lista-compacta">
+        {% for v in proximos %}
+        <li class="list-group-item">
+          <div class="d-flex justify-content-between align-items-start gap-2">
+            <div class="flex-grow-1">
+              <a href="{% url 'viajes:detalle' v.pk %}" class="fw-semibold">{{ v.nombre }}</a>
+              <div class="small text-muted">
+                {{ v.fecha_salida|date:"d M" }}{% if v.fecha_regreso != v.fecha_salida %} – {{ v.fecha_regreso|date:"d M" }}{% endif %}
+                ·
+                {% if v.dias_faltan > 1 %}faltan {{ v.dias_faltan }} días{% elif v.dias_faltan == 1 %}<span class="text-danger fw-semibold">sale mañana</span>{% elif v.dias_faltan == 0 %}<span class="text-danger fw-semibold">sale hoy</span>{% else %}<span class="text-primary">en curso</span>{% endif %}
+              </div>
+              {% if v.cupo %}
+              <div class="d-flex align-items-center gap-2 mt-1">
+                <div class="progress barra-ocupacion flex-grow-1" role="progressbar" aria-label="Ocupación">
+                  <div class="progress-bar {% if v.viajeros >= v.cupo %}bg-danger{% else %}bg-success{% endif %}" style="width: {{ v.viajeros|porcentaje:v.cupo }}%"></div>
+                </div>
+                <span class="small text-nowrap">{{ v.viajeros }}/{{ v.cupo }}</span>
+              </div>
+              {% else %}
+              <div class="small mt-1"><i class="bi bi-people me-1"></i>{{ v.viajeros }} viajero(s)</div>
+              {% endif %}
+            </div>
+            <div class="text-end small text-nowrap">
+              <div class="text-success">{{ v.cobrado|dinero }}</div>
+              {% if v.por_cobrar > 0 %}<div class="text-danger">debe {{ v.por_cobrar|dinero }}</div>{% else %}<div class="text-muted">sin saldo</div>{% endif %}
+            </div>
+          </div>
+          <div class="mt-1 d-flex gap-2">
+            <a href="{% url 'reservaciones:crear' %}?viaje={{ v.pk }}" class="small"><i class="bi bi-plus-circle me-1"></i>Reservar</a>
+            <a href="{% url 'reservaciones:lista' %}?viaje={{ v.pk }}&periodo=todos" class="small"><i class="bi bi-list-ul me-1"></i>Reservaciones</a>
+          </div>
+        </li>
+        {% empty %}
+        <li class="list-group-item text-muted text-center py-3">No hay salidas próximas. <a href="{% url 'viajes:crear' %}">Crear viaje</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    {# ── Últimas reservaciones ── #}
+    <div class="card shadow-sm mb-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-semibold"><i class="bi bi-clock-history me-1"></i>Últimas reservaciones</span>
+        <a href="{% url 'reservaciones:lista' %}?periodo=todos" class="small">Ver todas</a>
+      </div>
+      <ul class="list-group list-group-flush lista-compacta">
+        {% for r in ultimas_reservaciones %}
+        <li class="list-group-item d-flex justify-content-between align-items-center gap-2">
+          <div>
+            <a href="{% url 'reservaciones:detalle' r.pk %}" class="fw-semibold">{{ r.codigo }}</a>
+            <span class="text-muted small">· {% if r.titulares %}{{ r.titulares.0.cliente }}{% else %}sin titular{% endif %}</span>
+            <div class="small text-muted">{{ r.viaje.nombre }} · {{ r.creado|date:"d M, H:i" }}</div>
+          </div>
+          <span class="badge badge-{{ r.estado }}">{{ r.get_estado_display }}</span>
+        </li>
+        {% empty %}
+        <li class="list-group-item text-muted text-center py-3">Aún no hay reservaciones.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    {# ── Saldos por cobrar ── #}
+    <div class="card shadow-sm mb-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-semibold"><i class="bi bi-cash-coin me-1"></i>Saldos por cobrar</span>
+        {% if num_con_saldo %}<a href="{% url 'reservaciones:lista' %}?saldo=1" class="small">Ver todos ({{ num_con_saldo }})</a>{% endif %}
+      </div>
+      <ul class="list-group list-group-flush lista-compacta">
+        {% for r in con_saldo %}
+        <li class="list-group-item">
+          <div class="d-flex justify-content-between gap-2">
+            <div>
+              <a href="{% url 'reservaciones:detalle' r.pk %}" class="fw-semibold">{% if r.titulares %}{{ r.titulares.0.cliente }}{% else %}{{ r.codigo }}{% endif %}</a>
+              <div class="small text-muted">{{ r.viaje.nombre }} · {{ r.viaje.fecha_salida|date:"d M" }}</div>
+              {% if r.titulares and r.titulares.0.cliente.telefono %}<div class="small"><i class="bi bi-telephone me-1"></i>{{ r.titulares.0.cliente.telefono }}</div>{% endif %}
+            </div>
+            <div class="text-end text-nowrap">
+              <div class="text-danger fw-semibold">{{ r.fin_saldo|dinero }}</div>
+              <div class="small text-muted">de {{ r.fin_total|dinero }}</div>
+            </div>
+          </div>
+        </li>
+        {% empty %}
+        <li class="list-group-item text-success text-center py-3"><i class="bi bi-check-circle me-1"></i>No hay saldos pendientes.</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    {# ── Últimos pagos ── #}
+    <div class="card shadow-sm mb-3">
+      <div class="card-header fw-semibold"><i class="bi bi-receipt me-1"></i>Últimos pagos</div>
+      <ul class="list-group list-group-flush lista-compacta">
+        {% for pago in ultimos_pagos %}
+        <li class="list-group-item d-flex justify-content-between align-items-center gap-2">
+          <div>
+            <a href="{% url 'reservaciones:detalle' pago.reservacion_id %}" class="fw-semibold">{{ pago.reservacion.codigo }}</a>
+            <div class="small text-muted">{{ pago.fecha|date:"d M" }} · {{ pago.get_metodo_display }}{% if pago.estado != 'completado' %} · <span class="text-warning">{{ pago.get_estado_display }}</span>{% endif %}</div>
+          </div>
+          <div class="text-end text-nowrap">
+            <span class="fw-semibold {% if pago.estado == 'completado' %}text-success{% else %}text-muted{% endif %}">{{ pago.monto|dinero }}</span>
+            {% if pago.comprobante %}<a href="{% url 'reservaciones:pago_comprobante' pago.reservacion_id pago.pk %}" target="_blank" class="ms-1" title="Ver comprobante"><i class="bi bi-file-earmark-image"></i></a>{% endif %}
+          </div>
+        </li>
+        {% empty %}
+        <li class="list-group-item text-muted text-center py-3">Aún no hay pagos registrados.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const input = document.getElementById('buscador-tablero');
+  const caja = document.getElementById('resultados-tablero');
+  const urlBuscar = '{% url "clientes:buscar" %}';
+  const urlDetalle = '{% url "clientes:detalle" 0 %}';
+  const urlNuevo = '{% url "clientes:crear" %}';
+  let timer = null;
+  const esc = s => { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; };
+
+  input.addEventListener('input', function () {
+    const q = input.value.trim();
+    clearTimeout(timer);
+    if (q.length < 2) { caja.classList.add('d-none'); return; }
+    timer = setTimeout(function () {
+      fetch(urlBuscar + '?q=' + encodeURIComponent(q)).then(r => r.json()).then(function (data) {
+        if (input.value.trim() !== q) return;
+        caja.innerHTML = data.clientes.map(c =>
+          '<a class="list-group-item list-group-item-action" href="' + urlDetalle.replace('/0/', '/' + c.id + '/') + '">' +
+          '<div class="fw-semibold">' + esc(c.nombre) + '</div><div class="small text-muted">' +
+          (c.telefono ? '<i class="bi bi-telephone me-1"></i>' + esc(c.telefono) + ' ' : '') +
+          (c.email ? '<i class="bi bi-envelope ms-2 me-1"></i>' + esc(c.email) : '') + '</div></a>'
+        ).join('') +
+        '<a class="list-group-item list-group-item-action small text-primary" href="' + urlNuevo + '">' +
+          '<i class="bi bi-person-plus me-1"></i>' + (data.clientes.length ? 'Crear cliente nuevo' : 'Sin resultados. Crear cliente nuevo') + '</a>';
+        caja.classList.remove('d-none');
+      });
+    }, 250);
+  });
+  input.addEventListener('keydown', e => { if (e.key === 'Escape') caja.classList.add('d-none'); });
+  document.addEventListener('click', e => { if (!caja.contains(e.target) && e.target !== input) caja.classList.add('d-none'); });
+})();
+</script>
+{% endblock %}
