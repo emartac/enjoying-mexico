@@ -6,6 +6,21 @@
 {% block contenido %}
 <div class="row justify-content-center">
   <div class="col-lg-9">
+    {% if not object %}
+    <div class="card shadow-sm mb-3">
+      <div class="card-body">
+        <label for="buscador-clientes" class="form-label fw-semibold mb-1">
+          <i class="bi bi-search me-1"></i>Buscar cliente existente
+        </label>
+        <div class="position-relative">
+          <input type="search" id="buscador-clientes" class="form-control"
+                 placeholder="Nombre, apellido, teléfono, correo o documento…" autocomplete="off">
+          <div id="resultados-clientes" class="list-group position-absolute w-100 shadow-sm d-none" style="z-index: 1050; max-height: 360px; overflow-y: auto;"></div>
+        </div>
+        <div class="form-text">Revisa si el cliente ya está registrado antes de crearlo de nuevo.</div>
+      </div>
+    </div>
+    {% endif %}
     <div class="card shadow-sm">
       <div class="card-header">
         <h5 class="mb-0"><i class="bi bi-person-fill me-2"></i>{{ titulo }}</h5>
@@ -22,4 +37,75 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{% if not object %}
+<script>
+(function () {
+  const input = document.getElementById('buscador-clientes');
+  const caja = document.getElementById('resultados-clientes');
+  const urlBuscar = '{% url "clientes:buscar" %}';
+  const urlDetalle = '{% url "clientes:detalle" 0 %}';
+  const urlLista = '{% url "clientes:lista" %}';
+  let timer = null, ultima = '';
+
+  function esc(s) {
+    const d = document.createElement('div');
+    d.textContent = s || '';
+    return d.innerHTML;
+  }
+
+  function ocultar() { caja.classList.add('d-none'); }
+
+  function mostrar(clientes, q) {
+    if (!clientes.length) {
+      caja.innerHTML = '<div class="list-group-item text-muted small">Sin resultados para «' + esc(q) + '».</div>';
+    } else {
+      caja.innerHTML = clientes.map(c =>
+        '<a class="list-group-item list-group-item-action" href="' + urlDetalle.replace('/0/', '/' + c.id + '/') + '">' +
+          '<div class="fw-semibold">' + esc(c.nombre) + '</div>' +
+          '<div class="small text-muted">' +
+            (c.telefono ? '<i class="bi bi-telephone me-1"></i>' + esc(c.telefono) + ' ' : '') +
+            (c.email ? '<i class="bi bi-envelope ms-2 me-1"></i>' + esc(c.email) : '') +
+          '</div>' +
+        '</a>'
+      ).join('') +
+      '<a class="list-group-item list-group-item-action small text-primary" href="' + urlLista + '?q=' + encodeURIComponent(q) + '">' +
+        '<i class="bi bi-list-ul me-1"></i>Ver todos los resultados en la lista</a>';
+    }
+    caja.classList.remove('d-none');
+  }
+
+  input.addEventListener('input', function () {
+    const q = input.value.trim();
+    clearTimeout(timer);
+    if (q.length < 2) { ocultar(); return; }
+    timer = setTimeout(function () {
+      ultima = q;
+      fetch(urlBuscar + '?q=' + encodeURIComponent(q))
+        .then(r => r.json())
+        .then(data => { if (q === ultima) mostrar(data.clientes, q); })
+        .catch(ocultar);
+    }, 250);
+  });
+
+  input.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { ocultar(); }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const q = input.value.trim();
+      if (q) window.location = urlLista + '?q=' + encodeURIComponent(q);
+    }
+  });
+
+  document.addEventListener('click', function (e) {
+    if (!caja.contains(e.target) && e.target !== input) ocultar();
+  });
+  input.addEventListener('focus', function () {
+    if (input.value.trim().length >= 2 && caja.innerHTML) caja.classList.remove('d-none');
+  });
+})();
+</script>
+{% endif %}
 {% endblock %}

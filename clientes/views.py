@@ -22,8 +22,12 @@ class ClienteListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         qs = super().get_queryset()
         q = self.request.GET.get('q', '').strip()
-        if q:
-            qs = qs.filter(nombre__icontains=q) | qs.filter(apellido__icontains=q) | qs.filter(email__icontains=q) | qs.filter(numero_documento__icontains=q)
+        for palabra in q.split():
+            qs = qs.filter(
+                Q(nombre__icontains=palabra) | Q(apellido__icontains=palabra) |
+                Q(telefono__icontains=palabra) | Q(email__icontains=palabra) |
+                Q(numero_documento__icontains=palabra)
+            )
         return qs
 
     def get_context_data(self, **kwargs):
@@ -197,9 +201,15 @@ def cliente_buscar(request):
     q = request.GET.get('q', '').strip()
     if len(q) < 2:
         return JsonResponse({'clientes': []})
-    qs = Cliente.objects.filter(
-        Q(nombre__icontains=q) | Q(apellido__icontains=q) | Q(telefono__icontains=q)
-    ).order_by('apellido', 'nombre')[:10]
+    qs = Cliente.objects.all()
+    # Cada palabra debe coincidir con algún campo (permite "Juan Pérez")
+    for palabra in q.split():
+        qs = qs.filter(
+            Q(nombre__icontains=palabra) | Q(apellido__icontains=palabra) |
+            Q(telefono__icontains=palabra) | Q(email__icontains=palabra) |
+            Q(numero_documento__icontains=palabra)
+        )
+    qs = qs.order_by('apellido', 'nombre')[:10]
     return JsonResponse({'clientes': [
         {'id': c.pk, 'nombre': str(c), 'email': c.email, 'telefono': c.telefono or ''}
         for c in qs
