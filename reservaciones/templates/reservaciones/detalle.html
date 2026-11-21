@@ -151,9 +151,29 @@
           <div>
             <a href="{% url 'clientes:detalle' cr.cliente.pk %}">{{ cr.cliente }}</a>
             {% if cr.es_titular %}<span class="badge bg-primary ms-1">Titular</span>{% endif %}
+            {% if cr.cliente.viajero_frecuente %}<span class="badge bg-info text-dark ms-1">Frecuente</span>{% endif %}
+            {% include 'clientes/partials/marcas.html' with c=cr.cliente %}
             <br><small class="text-muted">{{ cr.cliente.email|default:"sin correo" }}{% if cr.cliente.telefono %} · {{ cr.cliente.telefono }}{% endif %}</small>
+            {% if cr.cliente.no_deseado and cr.cliente.motivo_no_deseado %}<br><small class="text-danger">{{ cr.cliente.motivo_no_deseado }}</small>{% endif %}
           </div>
           <div class="d-flex gap-1">
+            <form method="post" action="{% url 'clientes:marcas' cr.cliente.pk %}">
+              {% csrf_token %}
+              <input type="hidden" name="marca" value="es_tingo">
+              <input type="hidden" name="valor" value="{% if cr.cliente.es_tingo %}0{% else %}1{% endif %}">
+              <input type="hidden" name="next" value="{{ request.get_full_path }}">
+              <button class="btn btn-xs {% if cr.cliente.es_tingo %}btn-tingo-activo{% else %}btn-outline-tingo{% endif %}" style="font-size:.7rem;padding:2px 6px"
+                      title="{% if cr.cliente.es_tingo %}Quitar marca Tingo{% else %}Marcar como Tingo{% endif %}"><i class="bi bi-tag"></i></button>
+            </form>
+            <form method="post" action="{% url 'clientes:marcas' cr.cliente.pk %}" class="form-no-deseado">
+              {% csrf_token %}
+              <input type="hidden" name="marca" value="no_deseado">
+              <input type="hidden" name="valor" value="{% if cr.cliente.no_deseado %}0{% else %}1{% endif %}">
+              <input type="hidden" name="motivo" value="">
+              <input type="hidden" name="next" value="{{ request.get_full_path }}">
+              <button class="btn btn-xs {% if cr.cliente.no_deseado %}btn-danger{% else %}btn-outline-danger{% endif %}" style="font-size:.7rem;padding:2px 6px"
+                      title="{% if cr.cliente.no_deseado %}Quitar marca de no deseado{% else %}Marcar como no deseado{% endif %}"><i class="bi bi-slash-circle"></i></button>
+            </form>
             {% if not cr.es_titular %}
             <form method="post" action="{% url 'reservaciones:marcar_titular' reservacion.pk cr.pk %}">
               {% csrf_token %}
@@ -260,6 +280,18 @@
 {% include 'reservaciones/partials/modales_envio.html' %}
 
 <script>
+// Al marcar como no deseado, pedir el motivo (opcional)
+document.querySelectorAll('form.form-no-deseado').forEach(function (f) {
+  f.addEventListener('submit', function (e) {
+    if (f.querySelector('[name=valor]').value !== '1') return;
+    const motivo = prompt('¿Por qué se marca como no deseado? (opcional)');
+    if (motivo === null) { e.preventDefault(); return; }
+    f.querySelector('[name=motivo]').value = motivo;
+  });
+});
+</script>
+
+<script>
 // Registrar pago desde el modal (sin salir de la reservación)
 (function () {
   const form = document.getElementById('form-pago');
@@ -328,7 +360,9 @@
             btn.type = 'button';
             btn.className = 'list-group-item list-group-item-action py-1 small';
             btn.innerHTML = '<strong>' + escHtml(c.nombre) + '</strong>'
-              + '<span class="text-muted ms-2">' + escHtml(c.email)
+              + (c.tingo ? ' <span class="badge badge-tingo">Tingo</span>' : '')
+              + (c.no_deseado ? ' <span class="badge bg-danger">No deseado</span>' : '')
+              + '<span class="text-muted ms-2">' + escHtml(c.email || 'sin correo')
               + (c.telefono ? ' · ' + escHtml(c.telefono) : '') + '</span>';
             btn.addEventListener('click', () => elegir(c));
             resultsBox.appendChild(btn);
@@ -339,6 +373,8 @@
   }
 
   function elegir(c) {
+    if (c.no_deseado && !confirm(c.nombre + ' está marcado como CLIENTE NO DESEADO' +
+        (c.motivo_no_deseado ? ' (' + c.motivo_no_deseado + ')' : '') + '.\n\n¿Seleccionarlo de todas formas?')) return;
     selId.value = c.id;
     selNombre.textContent = c.nombre + (c.email ? ' (' + c.email + ')' : '');
     selDisplay.style.removeProperty('display');

@@ -28,11 +28,19 @@ class ClienteListView(LoginRequiredMixin, ListView):
                 Q(telefono__icontains=palabra) | Q(email__icontains=palabra) |
                 Q(numero_documento__icontains=palabra)
             )
+        marca = self.request.GET.get('marca', '')
+        if marca == 'tingo':
+            qs = qs.filter(es_tingo=True)
+        elif marca == 'no_deseado':
+            qs = qs.filter(no_deseado=True)
+        elif marca == 'frecuente':
+            qs = qs.filter(viajero_frecuente=True)
         return qs
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['q'] = self.request.GET.get('q', '')
+        ctx['marca'] = self.request.GET.get('marca', '')
         return ctx
 
 
@@ -211,7 +219,8 @@ def cliente_buscar(request):
     qs = qs.order_by('apellido', 'nombre')[:10]
     return JsonResponse({'clientes': [
         {'id': c.pk, 'nombre': str(c), 'email': c.email or '', 'telefono': c.telefono or '',
-         'frecuente': c.viajero_frecuente}
+         'frecuente': c.viajero_frecuente, 'tingo': c.es_tingo,
+         'no_deseado': c.no_deseado, 'motivo_no_deseado': c.motivo_no_deseado}
         for c in qs
     ]})
 
@@ -227,8 +236,36 @@ def cliente_crear_ajax(request):
             'ok': True, 'id': cliente.pk,
             'nombre': str(cliente), 'email': cliente.email or '',
             'telefono': cliente.telefono or '', 'frecuente': cliente.viajero_frecuente,
+            'tingo': cliente.es_tingo, 'no_deseado': cliente.no_deseado, 'motivo_no_deseado': cliente.motivo_no_deseado,
         })
     return JsonResponse({
         'ok': False,
         'errors': {k: [str(e) for e in v] for k, v in form.errors.items()},
     }, status=400)
+
+
+@login_required
+def cliente_marcas(request, pk):
+    """Activa o desactiva las marcas Tingo / No deseado desde cualquier pantalla (AJAX o formulario)."""
+    from django.shortcuts import get_object_or_404, redirect
+    cliente = get_object_or_404(Cliente, pk=pk)
+    if request.method != 'POST':
+        return JsonResponse({'ok': False}, status=405)
+    marca = request.POST.get('marca')
+    if marca not in ('es_tingo', 'no_deseado'):
+        return JsonResponse({'ok': False, 'error': 'Marca inválida.'}, status=400)
+    valor = request.POST.get('valor') == '1'
+    setattr(cliente, marca, valor)
+    campos = [marca]
+    if marca == 'no_deseado':
+        cliente.motivo_no_deseado = request.POST.get('motivo', '').strip()[:255] if valor else ''
+        campos.append('motivo_no_deseado')
+    cliente.save(update_fields=campos)
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({'ok': True, 'tingo': cliente.es_tingo, 'no_deseado': cliente.no_deseado,
+                             'motivo_no_deseado': cliente.motivo_no_deseado})
+    siguiente = request.POST.get('next') or ''
+    from django.utils.http import url_has_allowed_host_and_scheme
+    if not url_has_allowed_host_and_scheme(siguiente, allowed_hosts={request.get_host()}):
+        siguiente = ''
+    return redirect(siguiente or 'clientes:detalle', **({} if siguiente else {'pk': pk}))

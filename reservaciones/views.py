@@ -174,7 +174,8 @@ class ClientesReservacionMixin:
         encontrados = Cliente.objects.in_bulk(ids)
         seleccion = [
             {'id': c.pk, 'nombre': str(c), 'email': c.email or '', 'telefono': c.telefono or '',
-             'frecuente': c.viajero_frecuente, 'titular': str(c.pk) == titular}
+             'frecuente': c.viajero_frecuente, 'tingo': c.es_tingo, 'no_deseado': c.no_deseado,
+             'motivo_no_deseado': c.motivo_no_deseado, 'titular': str(c.pk) == titular}
             for c in (encontrados.get(i) for i in ids) if c
         ]
         if seleccion and not any(s['titular'] for s in seleccion):

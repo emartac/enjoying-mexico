@@ -158,7 +158,7 @@
         <li class="list-group-item">
           <div class="d-flex justify-content-between gap-2">
             <div>
-              <a href="{% url 'reservaciones:detalle' r.pk %}" class="fw-semibold">{% if r.titulares %}{{ r.titulares.0.cliente }}{% else %}{{ r.codigo }}{% endif %}</a>
+              <a href="{% url 'reservaciones:detalle' r.pk %}" class="fw-semibold">{% if r.titulares %}{{ r.titulares.0.cliente }}{% else %}{{ r.codigo }}{% endif %}</a>{% if r.titulares %}{% include 'clientes/partials/marcas.html' with c=r.titulares.0.cliente %}{% endif %}
               <div class="small text-muted">{{ r.viaje.nombre }} · {{ r.viaje.fecha_salida|date:"d M" }}</div>
               {% if r.titulares and r.titulares.0.cliente.telefono %}<div class="small"><i class="bi bi-telephone me-1"></i>{{ r.titulares.0.cliente.telefono }}</div>{% endif %}
             </div>
@@ -218,7 +218,7 @@
         if (input.value.trim() !== q) return;
         caja.innerHTML = data.clientes.map(c =>
           '<a class="list-group-item list-group-item-action" href="' + urlDetalle.replace('/0/', '/' + c.id + '/') + '">' +
-          '<div class="fw-semibold">' + esc(c.nombre) + '</div><div class="small text-muted">' +
+          '<div class="fw-semibold">' + esc(c.nombre) + (c.tingo ? ' <span class="badge badge-tingo">Tingo</span>' : '') + (c.no_deseado ? ' <span class="badge bg-danger">No deseado</span>' : '') + '</div><div class="small text-muted">' +
           (c.telefono ? '<i class="bi bi-telephone me-1"></i>' + esc(c.telefono) + ' ' : '') +
           (c.email ? '<i class="bi bi-envelope ms-2 me-1"></i>' + esc(c.email) : '') + '</div></a>'
         ).join('') +

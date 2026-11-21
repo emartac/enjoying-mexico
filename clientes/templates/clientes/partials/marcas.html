@@ -1,0 +1,3 @@
+{# Etiquetas de marcas del cliente. Uso: {% include 'clientes/partials/marcas.html' with c=cliente %} #}
+{% if c.es_tingo %}<span class="badge badge-tingo ms-1">Tingo</span>{% endif %}
+{% if c.no_deseado %}<span class="badge bg-danger ms-1"{% if c.motivo_no_deseado %} title="{{ c.motivo_no_deseado }}"{% endif %}><i class="bi bi-slash-circle me-1"></i>No deseado</span>{% endif %}

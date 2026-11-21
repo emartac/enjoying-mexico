@@ -96,6 +96,7 @@
   const inpPrecio   = document.getElementById('id_precio_personalizado');
   const viajeSelect = document.getElementById('id_viaje');
   const urlEditarCliente = '{% url "clientes:editar" 0 %}';
+  const urlMarcas = '{% url "clientes:marcas" 0 %}';
 
   // Clientes elegidos: [{id, nombre, email, telefono, frecuente, titular}]
   let seleccion = JSON.parse(document.getElementById('clientes-iniciales').textContent || '[]');
@@ -103,6 +104,9 @@
   let timer;
 
   const escHtml = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const marcasHtml = c =>
+    (c.tingo ? ' <span class="badge badge-tingo">Tingo</span>' : '') +
+    (c.no_deseado ? ' <span class="badge bg-danger"><i class="bi bi-slash-circle me-1"></i>No deseado</span>' : '');
   const dinero = n => '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   // ── Total estimado ────────────────────────────────────────────────
@@ -138,16 +142,20 @@
       if (c.titular && !c.email) faltan.push('correo');
       if (c.titular && !c.telefono) faltan.push('teléfono');
       const li = document.createElement('li');
-      li.className = 'list-group-item d-flex justify-content-between align-items-center' + (faltan.length ? ' list-group-item-warning' : '');
+      li.className = 'list-group-item d-flex justify-content-between align-items-center' +
+        (c.no_deseado ? ' list-group-item-danger' : (faltan.length ? ' list-group-item-warning' : ''));
       li.innerHTML =
         '<div><strong>' + escHtml(c.nombre) + '</strong>' +
           (c.titular ? ' <span class="badge bg-primary">Titular</span>' : '') +
-          (c.frecuente ? ' <span class="badge bg-info text-dark">Frecuente</span>' : '') +
+          (c.frecuente ? ' <span class="badge bg-info text-dark">Frecuente</span>' : '') + marcasHtml(c) +
           '<br><small class="text-muted">' + (c.email ? escHtml(c.email) : 'sin correo') + ' · ' + (c.telefono ? escHtml(c.telefono) : 'sin teléfono') + '</small>' +
           (faltan.length ? '<br><small class="text-danger"><i class="bi bi-exclamation-triangle me-1"></i>Al titular le falta ' + faltan.join(' y ') +
             '. <a href="' + urlEditarCliente.replace('/0/', '/' + c.id + '/') + '" target="_blank">Completar datos</a> y vuelve a agregarlo, o elige otro titular.</small>' : '') +
+          (c.no_deseado && c.motivo_no_deseado ? '<br><small class="text-danger">' + escHtml(c.motivo_no_deseado) + '</small>' : '') +
         '</div>' +
         '<div class="d-flex gap-1">' +
+          '<button type="button" class="btn btn-sm ' + (c.tingo ? 'btn-tingo-activo' : 'btn-outline-tingo') + '" data-accion="tingo" data-idx="' + idx + '" title="' + (c.tingo ? 'Quitar marca Tingo' : 'Marcar como Tingo') + '"><i class="bi bi-tag"></i></button>' +
+          '<button type="button" class="btn btn-sm ' + (c.no_deseado ? 'btn-danger' : 'btn-outline-danger') + '" data-accion="nodeseado" data-idx="' + idx + '" title="' + (c.no_deseado ? 'Quitar marca de no deseado' : 'Marcar como no deseado') + '"><i class="bi bi-slash-circle"></i></button>' +
           (c.titular ? '' : '<button type="button" class="btn btn-sm btn-outline-primary" data-accion="titular" data-idx="' + idx + '" title="Marcar como titular"><i class="bi bi-star"></i></button>') +
           '<button type="button" class="btn btn-sm btn-outline-danger" data-accion="quitar" data-idx="' + idx + '" title="Quitar"><i class="bi bi-x-lg"></i></button>' +
         '</div>';
@@ -164,18 +172,53 @@
     const btn = e.target.closest('button[data-accion]');
     if (!btn) return;
     const idx = parseInt(btn.dataset.idx, 10);
+    const c = seleccion[idx];
+    if (btn.dataset.accion === 'tingo') { cambiarMarca(c, 'es_tingo', !c.tingo); return; }
+    if (btn.dataset.accion === 'nodeseado') {
+      let motivo = '';
+      if (!c.no_deseado) {
+        motivo = prompt('¿Por qué se marca a ' + c.nombre + ' como no deseado? (opcional)');
+        if (motivo === null) return;
+      }
+      cambiarMarca(c, 'no_deseado', !c.no_deseado, motivo);
+      return;
+    }
     if (btn.dataset.accion === 'quitar') seleccion.splice(idx, 1);
-    else seleccion.forEach((c, i) => c.titular = (i === idx));
+    else seleccion.forEach((x, i) => x.titular = (i === idx));
     render();
   });
 
+  // Guarda la marca en el cliente (aplica a todas sus reservaciones)
+  function cambiarMarca(c, marca, valor, motivo) {
+    const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    fetch(urlMarcas.replace('/0/', '/' + c.id + '/'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': csrf, 'X-Requested-With': 'XMLHttpRequest' },
+      body: new URLSearchParams({ marca: marca, valor: valor ? '1' : '0', motivo: motivo || '' }).toString(),
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (!data.ok) { alert('No se pudo guardar la marca.'); return; }
+      c.tingo = data.tingo; c.no_deseado = data.no_deseado; c.motivo_no_deseado = data.motivo_no_deseado;
+      render();
+    })
+    .catch(() => alert('No se pudo guardar la marca. Revisa tu conexión.'));
+  }
+
   function agregar(c) {
     const existente = seleccion.find(s => String(s.id) === String(c.id));
+    if (!existente && c.no_deseado) {
+      const msg = c.nombre + ' está marcado como CLIENTE NO DESEADO' +
+        (c.motivo_no_deseado ? ' (' + c.motivo_no_deseado + ')' : '') + '.\n\n¿Agregarlo a la reservación de todas formas?';
+      if (!confirm(msg)) return;
+    }
     if (existente) {
       // Si se volvió a agregar tras completar sus datos, refrescarlos
-      Object.assign(existente, { email: c.email, telefono: c.telefono, frecuente: !!c.frecuente });
+      Object.assign(existente, { email: c.email, telefono: c.telefono, frecuente: !!c.frecuente,
+                                 tingo: !!c.tingo, no_deseado: !!c.no_deseado, motivo_no_deseado: c.motivo_no_deseado || '' });
     } else {
-      seleccion.push({ id: c.id, nombre: c.nombre, email: c.email, telefono: c.telefono, frecuente: !!c.frecuente, titular: false });
+      seleccion.push({ id: c.id, nombre: c.nombre, email: c.email, telefono: c.telefono, frecuente: !!c.frecuente,
+                       tingo: !!c.tingo, no_deseado: !!c.no_deseado, motivo_no_deseado: c.motivo_no_deseado || '', titular: false });
     }
     render();
     searchInput.value = '';
@@ -215,7 +258,7 @@
             b.type = 'button';
             b.className = 'list-group-item list-group-item-action py-2 small';
             b.innerHTML = '<strong>' + escHtml(c.nombre) + '</strong>' +
-              (c.frecuente ? ' <span class="badge bg-info text-dark">Frecuente</span>' : '') +
+              (c.frecuente ? ' <span class="badge bg-info text-dark">Frecuente</span>' : '') + marcasHtml(c) +
               (ya ? ' <span class="badge bg-secondary">ya agregado</span>' : '') +
               '<span class="text-muted ms-2">' + (c.email ? escHtml(c.email) : 'sin correo') + (c.telefono ? ' · ' + escHtml(c.telefono) : '') + '</span>';
             b.addEventListener('click', () => agregar(c));

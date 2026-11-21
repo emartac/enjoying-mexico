@@ -9,12 +9,19 @@ class ClienteForm(forms.ModelForm):
         model = Cliente
         fields = [
             'nombre', 'apellido', 'email', 'telefono',
-            'nacionalidad', 'direccion', 'viajero_frecuente', 'notas',
+            'nacionalidad', 'direccion', 'viajero_frecuente', 'es_tingo',
+            'no_deseado', 'motivo_no_deseado', 'notas',
         ]
         widgets = {
             'direccion': forms.Textarea(attrs={'rows': 2}),
             'notas': forms.Textarea(attrs={'rows': 2}),
         }
+
+    def clean(self):
+        datos = super().clean()
+        if not datos.get('no_deseado'):
+            datos['motivo_no_deseado'] = ''
+        return datos
 
     def clean_email(self):
         email = (self.cleaned_data.get('email') or '').strip()
@@ -36,7 +43,12 @@ class ClienteForm(forms.ModelForm):
             ),
             'nacionalidad',
             'direccion',
-            'viajero_frecuente',
+            Row(
+                Column('viajero_frecuente', css_class='col-md-4'),
+                Column('es_tingo', css_class='col-md-4'),
+                Column('no_deseado', css_class='col-md-4'),
+            ),
+            'motivo_no_deseado',
             'notas',
             ButtonHolder(Submit('submit', 'Guardar cliente', css_class='btn btn-primary')),
         )

@@ -110,7 +110,7 @@
           <td>
             {% if res.titulares %}
               {% with c=res.titulares.0.cliente %}
-              <a href="{% url 'clientes:detalle' c.pk %}">{{ c }}</a>
+              <a href="{% url 'clientes:detalle' c.pk %}">{{ c }}</a>{% include 'clientes/partials/marcas.html' with c=c %}
               {% if c.telefono %}<br><small class="text-muted"><i class="bi bi-telephone me-1"></i>{{ c.telefono }}</small>{% endif %}
               {% endwith %}
             {% else %}<span class="text-muted">—</span>{% endif %}

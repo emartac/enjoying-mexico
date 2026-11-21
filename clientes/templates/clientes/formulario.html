@@ -64,7 +64,7 @@
     } else {
       caja.innerHTML = clientes.map(c =>
         '<a class="list-group-item list-group-item-action" href="' + urlDetalle.replace('/0/', '/' + c.id + '/') + '">' +
-          '<div class="fw-semibold">' + esc(c.nombre) + '</div>' +
+          '<div class="fw-semibold">' + esc(c.nombre) + (c.tingo ? ' <span class="badge badge-tingo">Tingo</span>' : '') + (c.no_deseado ? ' <span class="badge bg-danger">No deseado</span>' : '') + '</div>' +
           '<div class="small text-muted">' +
             (c.telefono ? '<i class="bi bi-telephone me-1"></i>' + esc(c.telefono) + ' ' : '') +
             (c.email ? '<i class="bi bi-envelope ms-2 me-1"></i>' + esc(c.email) : '') +

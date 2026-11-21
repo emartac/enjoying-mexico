@@ -7,6 +7,7 @@
   <h4>
     <i class="bi bi-person-fill me-2"></i>{{ cliente }}
     {% if cliente.viajero_frecuente %}<span class="badge bg-warning text-dark ms-2"><i class="bi bi-star-fill me-1"></i>Viajero frecuente</span>{% endif %}
+    {% include 'clientes/partials/marcas.html' with c=cliente %}
   </h4>
   <div>
     <a href="{% url 'clientes:editar' cliente.pk %}" class="btn btn-outline-secondary">
@@ -16,6 +17,33 @@
       <i class="bi bi-trash me-1"></i>Eliminar
     </a>
   </div>
+</div>
+
+{% if cliente.no_deseado %}
+<div class="alert alert-danger d-flex align-items-center gap-2 py-2">
+  <i class="bi bi-slash-circle-fill"></i>
+  <div><strong>Cliente no deseado.</strong>{% if cliente.motivo_no_deseado %} Motivo: {{ cliente.motivo_no_deseado }}{% endif %}</div>
+</div>
+{% endif %}
+
+<div class="d-flex flex-wrap gap-2 mb-3">
+  <form method="post" action="{% url 'clientes:marcas' cliente.pk %}">
+    {% csrf_token %}
+    <input type="hidden" name="marca" value="es_tingo">
+    <input type="hidden" name="valor" value="{% if cliente.es_tingo %}0{% else %}1{% endif %}">
+    <button class="btn btn-sm {% if cliente.es_tingo %}btn-outline-secondary{% else %}btn-outline-tingo{% endif %}">
+      <i class="bi bi-tag me-1"></i>{% if cliente.es_tingo %}Quitar marca Tingo{% else %}Marcar como Tingo{% endif %}
+    </button>
+  </form>
+  <form method="post" action="{% url 'clientes:marcas' cliente.pk %}" class="form-no-deseado">
+    {% csrf_token %}
+    <input type="hidden" name="marca" value="no_deseado">
+    <input type="hidden" name="valor" value="{% if cliente.no_deseado %}0{% else %}1{% endif %}">
+    <input type="hidden" name="motivo" value="">
+    <button class="btn btn-sm {% if cliente.no_deseado %}btn-outline-secondary{% else %}btn-outline-danger{% endif %}">
+      <i class="bi bi-slash-circle me-1"></i>{% if cliente.no_deseado %}Quitar marca de no deseado{% else %}Marcar como no deseado{% endif %}
+    </button>
+  </form>
 </div>
 
 <div class="row g-3">
@@ -78,4 +106,18 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Al marcar como no deseado, pedir el motivo (opcional)
+document.querySelectorAll('form.form-no-deseado').forEach(function (f) {
+  f.addEventListener('submit', function (e) {
+    if (f.querySelector('[name=valor]').value !== '1') return;
+    const motivo = prompt('¿Por qué se marca como no deseado? (opcional)');
+    if (motivo === null) { e.preventDefault(); return; }
+    f.querySelector('[name=motivo]').value = motivo;
+  });
+});
+</script>
 {% endblock %}

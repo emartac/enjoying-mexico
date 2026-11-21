@@ -21,12 +21,20 @@
       <div class="col-md-8 col-lg-6">
         <div class="input-group">
           <span class="input-group-text"><i class="bi bi-search"></i></span>
-          <input type="text" name="q" class="form-control" placeholder="Buscar por nombre o email…" value="{{ q }}">
+          <input type="text" name="q" class="form-control" placeholder="Buscar por nombre, teléfono o correo…" value="{{ q }}">
         </div>
       </div>
       <div class="col-auto">
+        <select name="marca" class="form-select" onchange="this.form.submit()">
+          <option value="">Todos los clientes</option>
+          <option value="frecuente" {% if marca == 'frecuente' %}selected{% endif %}>Viajeros frecuentes</option>
+          <option value="tingo" {% if marca == 'tingo' %}selected{% endif %}>Tingo</option>
+          <option value="no_deseado" {% if marca == 'no_deseado' %}selected{% endif %}>No deseados</option>
+        </select>
+      </div>
+      <div class="col-auto">
         <button class="btn btn-outline-primary" type="submit">Buscar</button>
-        {% if q %}<a href="{% url 'clientes:lista' %}" class="btn btn-outline-secondary ms-1">Limpiar</a>{% endif %}
+        {% if q or marca %}<a href="{% url 'clientes:lista' %}" class="btn btn-outline-secondary ms-1">Limpiar</a>{% endif %}
       </div>
     </form>
   </div>
@@ -50,6 +58,7 @@
           <td>
             <a href="{% url 'clientes:detalle' cliente.pk %}">{{ cliente }}</a>
             {% if cliente.viajero_frecuente %}<span class="badge bg-warning text-dark ms-1"><i class="bi bi-star-fill me-1"></i>Frecuente</span>{% endif %}
+            {% include 'clientes/partials/marcas.html' with c=cliente %}
           </td>
           <td>{{ cliente.email|default:"—" }}</td>
           <td>{{ cliente.telefono }}</td>
@@ -69,11 +78,11 @@
     <nav>
       <ul class="pagination pagination-sm mb-0 justify-content-center">
         {% if page_obj.has_previous %}
-          <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ q }}">‹</a></li>
+          <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ q|urlencode }}&marca={{ marca }}">‹</a></li>
         {% endif %}
         <li class="page-item disabled"><span class="page-link">Pág. {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
         {% if page_obj.has_next %}
-          <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ q }}">›</a></li>
+          <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ q|urlencode }}&marca={{ marca }}">›</a></li>
         {% endif %}
       </ul>
     </nav>
