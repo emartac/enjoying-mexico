@@ -21,7 +21,7 @@
           <dt class="col-sm-6">Destino</dt><dd class="col-sm-6">{{ viaje.destino }}</dd>
           <dt class="col-sm-6">Fecha salida</dt><dd class="col-sm-6">{{ viaje.fecha_salida|date:"d/m/Y" }}</dd>
           <dt class="col-sm-6">Fecha regreso</dt><dd class="col-sm-6">{{ viaje.fecha_regreso|date:"d/m/Y" }}</dd>
-          <dt class="col-sm-6">Duración</dt><dd class="col-sm-6">{{ viaje.duracion_dias }} día(s)</dd>
+          <dt class="col-sm-6">Duración</dt><dd class="col-sm-6">{{ viaje.duracion_texto }}</dd>
           <dt class="col-sm-6">Estado</dt>
           <dd class="col-sm-6">{% if viaje.activo %}<span class="badge bg-success">Activo</span>{% else %}<span class="badge bg-secondary">Inactivo</span>{% endif %}</dd>
           {% if viaje.precio_por_persona %}

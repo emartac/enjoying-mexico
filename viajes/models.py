@@ -37,9 +37,19 @@ class Viaje(models.Model):
         return self.fecha_salida == self.fecha_regreso
 
     @property
+    def noches(self):
+        return max((self.fecha_regreso - self.fecha_salida).days, 0)
+
+    @property
     def duracion_dias(self):
-        dias = (self.fecha_regreso - self.fecha_salida).days
-        return dias if dias > 0 else 1
+        """Días del viaje contando salida y regreso: del 4 al 6 = 3 días."""
+        return self.noches + 1
+
+    @property
+    def duracion_texto(self):
+        if self.noches == 0:
+            return '1 día'
+        return f'{self.duracion_dias} días / {self.noches} noche{"s" if self.noches > 1 else ""}'
 
     @property
     def ocupacion_actual(self):

@@ -52,7 +52,17 @@
       <div class="card shadow-sm mb-3">
         <div class="card-header fw-semibold"><span class="badge rounded-pill bg-primary me-2">3</span>Alojamiento y precio</div>
         <div class="card-body pb-1">
+          {% if viaje_varios_dias %}
+          <div class="d-flex gap-2 align-items-start">
+            <div class="flex-grow-1" style="min-width:0">{{ form.habitacion|as_crispy_field }}</div>
+            <button type="button" class="btn btn-outline-primary text-nowrap" style="margin-top:2rem"
+                    data-bs-toggle="modal" data-bs-target="#modalNuevaHabitacion">
+              <i class="bi bi-door-open me-1"></i>Registrar habitación
+            </button>
+          </div>
+          {% else %}
           {{ form.habitacion|as_crispy_field }}
+          {% endif %}
           <div class="row">
             <div class="col-md-6">{{ form.precio_personalizado|as_crispy_field }}</div>
             <div class="col-md-6">{{ form.estado|as_crispy_field }}</div>
@@ -79,6 +89,10 @@
 </div>
 
 {% include 'reservaciones/partials/modal_nuevo_cliente.html' %}
+{% if viaje_varios_dias %}
+{% include 'reservaciones/partials/modal_nueva_habitacion.html' %}
+{{ nh_tipos_con_precio|json_script:"nh-tipos-con-precio" }}
+{% endif %}
 {{ clientes_seleccionados|json_script:"clientes-iniciales" }}
 {{ precios|json_script:"precios-viaje" }}
 {% endblock %}
@@ -317,6 +331,101 @@
   }
   if (selHab) selHab.addEventListener('change', actualizarTotal);
   if (inpPrecio) inpPrecio.addEventListener('input', actualizarTotal);
+
+  // ── Registrar habitación desde la ventana emergente ──────────────
+  {% if viaje_varios_dias %}
+  (function () {
+    const btnGuardar = document.getElementById('btn-guardar-nh');
+    if (!btnGuardar) return;
+    const tiposConPrecio = new Set(JSON.parse(document.getElementById('nh-tipos-con-precio').textContent || '[]').map(String));
+    const errDiv   = document.getElementById('nh-errores');
+    const selTipo  = document.getElementById('nh-tipo');
+    const selExist = document.getElementById('nh-existente');
+    const cajaPrecio = document.getElementById('nh-precio');
+    let tab = 'nueva';
+
+    function tipoElegido() {
+      if (tab === 'nueva') return selTipo.value ? { id: selTipo.value, nombre: selTipo.selectedOptions[0].text.split(' (')[0] } : null;
+      const opt = selExist && selExist.selectedOptions[0];
+      return opt && opt.value ? { id: opt.dataset.tipo, nombre: opt.text.split(' — ')[1].split(' #')[0] } : null;
+    }
+    function revisarPrecio() {
+      const t = tipoElegido();
+      const falta = t && !tiposConPrecio.has(String(t.id));
+      cajaPrecio.style.display = falta ? '' : 'none';
+      if (falta) document.getElementById('nh-precio-tipo').textContent = t.nombre;
+    }
+    document.querySelectorAll('[data-nh-tab]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        tab = b.dataset.nhTab;
+        document.querySelectorAll('[data-nh-tab]').forEach(x => x.classList.toggle('active', x === b));
+        document.getElementById('nh-tab-nueva').style.display = tab === 'nueva' ? '' : 'none';
+        document.getElementById('nh-tab-existente').style.display = tab === 'existente' ? '' : 'none';
+        revisarPrecio();
+      });
+    });
+    selTipo.addEventListener('change', revisarPrecio);
+    if (selExist) selExist.addEventListener('change', revisarPrecio);
+
+    btnGuardar.addEventListener('click', function () {
+      errDiv.style.display = 'none';
+      const params = { modo: tab, exigir_precio: '1' };
+      if (tab === 'nueva') {
+        params.nombre_hotel = document.getElementById('nh-hotel').value.trim();
+        params.numero = document.getElementById('nh-numero').value.trim();
+        params.tipo = selTipo.value;
+        params.num_camas = document.getElementById('nh-camas').value;
+      } else {
+        params.habitacion_id = selExist ? selExist.value : '';
+      }
+      if (cajaPrecio.style.display !== 'none') {
+        params.precio_tipo = document.getElementById('nh-precio-normal').value;
+        params.frecuente_tipo = document.getElementById('nh-precio-frecuente').value;
+      }
+      btnGuardar.disabled = true;
+      fetch('{% url "viajes:habitacion_agregar_ajax" viaje_varios_dias.pk %}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded',
+                   'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value },
+        body: new URLSearchParams(params).toString(),
+      })
+      .then(r => r.json())
+      .then(data => {
+        btnGuardar.disabled = false;
+        if (!data.ok) {
+          errDiv.textContent = Object.values(data.errors).join(' ');
+          errDiv.style.display = '';
+          return;
+        }
+        const h = data.habitacion;
+        if (data.precio) {
+          precios.habitaciones = precios.habitaciones || {};
+          precios.habitaciones[String(h.id)] = data.precio;
+          tiposConPrecio.add(String(h.tipo_id));
+        }
+        const precioTxt = data.precio ? ' — ' + dinero(data.precio[0]) + ' p/p' +
+          (data.precio[1] !== null ? ' (frecuente ' + dinero(data.precio[1]) + ')' : '') : '';
+        selHab.add(new Option(h.etiqueta + precioTxt, h.id, true, true));
+        selHab.classList.remove('is-invalid');
+        // Quitar el aviso de "no tiene habitaciones" y quitarla de "Ya registrada"
+        const aviso = document.getElementById('id_habitacion_helptext');
+        if (aviso) aviso.remove();
+        if (selExist) { const o = selExist.querySelector('option[value="' + h.id + '"]'); if (o) o.remove(); }
+        ['nh-hotel', 'nh-numero', 'nh-precio-normal', 'nh-precio-frecuente'].forEach(id => document.getElementById(id).value = '');
+        selTipo.value = '';
+        if (selExist) selExist.value = '';
+        revisarPrecio();
+        actualizarTotal();
+        bootstrap.Modal.getInstance(document.getElementById('modalNuevaHabitacion')).hide();
+      })
+      .catch(() => {
+        btnGuardar.disabled = false;
+        errDiv.textContent = 'No se pudo guardar. Revisa tu conexión e inténtalo de nuevo.';
+        errDiv.style.display = '';
+      });
+    });
+  })();
+  {% endif %}
 
   render();
 })();

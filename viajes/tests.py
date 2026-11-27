@@ -77,7 +77,8 @@ class PreciosPorTipoTests(TestCase):
         r = self.client.post(reverse('viajes:habitacion_agregar_ajax', args=[viaje.pk]), {
             'modo': 'nueva', 'nombre_hotel': 'Mesón', 'tipo': self.doble.pk,
             'numero': '101', 'num_camas': '2'})
-        self.assertEqual(r.json(), {'ok': True})
+        self.assertTrue(r.json()['ok'])
+        self.assertEqual(r.json()['precio'], [4500.0, 4200.0])
         r = self.client.get(reverse('viajes:detalle', args=[viaje.pk]))
         self.assertContains(r, '4500')
 
@@ -85,12 +86,40 @@ class PreciosPorTipoTests(TestCase):
         from reservaciones.forms import ReservacionForm
         self.client.post(reverse('viajes:crear'), self._datos_viaje())
         viaje = Viaje.objects.get()
+        self.assertEqual(viaje.duracion_texto, '3 días / 2 noches')  # del 1 al 3 de marzo
         r = self.client.get(reverse('reservaciones:crear') + f'?viaje={viaje.pk}')
-        self.assertContains(r, 'aún no tiene habitaciones')
+        self.assertContains(r, 'Este viaje de 3 días aún no tiene habitaciones')
         self.assertNotContains(r, 'Sin habitación (viaje de un día)')
         form = ReservacionForm({'viaje': viaje.pk, 'estado': 'pendiente'}, viaje_id=viaje.pk)
         self.assertFalse(form.is_valid())
         self.assertIn('habitacion', form.errors)
+
+    def test_registrar_habitacion_desde_reservacion(self):
+        # Viaje sin precio para Triple: la reservación debe exigirlo y guardarlo
+        self.client.post(reverse('viajes:crear'), self._datos_viaje(**{
+            f'precios-precio_{self.triple.pk}': ''}))
+        viaje = Viaje.objects.get()
+        r = self.client.get(reverse('reservaciones:crear') + f'?viaje={viaje.pk}')
+        self.assertContains(r, 'Registrar habitación')
+        self.assertContains(r, 'modalNuevaHabitacion')
+        url = reverse('viajes:habitacion_agregar_ajax', args=[viaje.pk])
+        datos = {'modo': 'nueva', 'nombre_hotel': 'Mesón', 'tipo': self.triple.pk,
+                 'numero': '201', 'num_camas': '3', 'exigir_precio': '1'}
+        r = self.client.post(url, datos)
+        self.assertEqual(r.status_code, 400)
+        self.assertIn('precio_tipo', r.json()['errors'])
+        self.assertFalse(Habitacion.objects.exists())  # no se creó a medias
+        r = self.client.post(url, {**datos, 'precio_tipo': '4000', 'frecuente_tipo': '3700'})
+        self.assertEqual(r.json()['precio'], [4000.0, 3700.0])
+        self.assertEqual(viaje.precio_de_tipo(self.triple.pk).precio_por_persona, Decimal('4000'))
+        # Ya aparece para elegir en la reservación
+        r = self.client.get(reverse('reservaciones:crear') + f'?viaje={viaje.pk}')
+        self.assertContains(r, 'Hab. 201')
+        self.assertNotContains(r, 'aún no tiene habitaciones')
+        # Agregar otra vez la misma habitación da un error claro
+        hab = Habitacion.objects.get()
+        r = self.client.post(url, {'modo': 'existente', 'habitacion_id': hab.pk})
+        self.assertIn('ya está en este viaje', r.json()['errors']['habitacion_id'])
 
     def test_reservacion_en_viaje_de_un_dia_no_pide_habitacion(self):
         from reservaciones.forms import ReservacionForm
@@ -99,6 +128,9 @@ class PreciosPorTipoTests(TestCase):
         viaje = Viaje.objects.get()
         form = ReservacionForm({'viaje': viaje.pk, 'estado': 'pendiente'}, viaje_id=viaje.pk)
         self.assertTrue(form.is_valid(), form.errors)
+        r = self.client.get(reverse('reservaciones:crear') + f'?viaje={viaje.pk}')
+        self.assertNotContains(r, 'modalNuevaHabitacion')
+        self.assertContains(r, 'Sin habitación (viaje de un día)')
 
     def test_costo_de_reservacion_usa_precio_del_tipo(self):
         self.client.post(reverse('viajes:crear'), self._datos_viaje())

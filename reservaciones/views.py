@@ -210,7 +210,25 @@ class ClientesReservacionMixin:
         ctx = super().get_context_data(**kwargs)
         ctx['clientes_seleccionados'] = self._clientes_seleccionados()
         ctx['precios'] = self._precios_para_js()
+        ctx.update(self._datos_nueva_habitacion())
         return ctx
+
+    def _datos_nueva_habitacion(self):
+        """Para la ventana 'Registrar habitación' (solo viajes de varios días)."""
+        from viajes.models import Viaje
+        from hoteles.models import Habitacion, TipoHabitacion
+        viaje_id = self._viaje_id()
+        viaje = Viaje.objects.filter(pk=viaje_id).first() if viaje_id else None
+        if not viaje or viaje.es_viaje_dia:
+            return {'viaje_varios_dias': None}
+        asignadas = viaje.viaje_habitaciones.values_list('habitacion_id', flat=True)
+        return {
+            'viaje_varios_dias': viaje,
+            'nh_tipos': TipoHabitacion.objects.all(),
+            'nh_habitaciones': (Habitacion.objects.select_related('tipo')
+                                .exclude(pk__in=asignadas).order_by('nombre_hotel', 'numero')),
+            'nh_tipos_con_precio': list(viaje.precios.values_list('tipo_habitacion_id', flat=True)),
+        }
 
     def _validar_clientes(self, form, seleccion):
         """Devuelve True si los clientes son válidos; si no, agrega el error al formulario."""

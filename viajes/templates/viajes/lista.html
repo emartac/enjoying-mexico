@@ -53,7 +53,7 @@
           <td>{{ viaje.destino }}</td>
           <td>{{ viaje.fecha_salida|date:"d/m/Y" }}</td>
           <td>{{ viaje.fecha_regreso|date:"d/m/Y" }}</td>
-          <td>{{ viaje.duracion_dias }}</td>
+          <td>{{ viaje.duracion_texto }}</td>
           <td>{% if viaje.activo %}<span class="badge bg-success">Activo</span>{% else %}<span class="badge bg-secondary">Inactivo</span>{% endif %}</td>
           <td class="text-end">
             <a href="{% url 'viajes:editar' viaje.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>

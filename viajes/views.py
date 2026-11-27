@@ -268,40 +268,89 @@ def viaje_habitacion_quitar(request, pk, vh_pk):
 
 @login_required
 def viaje_habitacion_agregar_ajax(request, pk):
+    """Agrega una habitación (existente o nueva) al viaje.
+
+    Opcionalmente guarda el precio por persona de su tipo en este viaje
+    (precio_tipo / frecuente_tipo). Con exigir_precio=1 no deja agregar una
+    habitación cuyo tipo no tenga precio (se usa desde la reservación)."""
     if request.method != 'POST':
         return JsonResponse({'ok': False}, status=405)
     viaje = get_object_or_404(Viaje, pk=pk)
+    from decimal import Decimal, InvalidOperation
     from hoteles.models import Habitacion, TipoHabitacion
+    from .models import ViajeHabitacionPrecio
 
     modo = request.POST.get('modo', 'nueva')
+    errors = {}
 
-    try:
-        if modo == 'existente':
-            hab_id = request.POST.get('habitacion_id', '').strip()
-            if not hab_id:
-                return JsonResponse({'ok': False, 'errors': {'habitacion_id': 'Selecciona una habitación.'}}, status=400)
-            hab = get_object_or_404(Habitacion, pk=hab_id)
-        else:
-            nombre_hotel = request.POST.get('nombre_hotel', '').strip()
-            tipo_id      = request.POST.get('tipo', '').strip()
-            numero       = request.POST.get('numero', '').strip()
-            num_camas    = request.POST.get('num_camas', '1').strip()
-            errors = {}
-            if not nombre_hotel: errors['nombre_hotel'] = 'Campo requerido.'
-            if not tipo_id:      errors['tipo']         = 'Campo requerido.'
-            if not numero:       errors['numero']       = 'Campo requerido.'
-            if errors:
-                return JsonResponse({'ok': False, 'errors': errors}, status=400)
-            tipo = get_object_or_404(TipoHabitacion, pk=tipo_id)
+    # 1. Qué habitación y de qué tipo
+    if modo == 'existente':
+        hab_id = request.POST.get('habitacion_id', '').strip()
+        hab = Habitacion.objects.select_related('tipo').filter(pk=hab_id).first() if hab_id.isdigit() else None
+        if not hab:
+            return JsonResponse({'ok': False, 'errors': {'habitacion_id': 'Selecciona una habitación.'}}, status=400)
+        if ViajeHabitacion.objects.filter(viaje=viaje, habitacion=hab).exists():
+            return JsonResponse({'ok': False, 'errors': {'habitacion_id': 'Esa habitación ya está en este viaje.'}}, status=400)
+        tipo = hab.tipo
+    else:
+        hab = None
+        nombre_hotel = request.POST.get('nombre_hotel', '').strip()
+        tipo_id      = request.POST.get('tipo', '').strip()
+        numero       = request.POST.get('numero', '').strip()
+        num_camas    = request.POST.get('num_camas', '1').strip()
+        if not nombre_hotel: errors['nombre_hotel'] = 'Escribe el nombre del hotel.'
+        if not tipo_id:      errors['tipo']         = 'Elige el tipo de habitación.'
+        if not numero:       errors['numero']       = 'Escribe el número de habitación.'
+        tipo = TipoHabitacion.objects.filter(pk=tipo_id).first() if tipo_id.isdigit() else None
+        if tipo_id and not tipo:
+            errors['tipo'] = 'Elige el tipo de habitación.'
+
+    # 2. Precio del tipo en este viaje
+    def decimal_o_none(nombre, etiqueta):
+        valor = request.POST.get(nombre, '').strip()
+        if not valor:
+            return None
+        try:
+            d = Decimal(valor)
+        except InvalidOperation:
+            errors[nombre] = f'{etiqueta}: escribe solo números.'
+            return None
+        if d < 0:
+            errors[nombre] = f'{etiqueta}: no puede ser negativo.'
+            return None
+        return d
+
+    precio_tipo = decimal_o_none('precio_tipo', 'Precio por persona')
+    frecuente_tipo = decimal_o_none('frecuente_tipo', 'Precio frecuente')
+    precio_existente = ViajeHabitacionPrecio.objects.filter(viaje=viaje, tipo_habitacion=tipo).first() if tipo else None
+    if tipo and not precio_existente and precio_tipo is None and request.POST.get('exigir_precio') == '1':
+        errors['precio_tipo'] = f'Este viaje aún no tiene precio para {tipo.nombre}. Escribe el precio por persona.'
+    if frecuente_tipo is not None and precio_tipo is None and not precio_existente:
+        errors['precio_tipo'] = 'Escribe también el precio normal por persona.'
+
+    if errors:
+        return JsonResponse({'ok': False, 'errors': errors}, status=400)
+
+    # 3. Guardar todo junto
+    with transaction.atomic():
+        if hab is None:
             hab = Habitacion.objects.create(
                 nombre_hotel=nombre_hotel, tipo=tipo, numero=numero,
                 num_camas=int(num_camas) if num_camas.isdigit() else 1,
             )
-
         ViajeHabitacion.objects.create(viaje=viaje, habitacion=hab)
-        return JsonResponse({'ok': True})
-    except Exception as e:
-        return JsonResponse({'ok': False, 'errors': {'__all__': str(e)}}, status=400)
+        if not precio_existente and precio_tipo is not None:
+            precio_existente = ViajeHabitacionPrecio.objects.create(
+                viaje=viaje, tipo_habitacion=tipo,
+                precio_por_persona=precio_tipo, precio_frecuente=frecuente_tipo)
+
+    num = lambda d: float(d) if d is not None else None
+    return JsonResponse({
+        'ok': True,
+        'habitacion': {'id': hab.pk, 'etiqueta': str(hab), 'tipo_id': tipo.pk},
+        'precio': ([num(precio_existente.precio_por_persona), num(precio_existente.precio_frecuente)]
+                   if precio_existente else None),
+    })
 
 
 class ViajeDeleteView(LoginRequiredMixin, DeleteView):

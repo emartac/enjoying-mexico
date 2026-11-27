@@ -1,0 +1,90 @@
+<!-- Modal: registrar habitación para el viaje (desde la reservación) -->
+<div class="modal fade" id="modalNuevaHabitacion" tabindex="-1" aria-labelledby="modalNuevaHabLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalNuevaHabLabel"><i class="bi bi-door-open me-1"></i>Registrar habitación</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <p class="small text-muted mb-2">Se agrega al viaje <strong>{{ viaje_varios_dias.nombre }}</strong> y queda seleccionada en esta reservación.</p>
+        <div id="nh-errores" class="alert alert-danger small py-2" style="display:none"></div>
+
+        {% if not nh_tipos %}
+        <div class="alert alert-warning small py-2 mb-0">
+          Aún no hay tipos de habitación. Créalos primero en
+          <a href="{% url 'hoteles:tipos_lista' %}" target="_blank">Tipos de habitación</a> (Doble, Triple, Cuádruple…) y recarga esta página.
+        </div>
+        {% else %}
+        <ul class="nav nav-tabs mb-3">
+          <li class="nav-item"><button type="button" class="nav-link active" data-nh-tab="nueva">Nueva habitación</button></li>
+          <li class="nav-item"><button type="button" class="nav-link" data-nh-tab="existente">Ya registrada</button></li>
+        </ul>
+
+        <div id="nh-tab-nueva">
+          <div class="row g-2">
+            <div class="col-8">
+              <label class="form-label small mb-1" for="nh-hotel">Hotel *</label>
+              <input type="text" class="form-control form-control-sm" id="nh-hotel">
+            </div>
+            <div class="col-4">
+              <label class="form-label small mb-1" for="nh-numero">Número *</label>
+              <input type="text" class="form-control form-control-sm" id="nh-numero">
+            </div>
+            <div class="col-8">
+              <label class="form-label small mb-1" for="nh-tipo">Tipo *</label>
+              <select class="form-select form-select-sm" id="nh-tipo">
+                <option value="">— Selecciona —</option>
+                {% for t in nh_tipos %}
+                <option value="{{ t.pk }}">{{ t.nombre }} (hasta {{ t.capacidad }} persona{{ t.capacidad|pluralize:"s" }})</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-4">
+              <label class="form-label small mb-1" for="nh-camas">Camas</label>
+              <input type="number" class="form-control form-control-sm" id="nh-camas" value="1" min="1">
+            </div>
+          </div>
+        </div>
+
+        <div id="nh-tab-existente" style="display:none">
+          {% if nh_habitaciones %}
+          <label class="form-label small mb-1" for="nh-existente">Habitación *</label>
+          <select class="form-select form-select-sm" id="nh-existente">
+            <option value="">— Selecciona —</option>
+            {% for h in nh_habitaciones %}
+            <option value="{{ h.pk }}" data-tipo="{{ h.tipo_id }}">{{ h.nombre_hotel }} — {{ h.tipo.nombre }} #{{ h.numero }}</option>
+            {% endfor %}
+          </select>
+          {% else %}
+          <p class="text-muted small mb-0">No hay otras habitaciones registradas. Usa la pestaña “Nueva habitación”.</p>
+          {% endif %}
+        </div>
+
+        {# Solo aparece si el tipo elegido aún no tiene precio en este viaje #}
+        <div id="nh-precio" class="border rounded p-2 mt-3 bg-light" style="display:none">
+          <p class="small mb-2"><i class="bi bi-tags me-1"></i>Este viaje aún no tiene precio para <strong id="nh-precio-tipo"></strong>. Se guarda para todas las habitaciones de ese tipo.</p>
+          <div class="row g-2">
+            <div class="col-6">
+              <label class="form-label small mb-1" for="nh-precio-normal">Precio por persona *</label>
+              <div class="input-group input-group-sm"><span class="input-group-text">$</span>
+                <input type="number" class="form-control" id="nh-precio-normal" step="0.01" min="0"></div>
+            </div>
+            <div class="col-6">
+              <label class="form-label small mb-1" for="nh-precio-frecuente">Viajero frecuente</label>
+              <div class="input-group input-group-sm"><span class="input-group-text">$</span>
+                <input type="number" class="form-control" id="nh-precio-frecuente" step="0.01" min="0"></div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+        {% if nh_tipos %}
+        <button type="button" class="btn btn-primary btn-sm" id="btn-guardar-nh"><i class="bi bi-save me-1"></i>Guardar habitación</button>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>

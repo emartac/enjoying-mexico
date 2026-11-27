@@ -48,12 +48,11 @@ class ReservacionForm(forms.ModelForm):
         if self._viaje and not self._viaje.es_viaje_dia:
             self.fields['habitacion'].empty_label = '— Elige una habitación —'
             if not self.fields['habitacion'].queryset.exists():
-                from django.urls import reverse
                 from django.utils.html import format_html
                 self.fields['habitacion'].help_text = format_html(
                     '<span class="text-danger">Este viaje de {} días aún no tiene habitaciones. '
-                    'Agrégalas en <a href="{}">el detalle del viaje</a> (sección Habitaciones → Agregar).</span>',
-                    self._viaje.duracion_dias + 1, reverse('viajes:detalle', args=[self._viaje.pk]))
+                    'Usa el botón <strong>Registrar habitación</strong>.</span>',
+                    self._viaje.duracion_dias)
         self.helper = FormHelper()
         # El <form> y el botón de guardar están en la plantilla, para poder
         # agregar la sección de clientes antes del botón
