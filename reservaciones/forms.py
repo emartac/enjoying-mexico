@@ -40,6 +40,20 @@ class ReservacionForm(forms.ModelForm):
             self.fields['habitacion'].queryset = Habitacion.objects.none()
         self.fields['habitacion'].required = False
         self.fields['habitacion'].empty_label = '— Sin habitación (viaje de un día) —'
+
+        # Viaje de varios días: la habitación es obligatoria y se explica qué hacer
+        # si el viaje todavía no tiene habitaciones asignadas.
+        from viajes.models import Viaje
+        self._viaje = Viaje.objects.filter(pk=self._viaje_id).first() if self._viaje_id else None
+        if self._viaje and not self._viaje.es_viaje_dia:
+            self.fields['habitacion'].empty_label = '— Elige una habitación —'
+            if not self.fields['habitacion'].queryset.exists():
+                from django.urls import reverse
+                from django.utils.html import format_html
+                self.fields['habitacion'].help_text = format_html(
+                    '<span class="text-danger">Este viaje de {} días aún no tiene habitaciones. '
+                    'Agrégalas en <a href="{}">el detalle del viaje</a> (sección Habitaciones → Agregar).</span>',
+                    self._viaje.duracion_dias + 1, reverse('viajes:detalle', args=[self._viaje.pk]))
         self.helper = FormHelper()
         # El <form> y el botón de guardar están en la plantilla, para poder
         # agregar la sección de clientes antes del botón
@@ -58,6 +72,9 @@ class ReservacionForm(forms.ModelForm):
         cleaned_data = super().clean()
         habitacion = cleaned_data.get('habitacion')
         viaje = cleaned_data.get('viaje')
+        if viaje and not viaje.es_viaje_dia and not habitacion:
+            self.add_error('habitacion',
+                'Este viaje dura más de un día: elige la habitación donde se hospedarán.')
         if habitacion and viaje:
             qs = ClienteReservacion.objects.filter(
                 reservacion__habitacion=habitacion,

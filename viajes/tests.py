@@ -81,6 +81,25 @@ class PreciosPorTipoTests(TestCase):
         r = self.client.get(reverse('viajes:detalle', args=[viaje.pk]))
         self.assertContains(r, '4500')
 
+    def test_reservacion_en_viaje_de_varios_dias_sin_habitaciones_avisa(self):
+        from reservaciones.forms import ReservacionForm
+        self.client.post(reverse('viajes:crear'), self._datos_viaje())
+        viaje = Viaje.objects.get()
+        r = self.client.get(reverse('reservaciones:crear') + f'?viaje={viaje.pk}')
+        self.assertContains(r, 'aún no tiene habitaciones')
+        self.assertNotContains(r, 'Sin habitación (viaje de un día)')
+        form = ReservacionForm({'viaje': viaje.pk, 'estado': 'pendiente'}, viaje_id=viaje.pk)
+        self.assertFalse(form.is_valid())
+        self.assertIn('habitacion', form.errors)
+
+    def test_reservacion_en_viaje_de_un_dia_no_pide_habitacion(self):
+        from reservaciones.forms import ReservacionForm
+        datos = self._datos_viaje(fecha_regreso='2027-03-01', precio_por_persona='900')
+        self.client.post(reverse('viajes:crear'), datos)
+        viaje = Viaje.objects.get()
+        form = ReservacionForm({'viaje': viaje.pk, 'estado': 'pendiente'}, viaje_id=viaje.pk)
+        self.assertTrue(form.is_valid(), form.errors)
+
     def test_costo_de_reservacion_usa_precio_del_tipo(self):
         self.client.post(reverse('viajes:crear'), self._datos_viaje())
         viaje = Viaje.objects.get()
