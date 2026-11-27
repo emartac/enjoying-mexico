@@ -82,9 +82,14 @@ class Reservacion(models.Model):
         """(precio regular, precio frecuente o None) por persona, según habitación o viaje."""
         from decimal import Decimal
         if self.habitacion_id:
+            # Precio por persona según el tipo de habitación (Doble, Triple…) en este viaje
+            precio = self.viaje.precio_de_tipo(self.habitacion.tipo_id)
+            if precio:
+                return precio.precio_por_persona, precio.precio_frecuente
+            # Respaldo: precio antiguo capturado en la habitación
             from viajes.models import ViajeHabitacion
             vh = ViajeHabitacion.objects.filter(viaje_id=self.viaje_id, habitacion_id=self.habitacion_id).first()
-            if not vh:
+            if not vh or vh.precio_total is None:
                 return Decimal(0), None
             return vh.precio_total, vh.precio_frecuente
         return (self.viaje.precio_por_persona or Decimal(0)), self.viaje.precio_frecuente

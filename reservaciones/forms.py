@@ -23,6 +23,19 @@ class ReservacionForm(forms.ModelForm):
         if self._viaje_id:
             ids = ViajeHabitacion.objects.filter(viaje_id=self._viaje_id).values_list('habitacion_id', flat=True)
             self.fields['habitacion'].queryset = Habitacion.objects.filter(pk__in=ids).select_related('tipo')
+            from viajes.models import ViajeHabitacionPrecio
+            precios = {p.tipo_habitacion_id: p for p in
+                       ViajeHabitacionPrecio.objects.filter(viaje_id=self._viaje_id)}
+
+            def etiqueta(h):
+                texto = str(h)
+                p = precios.get(h.tipo_id)
+                if p:
+                    texto += f' — ${p.precio_por_persona:,.2f} p/p'
+                    if p.precio_frecuente is not None:
+                        texto += f' (frecuente ${p.precio_frecuente:,.2f})'
+                return texto
+            self.fields['habitacion'].label_from_instance = etiqueta
         else:
             self.fields['habitacion'].queryset = Habitacion.objects.none()
         self.fields['habitacion'].required = False

@@ -5,9 +5,10 @@ from django.urls import reverse_lazy, reverse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
 from django.http import JsonResponse
+from django.db import transaction
 from django.db.models.deletion import ProtectedError
 from .models import Viaje, ViajeHabitacion
-from .forms import ViajeForm, ViajeHabitacionForm, PuntoAbordajeFormSet
+from .forms import ViajeForm, ViajeHabitacionForm, PuntoAbordajeFormSet, PreciosTipoForm
 
 
 class ViajeListView(LoginRequiredMixin, ListView):
@@ -92,6 +93,10 @@ class ViajeDetailView(LoginRequiredMixin, DetailView):
             else:
                 g['disponibles'] += 1
         ctx['grupos_habitacion'] = dict(grupos)
+        precios = {p.tipo_habitacion_id: p for p in self.object.precios.select_related('tipo_habitacion')}
+        for g in grupos.values():
+            g['precio'] = precios.get(g['tipo'].pk)
+        ctx['precios_tipo'] = sorted(precios.values(), key=lambda p: (p.tipo_habitacion.capacidad, p.tipo_habitacion.nombre))
         total_capacidad = sum(
             vh.habitacion.tipo.capacidad
             for g in grupos.values()
@@ -101,6 +106,12 @@ class ViajeDetailView(LoginRequiredMixin, DetailView):
         ctx['cupo'] = self.object.capacidad_maxima if self.object.capacidad_maxima > 0 else total_capacidad
         ctx['disponibles'] = ctx['cupo'] - ctx['total_viajeros'] if ctx['cupo'] else None
         return ctx
+
+
+def _es_de_varios_dias(form):
+    salida = form.cleaned_data.get('fecha_salida')
+    regreso = form.cleaned_data.get('fecha_regreso')
+    return bool(salida and regreso and regreso > salida)
 
 
 class ViajeCreateView(LoginRequiredMixin, CreateView):
@@ -113,18 +124,24 @@ class ViajeCreateView(LoginRequiredMixin, CreateView):
         ctx = super().get_context_data(**kwargs)
         ctx['titulo'] = 'Nuevo viaje'
         ctx['abordaje_formset'] = PuntoAbordajeFormSet(self.request.POST or None, prefix='abordaje')
+        ctx['precios_form'] = PreciosTipoForm(self.request.POST or None, prefix='precios')
         return ctx
 
     def form_valid(self, form):
         ctx = self.get_context_data()
         abordaje_formset = ctx['abordaje_formset']
-        if abordaje_formset.is_valid():
-            self.object = form.save()
-            abordaje_formset.instance = self.object
-            abordaje_formset.save()
+        precios_form = ctx['precios_form']
+        varios_dias = _es_de_varios_dias(form)
+        if abordaje_formset.is_valid() and (not varios_dias or precios_form.is_valid()):
+            with transaction.atomic():
+                self.object = form.save()
+                abordaje_formset.instance = self.object
+                abordaje_formset.save()
+                if varios_dias:
+                    precios_form.save(self.object)
             messages.success(self.request, 'Viaje creado exitosamente.')
-            return super().form_valid(form)
-        return self.form_invalid(form)
+            return redirect(self.get_success_url())
+        return self.render_to_response(self.get_context_data(form=form))
 
 
 class ViajeUpdateView(LoginRequiredMixin, UpdateView):
@@ -139,18 +156,24 @@ class ViajeUpdateView(LoginRequiredMixin, UpdateView):
         ctx = super().get_context_data(**kwargs)
         ctx['titulo'] = f'Editar viaje: {self.object.nombre}'
         ctx['abordaje_formset'] = PuntoAbordajeFormSet(self.request.POST or None, instance=self.object, prefix='abordaje')
+        ctx['precios_form'] = PreciosTipoForm(self.request.POST or None, viaje=self.object, prefix='precios')
         return ctx
 
     def form_valid(self, form):
         ctx = self.get_context_data()
         abordaje_formset = ctx['abordaje_formset']
-        if abordaje_formset.is_valid():
-            self.object = form.save()
-            abordaje_formset.instance = self.object
-            abordaje_formset.save()
+        precios_form = ctx['precios_form']
+        varios_dias = _es_de_varios_dias(form)
+        if abordaje_formset.is_valid() and (not varios_dias or precios_form.is_valid()):
+            with transaction.atomic():
+                self.object = form.save()
+                abordaje_formset.instance = self.object
+                abordaje_formset.save()
+                if varios_dias:
+                    precios_form.save(self.object)
             messages.success(self.request, 'Viaje actualizado.')
-            return super().form_valid(form)
-        return self.form_invalid(form)
+            return redirect(self.get_success_url())
+        return self.render_to_response(self.get_context_data(form=form))
 
 
 class ViajeHabitacionesView(LoginRequiredMixin, DetailView):
@@ -250,12 +273,7 @@ def viaje_habitacion_agregar_ajax(request, pk):
     viaje = get_object_or_404(Viaje, pk=pk)
     from hoteles.models import Habitacion, TipoHabitacion
 
-    modo         = request.POST.get('modo', 'nueva')
-    precio_total = request.POST.get('precio_total', '').strip()
-    precio_frec  = request.POST.get('precio_frecuente', '').strip() or None
-
-    if not precio_total:
-        return JsonResponse({'ok': False, 'errors': {'precio_total': 'Campo requerido.'}}, status=400)
+    modo = request.POST.get('modo', 'nueva')
 
     try:
         if modo == 'existente':
@@ -280,10 +298,7 @@ def viaje_habitacion_agregar_ajax(request, pk):
                 num_camas=int(num_camas) if num_camas.isdigit() else 1,
             )
 
-        ViajeHabitacion.objects.create(
-            viaje=viaje, habitacion=hab,
-            precio_total=precio_total, precio_frecuente=precio_frec,
-        )
+        ViajeHabitacion.objects.create(viaje=viaje, habitacion=hab)
         return JsonResponse({'ok': True})
     except Exception as e:
         return JsonResponse({'ok': False, 'errors': {'__all__': str(e)}}, status=400)

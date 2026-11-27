@@ -47,6 +47,10 @@ class Viaje(models.Model):
             'clientes', flat=True
         ).distinct().count()
 
+    def precio_de_tipo(self, tipo_id):
+        """Precio por persona de un tipo de habitación en este viaje (o None)."""
+        return self.precios.filter(tipo_habitacion_id=tipo_id).first()
+
     @property
     def lugares_disponibles(self):
         if self.capacidad_maxima == 0:
@@ -60,12 +64,15 @@ class ViajeHabitacion(models.Model):
         'hoteles.Habitacion', on_delete=models.PROTECT, verbose_name='Habitación',
         related_name='viaje_habitaciones',
     )
+    # Precios antiguos por habitación. Ahora el precio se captura por tipo de
+    # habitación (ViajeHabitacionPrecio); estos solo se usan si el viaje no
+    # tiene precio para el tipo de la habitación.
     precio_total = models.DecimalField(
-        'Precio total del viaje (MXN)', max_digits=10, decimal_places=2,
-        validators=[MinValueValidator(0)],
+        'Precio por persona anterior (MXN)', max_digits=10, decimal_places=2,
+        null=True, blank=True, validators=[MinValueValidator(0)],
     )
     precio_frecuente = models.DecimalField(
-        'Precio viajero frecuente (MXN)', max_digits=10, decimal_places=2,
+        'Precio viajero frecuente anterior (MXN)', max_digits=10, decimal_places=2,
         null=True, blank=True, validators=[MinValueValidator(0)],
     )
 
@@ -75,7 +82,7 @@ class ViajeHabitacion(models.Model):
         unique_together = ['viaje', 'habitacion']
 
     def __str__(self):
-        return f'{self.habitacion} — ${self.precio_total}'
+        return f'{self.habitacion} — {self.viaje.nombre}'
 
 
 class PuntoAbordaje(models.Model):
@@ -101,6 +108,10 @@ class ViajeHabitacionPrecio(models.Model):
     precio_por_persona = models.DecimalField(
         'Precio por persona (MXN)', max_digits=10, decimal_places=2,
         validators=[MinValueValidator(0)],
+    )
+    precio_frecuente = models.DecimalField(
+        'Precio viajero frecuente por persona (MXN)', max_digits=10, decimal_places=2,
+        null=True, blank=True, validators=[MinValueValidator(0)],
     )
 
     class Meta:

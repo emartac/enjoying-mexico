@@ -192,12 +192,18 @@ class ClientesReservacionMixin:
         if not viaje:
             return {}
         num = lambda d: float(d) if d is not None else None
+        # Precio por tipo de habitación; si el tipo no tiene, el precio antiguo de la habitación
+        por_tipo = {p.tipo_habitacion_id: p for p in viaje.precios.all()}
+        habitaciones = {}
+        for vh in ViajeHabitacion.objects.filter(viaje=viaje).select_related('habitacion'):
+            p = por_tipo.get(vh.habitacion.tipo_id)
+            if p:
+                habitaciones[str(vh.habitacion_id)] = [num(p.precio_por_persona), num(p.precio_frecuente)]
+            else:
+                habitaciones[str(vh.habitacion_id)] = [num(vh.precio_total or 0), num(vh.precio_frecuente)]
         return {
             'viaje': [num(viaje.precio_por_persona or 0), num(viaje.precio_frecuente)],
-            'habitaciones': {
-                str(vh.habitacion_id): [num(vh.precio_total), num(vh.precio_frecuente)]
-                for vh in ViajeHabitacion.objects.filter(viaje=viaje)
-            },
+            'habitaciones': habitaciones,
         }
 
     def get_context_data(self, **kwargs):

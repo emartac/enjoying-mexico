@@ -18,6 +18,47 @@
         </div>
       </div>
 
+      <div class="card shadow-sm mb-3" id="card-precios-tipo">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="bi bi-tags me-2"></i>Precios por tipo de habitación</h5>
+          <small class="text-muted">Precio <strong>por persona</strong>. Deja vacío el tipo que no se ofrece en este viaje.</small>
+        </div>
+        <div class="card-body">
+          {% if precios_form.tipos %}
+          {% if precios_form.non_field_errors %}<div class="alert alert-danger small py-2">{{ precios_form.non_field_errors|join:" " }}</div>{% endif %}
+          <table class="table table-sm align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Tipo de habitación</th>
+                <th style="width:30%">Precio normal ($)</th>
+                <th style="width:30%">Precio viajero frecuente ($)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for tipo, campo_precio, campo_frecuente in precios_form.filas %}
+              <tr>
+                <td>{{ tipo.nombre }} <span class="text-muted small">(hasta {{ tipo.capacidad }} persona{{ tipo.capacidad|pluralize:"s" }})</span></td>
+                <td>
+                  {{ campo_precio }}
+                  {% for e in campo_precio.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+                </td>
+                <td>
+                  {{ campo_frecuente }}
+                  {% for e in campo_frecuente.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <p class="text-muted small mb-0">
+            Aún no hay tipos de habitación. Créalos primero en
+            <a href="{% url 'hoteles:tipos_lista' %}">Tipos de habitación</a> (Doble, Triple, Cuádruple…).
+          </p>
+          {% endif %}
+        </div>
+      </div>
+
       <div class="card shadow-sm mb-3">
         <div class="card-header d-flex justify-content-between align-items-center">
           <h5 class="mb-0"><i class="bi bi-geo-alt me-2"></i>Puntos de abordaje</h5>
@@ -90,12 +131,15 @@ document.addEventListener('DOMContentLoaded', function () {
   var inputRegreso  = document.getElementById('id_fecha_regreso');
   var inputPrecio   = document.getElementById('id_precio_por_persona');
   var inputFrecuente = document.getElementById('id_precio_frecuente');
+  var cardPreciosTipo = document.getElementById('card-precios-tipo');
 
   function actualizarPrecios() {
     var s = inputSalida.value, r = inputRegreso.value;
     var esUnDia = !s || !r || s === r;
     inputPrecio.disabled    = !esUnDia;
     inputFrecuente.disabled = !esUnDia;
+    // Viaje de un día: precio único. Varios días: precio por tipo de habitación.
+    cardPreciosTipo.style.display = esUnDia ? 'none' : '';
     if (!esUnDia) {
       inputPrecio.value    = '0';
       inputFrecuente.value = '';

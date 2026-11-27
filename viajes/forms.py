@@ -32,6 +32,8 @@ class ViajeForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['precio_por_persona'].required = False
         self.fields['precio_frecuente'].required = False
+        self.fields['precio_por_persona'].help_text = (
+            'Solo para viajes de un día. En viajes de varios días el precio va por tipo de habitación.')
         self.helper = FormHelper()
         self.helper.form_tag = False
         self.helper.layout = Layout(
@@ -80,19 +82,67 @@ PuntoAbordajeFormSet = inlineformset_factory(
     },
 )
 
-PrecioFormSet = inlineformset_factory(
-    Viaje,
-    ViajeHabitacionPrecio,
-    fields=['tipo_habitacion', 'precio_por_persona'],
-    extra=2,
-    can_delete=True,
-)
+class PreciosTipoForm(forms.Form):
+    """Una fila por tipo de habitación: precio normal y de viajero frecuente
+    (ambos por persona). Dejar el precio vacío = ese tipo no se ofrece."""
+
+    def __init__(self, *args, viaje=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        from hoteles.models import TipoHabitacion
+        self.viaje = viaje
+        self.tipos = list(TipoHabitacion.objects.all())
+        existentes = {}
+        if viaje and viaje.pk:
+            existentes = {p.tipo_habitacion_id: p for p in viaje.precios.all()}
+        for t in self.tipos:
+            p = existentes.get(t.pk)
+            attrs = {'class': 'form-control form-control-sm', 'step': '0.01', 'min': '0'}
+            self.fields[f'precio_{t.pk}'] = forms.DecimalField(
+                required=False, min_value=0, max_digits=10, decimal_places=2,
+                initial=p.precio_por_persona if p else None,
+                widget=forms.NumberInput(attrs=attrs))
+            self.fields[f'frecuente_{t.pk}'] = forms.DecimalField(
+                required=False, min_value=0, max_digits=10, decimal_places=2,
+                initial=p.precio_frecuente if p else None,
+                widget=forms.NumberInput(attrs=attrs))
+
+    def filas(self):
+        """Para la plantilla: [(tipo, campo precio, campo frecuente), ...]"""
+        return [(t, self[f'precio_{t.pk}'], self[f'frecuente_{t.pk}']) for t in self.tipos]
+
+    def clean(self):
+        cleaned = super().clean()
+        tipos_con_habitaciones = set()
+        if self.viaje and self.viaje.pk:
+            tipos_con_habitaciones = set(
+                self.viaje.viaje_habitaciones.values_list('habitacion__tipo_id', flat=True))
+        for t in self.tipos:
+            precio = cleaned.get(f'precio_{t.pk}')
+            frecuente = cleaned.get(f'frecuente_{t.pk}')
+            if precio is None and frecuente is not None:
+                self.add_error(f'precio_{t.pk}',
+                               f'Escribe el precio normal de {t.nombre} (el frecuente solo no basta).')
+            elif precio is None and t.pk in tipos_con_habitaciones:
+                self.add_error(f'precio_{t.pk}',
+                               f'Este viaje tiene habitaciones {t.nombre}; escribe su precio.')
+        return cleaned
+
+    def save(self, viaje):
+        for t in self.tipos:
+            precio = self.cleaned_data.get(f'precio_{t.pk}')
+            frecuente = self.cleaned_data.get(f'frecuente_{t.pk}')
+            if precio is None:
+                ViajeHabitacionPrecio.objects.filter(viaje=viaje, tipo_habitacion=t).delete()
+            else:
+                ViajeHabitacionPrecio.objects.update_or_create(
+                    viaje=viaje, tipo_habitacion=t,
+                    defaults={'precio_por_persona': precio, 'precio_frecuente': frecuente})
 
 
 class ViajeHabitacionForm(forms.ModelForm):
     class Meta:
         model = ViajeHabitacion
-        fields = ['habitacion', 'precio_total', 'precio_frecuente']
+        fields = ['habitacion']
 
     def __init__(self, viaje=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -106,18 +156,5 @@ class ViajeHabitacionForm(forms.ModelForm):
         self.helper = FormHelper()
         self.helper.layout = Layout(
             'habitacion',
-            Row(
-                Column('precio_total', css_class='col-md-6'),
-                Column('precio_frecuente', css_class='col-md-6'),
-            ),
             ButtonHolder(Submit('submit', 'Guardar', css_class='btn btn-primary')),
         )
-
-
-HabitacionFormSet = inlineformset_factory(
-    Viaje,
-    ViajeHabitacion,
-    fields=['habitacion', 'precio_total'],
-    extra=2,
-    can_delete=True,
-)

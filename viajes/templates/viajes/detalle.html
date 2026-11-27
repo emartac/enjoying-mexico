@@ -32,6 +32,26 @@
           <dd class="col-sm-6"><span class="fw-bold">${{ viaje.precio_frecuente }}</span></dd>
           {% endif %}
         </dl>
+        {% if not viaje.es_viaje_dia %}
+        <hr>
+        <p class="fw-semibold mb-1 small"><i class="bi bi-tags me-1"></i>Precios por persona</p>
+        {% if precios_tipo %}
+        <table class="table table-sm small mb-0">
+          <thead><tr><th>Tipo</th><th class="text-end">Normal</th><th class="text-end">Frecuente</th></tr></thead>
+          <tbody>
+            {% for p in precios_tipo %}
+            <tr>
+              <td>{{ p.tipo_habitacion.nombre }}</td>
+              <td class="text-end">${{ p.precio_por_persona }}</td>
+              <td class="text-end">{% if p.precio_frecuente is not None %}${{ p.precio_frecuente }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <p class="small text-danger mb-0">Sin precios. <a href="{% url 'viajes:editar' viaje.pk %}">Captúralos aquí</a>.</p>
+        {% endif %}
+        {% endif %}
         {% if viaje.incluye %}<hr><p class="fw-semibold mb-1 small">Incluye:</p><p class="text-muted small mb-0">{{ viaje.incluye|linebreaksbr }}</p>{% endif %}
         {% if viaje.descripcion %}<hr><p class="text-muted small mb-0">{{ viaje.descripcion }}</p>{% endif %}
         <hr>
@@ -159,22 +179,26 @@
   <div class="table-responsive">
     <table class="table table-sm mb-0">
       <thead class="table-light">
-        <tr><th>Habitación</th><th>Tipo</th><th>Precio regular</th><th>Precio frecuente</th><th></th></tr>
+        <tr><th>Habitación</th><th>Tipo</th><th>Camas</th><th></th></tr>
       </thead>
       <tbody>
         {% for tipo_nombre, grupo in grupos_habitacion.items %}
         <tr class="table-secondary">
-          <td colspan="5" class="py-1 small fw-semibold">
+          <td colspan="4" class="py-1 small fw-semibold">
             {{ tipo_nombre }}
             <span class="text-muted fw-normal ms-2">{{ grupo.total }} hab. — {{ grupo.reservadas }} reservadas, {{ grupo.disponibles }} disponibles</span>
+            {% if grupo.precio %}
+            <span class="fw-normal ms-2">· ${{ grupo.precio.precio_por_persona }} p/p{% if grupo.precio.precio_frecuente is not None %} (frecuente ${{ grupo.precio.precio_frecuente }}){% endif %}</span>
+            {% else %}
+            <a href="{% url 'viajes:editar' viaje.pk %}" class="badge bg-danger text-decoration-none ms-2">Sin precio — capturar</a>
+            {% endif %}
           </td>
         </tr>
         {% for vh in grupo.habitaciones %}
         <tr>
           <td class="ps-3">{{ vh.habitacion.nombre_hotel }} #{{ vh.habitacion.numero }}</td>
           <td class="text-muted small">{{ vh.habitacion.tipo.nombre }}</td>
-          <td>${{ vh.precio_total }}</td>
-          <td>{% if vh.precio_frecuente %}${{ vh.precio_frecuente }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
+          <td class="text-muted small">{{ vh.habitacion.num_camas }}</td>
           <td class="text-end">
             <a href="{% url 'viajes:habitacion_editar' viaje.pk vh.pk %}" class="btn btn-xs btn-outline-secondary btn-sm py-0 px-1"><i class="bi bi-pencil"></i></a>
             <form method="post" action="{% url 'viajes:habitacion_quitar' viaje.pk vh.pk %}" class="d-inline" onsubmit="return confirm('¿Quitar habitación del viaje?')">
@@ -184,7 +208,7 @@
         </tr>
         {% endfor %}
         {% empty %}
-        <tr><td colspan="5" class="text-center text-muted py-3">Sin habitaciones asignadas.</td></tr>
+        <tr><td colspan="4" class="text-center text-muted py-3">Sin habitaciones asignadas.</td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -255,23 +279,10 @@
           </div>
         </div>
 
-        <!-- Precios (comunes a ambos tabs) -->
-        <div class="row g-2 mt-1">
-          <div class="col-6">
-            <label class="form-label small mb-1">Precio regular *</label>
-            <div class="input-group input-group-sm">
-              <span class="input-group-text">$</span>
-              <input type="number" class="form-control" id="hab-precio" step="0.01" min="0">
-            </div>
-          </div>
-          <div class="col-6">
-            <label class="form-label small mb-1">Precio frecuente</label>
-            <div class="input-group input-group-sm">
-              <span class="input-group-text">$</span>
-              <input type="number" class="form-control" id="hab-frecuente" step="0.01" min="0">
-            </div>
-          </div>
-        </div>
+        <p class="text-muted small mt-3 mb-0">
+          <i class="bi bi-info-circle me-1"></i>El precio se toma del tipo de habitación
+          (se captura en <a href="{% url 'viajes:editar' viaje.pk %}">Editar viaje</a>).
+        </p>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
@@ -304,11 +315,7 @@
     var errDiv = document.getElementById('hab-errores');
     errDiv.style.display = 'none';
     var csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    var params = {
-      modo:             tabActivo,
-      precio_total:     document.getElementById('hab-precio').value,
-      precio_frecuente: document.getElementById('hab-frecuente').value,
-    };
+    var params = { modo: tabActivo };
     if (tabActivo === 'existente') {
       params.habitacion_id = document.getElementById('hab-existente-id').value;
     } else {
